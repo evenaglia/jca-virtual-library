@@ -1,0 +1,18 @@
+package net.venaglia.realms.common.map.db;
+
+import net.venaglia.realms.common.util.SpatialMap;
+
+/**
+ * User: ed
+ * Date: 3/3/13
+ * Time: 11:08 AM
+ */
+public interface SpatialIndex<E> extends SpatialMap<E> {
+
+    boolean isReadOnly();
+
+    boolean hasUncommittedChanges();
+
+    void commitChanges();
+
+}
