@@ -105,7 +105,7 @@ public class LoginForm {
             panel.add(button);
 
             frame = new JFrame("JCA Login");
-            frame.setSize(250, 140);
+            frame.setSize(350, 140);
             frame.add(panel);
             frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
             frame.setVisible(true);
@@ -113,10 +113,10 @@ public class LoginForm {
             label1.setLocation(25,25);
             label2.setLocation(25,55);
             username.setLocation(100,20);
-            username.setSize(1130,130);
+            username.setSize(230,30);
             password.setLocation(100,50);
-            password.setSize(1130,130);
-            button.setLocation(150,80);
+            password.setSize(230,30);
+            button.setLocation(250,80);
             button.setSize(80,30);
 
             if (username.getText().length() == 0) {

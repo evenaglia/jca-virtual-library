@@ -381,6 +381,12 @@ public class DirectProjectionBuffer extends DelegatingGeometryBuffer implements 
     }
 
     @Override
+    public void identity() {
+        super.identity();
+        modelMatrixChangeCounter.increment();
+    }
+
+    @Override
     public void rotate(Axis axis, double angle) {
         super.rotate(axis, angle);
         modelMatrixChangeCounter.increment();

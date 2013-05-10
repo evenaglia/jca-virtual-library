@@ -116,6 +116,10 @@ public class DelegatingGeometryBuffer implements GeometryBuffer {
         delegate.popTransform();
     }
 
+    public void identity() {
+        delegate.identity();
+    }
+
     public void rotate(Axis axis, double angle) {
         delegate.rotate(axis, angle);
     }

@@ -345,6 +345,12 @@ public class DirectGeometryBuffer implements GeometryBuffer {
         if (logCalls) logCall("glPopMatrix");
     }
 
+    @Override
+    public void identity() {
+        glLoadIdentity();
+        if (logCalls) logCall("glLoadIdentity");
+    }
+
     public void rotate(Axis axis, double angle) {
         double degrees = angle * (180.0 / Math.PI);
         rotateImpl(axis.vector(), degrees);

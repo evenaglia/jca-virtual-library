@@ -2,6 +2,9 @@ package com.jivesoftware.jcalibrary;
 
 import com.jivesoftware.jcalibrary.objects.Library;
 import com.jivesoftware.jcalibrary.objects.Objects;
+import com.jivesoftware.jcalibrary.scheduler.InstanceDataFetcher;
+import com.jivesoftware.jcalibrary.scheduler.WorkScheduler;
+import com.jivesoftware.jcalibrary.structures.JiveInstance;
 import com.jivesoftware.jcalibrary.structures.ServerRack;
 import com.jivesoftware.jcalibrary.structures.ServerSlot;
 import net.venaglia.realms.common.navigation.Position;
@@ -23,11 +26,13 @@ import net.venaglia.realms.common.projection.Camera;
 import net.venaglia.realms.common.projection.GeometryBuffer;
 import net.venaglia.realms.common.projection.ProjectionBuffer;
 import net.venaglia.realms.common.view.*;
+import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.Dimension;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -50,11 +55,19 @@ public class VirtualLibrary {
         final Camera camera = new Camera();
         final MouseTargetEventListener<ServerSlot> eventListener = new MouseTargetEventListener<ServerSlot>() {
             public void mouseOver(MouseTarget<? extends ServerSlot> target) {
-                hoverSlot.set(target.getValue());
+                ServerSlot value = target.getValue();
+                hoverSlot.set(value);
+                JiveInstance jiveInstance = value.getJiveInstance();
+                if (jiveInstance != null) {
+                    Display.setTitle("JCA Virtual Library - " + jiveInstance.getCustomer().getName());
+                } else {
+                    Display.setTitle("JCA Virtual Library - empty slot");
+                }
             }
 
             public void mouseOut(MouseTarget<? extends ServerSlot> target) {
                 hoverSlot.compareAndSet(target.getValue(), null);
+                Display.setTitle("JCA Virtual Library");
             }
 
             @Override
@@ -261,7 +274,8 @@ public class VirtualLibrary {
     }
 
     public static void main(String[] args) {
-//        LibraryProps.INSTANCE.getJCACredentials();
+        LibraryProps.INSTANCE.getJCACredentials();
+        WorkScheduler.interval(new InstanceDataFetcher(), 60, TimeUnit.SECONDS);
         new VirtualLibrary();
     }
 }

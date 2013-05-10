@@ -185,6 +185,12 @@ public class CountingDirectGeometryBuffer extends DirectGeometryBuffer implement
     }
 
     @Override
+    public void identity() {
+        super.identity();
+        count++;
+    }
+
+    @Override
     public void rotate(Axis axis, double angle) {
         super.rotate(axis, angle);
         count++;

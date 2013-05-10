@@ -67,6 +67,8 @@ public interface GeometryBuffer extends CoordinateBuffer {
 
     void popTransform();
 
+    void identity();
+
     void rotate(Axis axis, double angle);
 
     void rotate(Vector axis, double angle);

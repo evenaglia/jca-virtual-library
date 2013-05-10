@@ -25,6 +25,7 @@ public enum Objects implements Projectable {
 //    BOX_CURSOR_SMALL(new BoxCursor(0.333,0.333,0.333,0.125,0.025,0.25,DetailLevel.MEDIUM)),
 //    BOX_CURSOR_SMALL(new BoxCursor(0.333,0.333,0.333,0.0625,0.025/4,0.25,DetailLevel.MEDIUM)),
     BOX_CURSOR_SMALL(new BoxCursor(1,1,1, 0.125, 0.0125, 0.1875,DetailLevel.MEDIUM)),
+    EMPTY_SERVER_FRAME(new Box().setMaterial(Material.makeWireFrame(new Color(0.1f, 0.1f, 0.1f)))),
     SERVER_FRAME(new Box().setMaterial(Material.makeWireFrame(Color.GRAY_25))),
     HEART(DemoObjects.ObjectCategory.INTERESTING_SHAPES.getDynamicDetailSource(1)),
     SCROLL(DemoObjects.ObjectCategory.INTERESTING_SHAPES.getDynamicDetailSource(2)),

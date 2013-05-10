@@ -90,24 +90,14 @@ public class ServerSlot extends AbstractLibraryElement<ServerSlot> {
     }
 
     @Override
-    public void project(long nowMS, GeometryBuffer buffer) {
-        if (jiveInstance == null) {
-            buffer.pushTransform();
-            getTransformation().apply(nowMS, buffer);
-            if (jiveInstance != null) {
-                Objects.SERVER_FRAME.project(nowMS, buffer);
-                jiveInstance.project(nowMS, buffer);
-            }
-            buffer.popTransform();
-        } else {
-            super.project(nowMS, buffer);
-        }
-    }
-
-    @Override
     protected void projectImpl(long nowMS, GeometryBuffer buffer) {
         if (jiveInstance != null) {
+            buffer.pushTransform();
+            buffer.identity();
             jiveInstance.project(nowMS, buffer);
+            buffer.popTransform();
+        } else {
+            Objects.EMPTY_SERVER_FRAME.project(nowMS, buffer);
         }
     }
 }

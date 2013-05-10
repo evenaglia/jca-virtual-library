@@ -28,7 +28,8 @@ public class ServerRackSource implements DynamicDetailSource<DisplayList> {
     public static final int SHELVES = 5;
 
     private Shape<?> target;
-    private Material material = Material.makeSelfIlluminating(Color.CYAN);
+//    private Material material = Material.makeSelfIlluminating(Color.CYAN);
+    private Material material = Material.INHERIT;
 //    private Material material = Material.makeWireFrame(Color.CYAN);
 
     public ServerRackSource() {

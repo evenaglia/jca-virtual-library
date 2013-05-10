@@ -24,7 +24,12 @@ public class ServerRack extends AbstractLibraryElement<ServerRack> {
     protected final MouseTarget<ServerRack> mouseTarget;
     protected final int seq;
 
+    protected JiveInstance.Grouping grouping;
+    protected Material material;
+
     public ServerRack(Projectable target, MouseTargetEventListener<ServerSlot> eventListener, int seq) {
+        grouping = JiveInstance.Grouping.byRack(seq);
+        material = Material.makeSelfIlluminating(grouping.color);
         int slotsPerShelf = (int)(ServerRackSource.WIDTH / 1.1111f);
         double slotWidth = ServerRackSource.WIDTH / slotsPerShelf;
         this.slots = new ServerSlot[ServerRackSource.SHELVES * slotsPerShelf];
@@ -67,8 +72,9 @@ public class ServerRack extends AbstractLibraryElement<ServerRack> {
 
     @Override
     protected void projectImpl(long nowMS, GeometryBuffer buffer) {
-        Objects.SERVER_RACK.project(nowMS, buffer);
         buffer.pushBrush();
+        material.apply(nowMS, buffer);
+        Objects.SERVER_RACK.project(nowMS, buffer);
         for (ServerSlot slot : slots) {
             slot.project(nowMS, buffer);
         }

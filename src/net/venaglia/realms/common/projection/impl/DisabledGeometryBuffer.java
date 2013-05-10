@@ -70,6 +70,11 @@ public abstract class DisabledGeometryBuffer implements GeometryBuffer {
         fail();
     }
 
+    @Override
+    public void identity() {
+        fail();
+    }
+
     public void rotate(Axis axis, double angle) {
         fail();
     }
