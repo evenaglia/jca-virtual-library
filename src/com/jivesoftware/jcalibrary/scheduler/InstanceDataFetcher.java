@@ -19,6 +19,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class InstanceDataFetcher implements Runnable{
 
@@ -107,6 +108,12 @@ public class InstanceDataFetcher implements Runnable{
                             nodeDetails.setType(type);
                             nodeDetails.setStatus(status);
                             nodeDetails.setUrl(stringId);
+
+                            // TODO Replace fake data with real data
+                            Random r = new Random();
+                            nodeDetails.setActiveConnections((long) (r.nextGaussian() * 100));
+                            nodeDetails.setActiveSessions((long) (r.nextGaussian() * 100));
+                            nodeDetails.setLoadAverage((long) (r.nextGaussian()));
                         }
                     }
 

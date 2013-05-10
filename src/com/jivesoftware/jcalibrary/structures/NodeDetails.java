@@ -14,6 +14,10 @@ public class NodeDetails {
     private String status;
     private String url;
 
+    private long activeConnections;
+    private long activeSessions;
+    private long loadAverage;
+
     public Date getTimestamp() {
         return timestamp;
     }
@@ -52,5 +56,29 @@ public class NodeDetails {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public long getActiveConnections() {
+        return activeConnections;
+    }
+
+    public void setActiveConnections(long activeConnections) {
+        this.activeConnections = activeConnections;
+    }
+
+    public long getActiveSessions() {
+        return activeSessions;
+    }
+
+    public void setActiveSessions(long activeSessions) {
+        this.activeSessions = activeSessions;
+    }
+
+    public long getLoadAverage() {
+        return loadAverage;
+    }
+
+    public void setLoadAverage(long loadAverage) {
+        this.loadAverage = loadAverage;
     }
 }
