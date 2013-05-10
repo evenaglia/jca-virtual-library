@@ -63,8 +63,14 @@ public class VirtualLibrary {
                 hoverSlot.compareAndSet(target.getValue(), null);
             }
 
-            public void mouseClick(MouseTarget<? extends ServerSlot> target, MouseButton button) {
-                // todo
+            @Override
+            public void mouseDown(MouseTarget<? extends ServerSlot> target, MouseButton button) {
+                System.out.println("mouseDown on " + target);
+            }
+
+            @Override
+            public void mouseUp(MouseTarget<? extends ServerSlot> target, MouseButton button) {
+                System.out.println("mouseUp on " + target);
             }
         };
         final UserNavigation userNavigation = new UserNavigation(keyboardManager, camera, new BoundingSphere(Point.ORIGIN, Math.sqrt(425))) {
@@ -138,9 +144,9 @@ public class VirtualLibrary {
                                               MouseTargetEventListener.MouseButton button,
                                               int event) {
                 super.fireMouseEvent(target, button, event);
-                if (event == 2) {
+                if (event == 1) {
                     activeMouseTarget.set(target);
-                } else if (event == 1) {
+                } else if (event == 2) {
                     activeMouseTarget.compareAndSet(target, null);
                 }
             }

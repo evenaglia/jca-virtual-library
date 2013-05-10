@@ -8,12 +8,20 @@ package net.venaglia.realms.common.view;
 public interface MouseTargetEventListener<V> {
 
     enum MouseButton {
-        PRIMARY, SECONDARY
+        PRIMARY(0), SECONDARY(1);
+
+        public final int glCode;
+
+        private MouseButton(int glCode) {
+            this.glCode = glCode;
+        }
     }
 
     void mouseOver(MouseTarget<? extends V> target);
 
     void mouseOut(MouseTarget<? extends V> target);
 
-    void mouseClick(MouseTarget<? extends V> target, MouseButton button);
+    void mouseDown(MouseTarget<? extends V> target, MouseButton button);
+
+    void mouseUp(MouseTarget<? extends V> target, MouseButton button);
 }

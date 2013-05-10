@@ -1,12 +1,5 @@
 package net.venaglia.realms.common.view;
 
-import net.venaglia.realms.common.physical.bounds.BoundingBox;
-import net.venaglia.realms.common.physical.bounds.BoundingSphere;
-import net.venaglia.realms.common.physical.bounds.BoundingVolume;
-import net.venaglia.realms.common.physical.geom.Axis;
-import net.venaglia.realms.common.physical.geom.Point;
-import net.venaglia.realms.common.physical.geom.primitives.Box;
-import net.venaglia.realms.common.projection.GeometryBuffer;
 import net.venaglia.realms.common.projection.Projectable;
 
 import java.util.concurrent.atomic.AtomicInteger;

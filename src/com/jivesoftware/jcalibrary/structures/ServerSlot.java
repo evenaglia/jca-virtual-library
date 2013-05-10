@@ -45,9 +45,17 @@ public class ServerSlot extends AbstractLibraryElement<ServerSlot> {
                 }
             }
 
-            public void mouseClick(MouseTarget<? extends ServerSlot> target, MouseButton button) {
+            @Override
+            public void mouseDown(MouseTarget<? extends ServerSlot> target, MouseButton button) {
                 if (delegateListener != null) {
-                    delegateListener.mouseClick(target, button);
+                    delegateListener.mouseDown(target, button);
+                }
+            }
+
+            @Override
+            public void mouseUp(MouseTarget<? extends ServerSlot> target, MouseButton button) {
+                if (delegateListener != null) {
+                    delegateListener.mouseUp(target, button);
                 }
             }
         }, this);

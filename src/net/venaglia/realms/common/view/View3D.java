@@ -17,13 +17,16 @@ import org.lwjgl.opengl.PixelFormat;
 import org.lwjgl.util.Dimension;
 
 import static net.venaglia.realms.common.util.CallLogger.*;
+import static net.venaglia.realms.common.view.MouseTargetEventListener.MouseButton;
 import static org.lwjgl.opengl.GL11.*;
 
 import java.io.Closeable;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -57,6 +60,7 @@ public class View3D extends Thread implements Closeable {
     private MouseTarget<?> lastMouseTarget;
     private FramesPerSecond fps;
     private SimpleSelectObserver selectObserver;
+    private Map<MouseTargetEventListener.MouseButton,MouseTarget<?>> buttonsDown;
 
     private AtomicInteger dirtyBits = new AtomicInteger(TITLE_DIRTY_BIT);
 
@@ -74,6 +78,7 @@ public class View3D extends Thread implements Closeable {
         this.brush.setColor(true);
         this.brush.setTexturing(true);
         this.shader = ShaderProgram.DEFAULT_SHADER;
+        this.buttonsDown = new EnumMap<MouseButton,MouseTarget<?>>(MouseButton.class);
     }
 
     @Override
@@ -95,6 +100,7 @@ public class View3D extends Thread implements Closeable {
                 updateDirtyValues();
                 userNewFrame(now);
                 processTargets(buffer, now);
+                processMouseButtons();
                 glColorMask(true, true, true, true);
                 if (logCalls) logCall("glColorMask", true, true, true, true);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -141,27 +147,45 @@ public class View3D extends Thread implements Closeable {
             targets = mouseTarget == null ? null : mouseTarget.getChildren();
         }
         if (mouseTarget != lastMouseTarget) {
-            fireMouseEvent(lastMouseTarget, null, 3);
-            fireMouseEvent(mouseTarget, null, 2);
+            fireMouseEvent(lastMouseTarget, null, 2);
+            fireMouseEvent(mouseTarget, null, 1);
             lastMouseTarget = mouseTarget;
         }
     }
 
-    protected <V> void fireMouseEvent(MouseTarget<V> target, MouseTargetEventListener.MouseButton button, int event) {
+    private void processMouseButtons() {
+        for (MouseButton mouseButton : MouseButton.values()) {
+            boolean wasPressed = buttonsDown.containsKey(mouseButton);
+            boolean isPressed = Mouse.isButtonDown(mouseButton.glCode);
+            if (wasPressed != isPressed) {
+                if (isPressed && lastMouseTarget != null) {
+                    fireMouseEvent(lastMouseTarget, mouseButton, 3);
+                    buttonsDown.put(mouseButton, lastMouseTarget);
+                } else if (wasPressed) {
+                    fireMouseEvent(buttonsDown.remove(mouseButton), mouseButton, 4);
+                }
+            }
+        }
+    }
+
+    protected <V> void fireMouseEvent(MouseTarget<V> target, MouseButton button, int event) {
         MouseTargetEventListener<? super V> listener = target == null ? null : target.getListener();
         if (listener == null) {
             return;
         }
         try {
             switch (event) {
-                case 1: // mouseClick
-                    listener.mouseClick(target, button);
-                    break;
-                case 2: // mouseOver
+                case 1: // mouseOver
                     listener.mouseOver(target);
                     break;
-                case 3: // mouseOut
+                case 2: // mouseOut
                     listener.mouseOut(target);
+                    break;
+                case 3: // mouseDown
+                    listener.mouseDown(target, button);
+                    break;
+                case 4: // mouseUp
+                    listener.mouseUp(target, button);
                     break;
             }
         } catch (Throwable t) {

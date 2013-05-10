@@ -192,9 +192,14 @@ public class PrimitivesDemo {
             System.out.println(name + ".mouseOut()");
         }
 
-        public void mouseClick(MouseTarget<? extends Shape<?>> target, MouseButton button) {
-            // no-op
-            System.out.println(name + ".mouseClick(" + button + ")");
+        @Override
+        public void mouseDown(MouseTarget<? extends Shape<?>> target, MouseButton button) {
+            System.out.println(name + ".mouseDown(" + button + ")");
+        }
+
+        @Override
+        public void mouseUp(MouseTarget<? extends Shape<?>> target, MouseButton button) {
+            System.out.println(name + ".mouseUp(" + button + ")");
         }
     }
 
