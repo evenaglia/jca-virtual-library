@@ -2,20 +2,26 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="eb432b89-1681-45ab-9f67-afe2eedc073b" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/scheduler/WorkScheduler.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/js/sample.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/jca-virtual-library.iml" afterPath="$PROJECT_DIR$/jca-virtual-library.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/jca-virtual-library.ipr" afterPath="$PROJECT_DIR$/jca-virtual-library.ipr" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/js/node_proxy/app.js" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/js/node_proxy/config.json" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/js/node_proxy/config_app.js" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/js/node_proxy/routes/jcadata/get.js" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/js/node_proxy/package.json" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/js/sample.json" afterPath="$PROJECT_DIR$/js/node_proxy/data/sample.json" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/jca-virtual-library.iws" afterPath="$PROJECT_DIR$/jca-virtual-library.iws" />
     </list>
     <ignored path="jca-virtual-library.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/Dummy.txt" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368164519887" ignored="false" />
-    <file path="/fragment.java" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368165451284" ignored="false" />
+    <file path="/Dummy.txt" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368198591776" ignored="false" />
+    <file path="/fragment.java" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368199846391" ignored="false" />
     <file path="/sample.json" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368146811615" ignored="false" />
     <file path="/HttpUtil.java" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368165311573" ignored="false" />
     <file path="/scheduler.java" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368166173813" ignored="false" />
     <file path="/WorkScheduler.java" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368168338695" ignored="false" />
+    <file path="/get.js" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368199829516" ignored="false" />
+    <file path="/app.js" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368199414508" ignored="false" />
+    <file path="/config.json" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368199075105" ignored="false" />
+    <file path="/config_app.js" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368199324969" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,6 +36,7 @@
     <disable_hints />
   </component>
   <component name="DebuggerManager">
+    <ui_properties default_suspend_policy="SuspendAll" default_condition_enabled="true" />
     <breakpoint_any default_suspend_policy="SuspendAll" default_condition_enabled="true">
       <breakpoint>
         <option name="NOTIFY_CAUGHT" value="true" />
@@ -66,7 +73,6 @@
         <option name="LOG_MESSAGE" value="" />
       </breakpoint>
     </breakpoint_any>
-    <ui_properties default_suspend_policy="SuspendAll" default_condition_enabled="true" />
     <breakpoint_rules />
     <ui_properties />
   </component>
@@ -94,10 +100,55 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="sample.json" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/js/sample.json">
+      <file leaf-file-name="sample.json" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/js/node_proxy/data/sample.json">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="54" column="0" selection-start="1399" selection-end="1399" vertical-scroll-proportion="1.3682432">
+            <state line="6" column="29" selection-start="158" selection-end="159" vertical-scroll-proportion="-3.84">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="app.js" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/js/node_proxy/app.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="1" column="33" selection-start="34" selection-end="34" vertical-scroll-proportion="0.023529412">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="package.json" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/js/node_proxy/package.json">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="14" column="25" selection-start="385" selection-end="385" vertical-scroll-proportion="-8.96">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="config_app.js" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/js/node_proxy/config_app.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="23" column="1" selection-start="519" selection-end="519" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="config.json" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/js/node_proxy/config.json">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="0" column="1" selection-start="1" selection-end="1" vertical-scroll-proportion="-0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="get.js" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/js/node_proxy/routes/jcadata/get.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="9" column="24" selection-start="244" selection-end="244" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -106,11 +157,8 @@
       <file leaf-file-name="WorkScheduler.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/scheduler/WorkScheduler.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="80" column="0" selection-start="2782" selection-end="2782" vertical-scroll-proportion="0.0">
-              <folding>
-                <element signature="e#1313#1592#0" expanded="true" />
-                <element signature="e#1577#1578#0" expanded="true" />
-              </folding>
+            <state line="80" column="0" selection-start="2781" selection-end="2781" vertical-scroll-proportion="0.0">
+              <folding />
             </state>
           </provider>
         </entry>
@@ -138,13 +186,18 @@
         <option value="$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/scheduler.java" />
         <option value="$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/WorkScheduler.java" />
         <option value="$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/scheduler/WorkScheduler.java" />
+        <option value="$PROJECT_DIR$/js/node_proxy/config.json" />
+        <option value="$PROJECT_DIR$/js/node_proxy/package.json" />
+        <option value="$PROJECT_DIR$/js/node_proxy/app.js" />
+        <option value="$PROJECT_DIR$/js/node_proxy/config_app.js" />
+        <option value="$PROJECT_DIR$/js/node_proxy/routes/jcadata/get.js" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="y" value="22" />
+    <option name="x" value="1920" />
     <option name="width" value="1920" />
-    <option name="height" value="1058" />
+    <option name="height" value="1200" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -225,10 +278,6 @@
               <option name="myItemId" value="src" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="realms" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
           </PATH>
           <PATH>
             <PATH_ELEMENT>
@@ -240,33 +289,11 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
+              <option name="myItemId" value="js" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="realms" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="common" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="jca-virtual-library" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="jca-virtual-library" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="jcalibrary" />
+              <option name="myItemId" value="node_proxy" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -283,11 +310,45 @@
               <option name="myItemId" value="js" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="node_proxy" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="routes" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jcadata" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jca-virtual-library" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jca-virtual-library" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="js" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="node_proxy" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="data" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
       <pane id="PackagesPane" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -297,38 +358,38 @@
     <property name="project.structure.proportion" value="0.15" />
     <property name="MemberChooser.sorted" value="false" />
     <property name="recentsLimit" value="5" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/lib/runtime/apache/httpmime-4.2.5.jar!/" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/js/node_proxy/app.js" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="MemberChooser.copyJavadoc" value="false" />
     <property name="GoToClass.toSaveIncludeLibraries" value="false" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="restartRequiresConfirmation" value="true" />
-    <property name="FullScreen" value="false" />
     <property name="MemberChooser.showClasses" value="true" />
+    <property name="FullScreen" value="false" />
     <property name="GoToClass.includeLibraries" value="false" />
     <property name="dynamic.classpath" value="false" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/js/node_proxy/data" />
+      <recent name="$PROJECT_DIR$/js/node_proxy" />
+      <recent name="$PROJECT_DIR$/js/node_proxy/routes/jcadata" />
+      <recent name="$PROJECT_DIR$/lib/runtime" />
+    </key>
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
       <recent name="com.jivesoftware.jcalibrary.scheduler" />
     </key>
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/lib/runtime" />
-    </key>
   </component>
-  <component name="RunManager" selected="Application.VirtualLibrary - OS X">
-    <configuration default="true" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType" factoryName="Plugin">
-      <module name="" />
-      <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m" />
-      <option name="PROGRAM_PARAMETERS" />
-      <method />
-    </configuration>
+  <component name="RunManager" selected="Node.js.run_node_proxy">
     <configuration default="true" type="Remote" factoryName="Remote">
       <option name="USE_SOCKET_TRANSPORT" value="true" />
       <option name="SERVER_MODE" value="false" />
       <option name="SHMEM_ADDRESS" value="javadebug" />
       <option name="HOST" value="localhost" />
       <option name="PORT" value="5005" />
+      <method />
+    </configuration>
+    <configuration default="true" type="NodeJSConfigurationType" factoryName="Node.js" working-dir="$PROJECT_DIR$">
       <method />
     </configuration>
     <configuration default="true" type="Applet" factoryName="Applet">
@@ -416,9 +477,15 @@
       <envs />
       <method />
     </configuration>
-    <list size="2">
+    <configuration default="false" name="run_node_proxy" type="NodeJSConfigurationType" factoryName="Node.js" path-to-node="/usr/local/bin/node" path-to-js-file="app.js" working-dir="$PROJECT_DIR$/js/node_proxy">
+      <RunnerSettings RunnerId="NodeJS.run" />
+      <ConfigurationWrapper RunnerId="NodeJS.run" />
+      <method />
+    </configuration>
+    <list size="3">
       <item index="0" class="java.lang.String" itemvalue="Application.VirtualLibrary - OS X" />
       <item index="1" class="java.lang.String" itemvalue="Application.VirtualLibrary - Linux" />
+      <item index="2" class="java.lang.String" itemvalue="Node.js.run_node_proxy" />
     </list>
     <configuration name="&lt;template&gt;" type="TestNG" default="true" selected="false">
       <option name="MAIN_CLASS_NAME" />
@@ -433,28 +500,28 @@
   </component>
   <component name="ShelveChangesManager" show_recycled="false" />
   <component name="ToolWindowManager">
-    <frame x="0" y="22" width="1920" height="1058" extended-state="0" />
-    <editor active="false" />
+    <frame x="1920" y="0" width="1920" height="1200" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info id="Changes" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3298647" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32922202" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39958376" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32917964" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.2497332" sideWeight="0.67013526" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.2497332" sideWeight="0.670778" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39958376" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32922202" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32917964" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
     </layout>
@@ -525,6 +592,34 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/src/net/venaglia/realms/common/navigation/UserNavigation.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="104" column="13" selection-start="4774" selection-end="4774" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/structures/Server.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="26" column="0" selection-start="830" selection-end="830" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/js/node_proxy/data/sample.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="54" column="0" selection-start="1399" selection-end="1399" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/scheduler/WorkScheduler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="80" column="0" selection-start="2781" selection-end="2781" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/structures/Server.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="4" column="54" selection-start="240" selection-end="240" vertical-scroll-proportion="0.0">
@@ -568,66 +663,59 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/net/venaglia/realms/common/util/work/WorkHandler.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="21" column="13" selection-start="613" selection-end="613" vertical-scroll-proportion="0.33262032">
-          <folding />
-        </state>
+        <state line="21" column="13" selection-start="613" selection-end="613" vertical-scroll-proportion="0.33262032" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/net/venaglia/realms/common/util/work/WorkManager.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="21" column="13" selection-start="596" selection-end="596" vertical-scroll-proportion="-0.79037434">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar:///Library/Java/JavaVirtualMachines/1.6.0_43-b01-447.jdk/Contents/Home/src.jar!/src/java/util/concurrent/Future.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="69" column="17" selection-start="2676" selection-end="2676" vertical-scroll-proportion="0.1657754">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar:///Library/Java/JavaVirtualMachines/1.6.0_43-b01-447.jdk/Contents/Home/src.jar!/src/java/util/concurrent/ScheduledFuture.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="18" column="57" selection-start="519" selection-end="519" vertical-scroll-proportion="0.28877005">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar:///Library/Java/JavaVirtualMachines/1.6.0_43-b01-447.jdk/Contents/Home/src.jar!/src/java/util/concurrent/Delayed.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="22" column="17" selection-start="540" selection-end="540" vertical-scroll-proportion="0.3529412">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar:///Library/Java/JavaVirtualMachines/1.6.0_43-b01-447.jdk/Contents/Home/src.jar!/src/java/util/concurrent/BlockingQueue.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="152" column="17" selection-start="5895" selection-end="5895" vertical-scroll-proportion="0.33262032">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar:///Library/Java/JavaVirtualMachines/1.6.0_43-b01-447.jdk/Contents/Home/src.jar!/src/java/util/concurrent/ScheduledThreadPoolExecutor.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="593" column="35" selection-start="22751" selection-end="22751" vertical-scroll-proportion="0.33262032">
-          <folding />
-        </state>
+        <state line="21" column="13" selection-start="596" selection-end="596" vertical-scroll-proportion="-0.79037434" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/scheduler/WorkScheduler.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="80" column="0" selection-start="2782" selection-end="2782" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="e#1313#1592#0" expanded="true" />
-            <element signature="e#1577#1578#0" expanded="true" />
-          </folding>
+        <state line="80" column="0" selection-start="2781" selection-end="2781" vertical-scroll-proportion="0.0">
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/js/sample.json">
+    <entry file="file://$PROJECT_DIR$/js/node_proxy/data/sample.json">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="54" column="0" selection-start="1399" selection-end="1399" vertical-scroll-proportion="1.3682432">
+        <state line="6" column="29" selection-start="158" selection-end="159" vertical-scroll-proportion="-3.84">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/js/node_proxy/config.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="1" selection-start="1" selection-end="1" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/js/node_proxy/package.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="14" column="25" selection-start="385" selection-end="385" vertical-scroll-proportion="-8.96">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/js/node_proxy/config_app.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="23" column="1" selection-start="519" selection-end="519" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/js/node_proxy/routes/jcadata/get.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="9" column="24" selection-start="244" selection-end="244" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/js/node_proxy/app.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="1" column="33" selection-start="34" selection-end="34" vertical-scroll-proportion="0.023529412">
           <folding />
         </state>
       </provider>
