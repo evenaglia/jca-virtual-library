@@ -1,7 +1,5 @@
 package com.jivesoftware.jcalibrary.api;
 
-import com.jivesoftware.jcalibrary.JiveInstancesRegistry;
-import com.jivesoftware.jcalibrary.api.rest.CustomerInstallationResponse;
 import com.jivesoftware.jcalibrary.api.rest.manager.RestClientManager;
 import com.jivesoftware.jcalibrary.structures.JiveInstance;
 import org.apache.commons.io.IOUtils;
@@ -9,11 +7,18 @@ import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import javax.ws.rs.core.Response;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * JCAManager
@@ -57,5 +62,29 @@ public class JCAManager {
         }
 
         return jiveInstances;
+    }
+
+    private Map<Long,int[]> customerIcons;
+
+    public int[] getCustomerIcons(long customerId) {
+        if (customerIcons == null) {
+            customerIcons = new HashMap<Long,int[]>();
+            URL url = Thread.currentThread().getContextClassLoader().getResource("customerInstallationToIconsMap.csv");
+            try {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"));
+                String line = reader.readLine();
+                line = reader.readLine();
+                while (line != null) {
+                    line = reader.readLine();
+                    String[] cols = line.split(",");
+                    int icon1 = Integer.parseInt(cols[1]);
+                    int icon2 = Integer.parseInt(cols[2]);
+                    customerIcons.put(Long.parseLong(cols[0]), new int[]{ icon1, icon2 });
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return customerIcons.get(customerId);
     }
 }
