@@ -10,7 +10,7 @@ import net.venaglia.realms.common.view.MouseTarget;
  * Date: 4/22/13
  * Time: 5:22 PM
  */
-public class Server extends AbstractLibraryElement<Server> {
+public class JiveInstance extends AbstractLibraryElement<JiveInstance> {
 
     private Transformation transformation = new Transformation();
 
@@ -20,7 +20,7 @@ public class Server extends AbstractLibraryElement<Server> {
     }
 
     @Override
-    public MouseTarget<Server> getMouseTarget() {
+    public MouseTarget<JiveInstance> getMouseTarget() {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }
