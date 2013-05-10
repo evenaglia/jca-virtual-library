@@ -65,12 +65,14 @@ public class VirtualLibrary {
 
             @Override
             public void mouseDown(MouseTarget<? extends ServerSlot> target, MouseButton button) {
-                System.out.println("mouseDown on " + target);
+                ServerSlot value = target.getValue();
+                System.out.printf("mouseDown on Rack[%d], Shelf[%d], Slot[%d]\n", value.getServerRack().getSeq(), value.getSeq() / 9 + 1, value.getSeq() % 9 + 1);
             }
 
             @Override
             public void mouseUp(MouseTarget<? extends ServerSlot> target, MouseButton button) {
-                System.out.println("mouseUp on " + target);
+                ServerSlot value = target.getValue();
+                System.out.printf("mouseUp on Rack[%d], Shelf[%d], Slot[%d]\n", value.getServerRack().getSeq(), value.getSeq() / 9 + 1, value.getSeq() % 9 + 1);
             }
         };
         final UserNavigation userNavigation = new UserNavigation(keyboardManager, camera, new BoundingSphere(Point.ORIGIN, Math.sqrt(425))) {
