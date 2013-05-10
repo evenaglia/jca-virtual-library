@@ -17,9 +17,9 @@ exports.handler = function (req, res) {
     var url_parts = url.parse(reqUrl, true);
     var query = url_parts.query;
 
-    var server = query['server'];
+    var id = query['id'];
 
-    jca_data.get_jca_data(server).then(
+    jca_data.get_jca_data(id).then(
 
         function(data ) {
             res.writeHead(200, { 'Content-Type': 'application/json' });
