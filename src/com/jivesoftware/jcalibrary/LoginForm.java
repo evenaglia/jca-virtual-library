@@ -4,6 +4,9 @@ import net.venaglia.realms.common.util.Pair;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -23,8 +26,28 @@ public class LoginForm {
     private boolean ready = false;
     private Pair<String,String> credentials;
 
-    public LoginForm(Properties props) {
-        this.props = props;
+    public LoginForm() {
+        this.props = loadProps();
+    }
+
+    private Properties loadProps() {
+        Properties properties = new Properties();
+        try {
+            properties.load(new FileReader("jca.credentials.properties"));
+        } catch (IOException e) {
+            // don't care
+        }
+        return properties;
+    }
+
+    public void rememberCredentials() {
+        try {
+            FileWriter out = new FileWriter("jca.credentials.properties");
+            props.store(out, "Private cached credentials -- Do not commit!");
+            out.close();
+        } catch (IOException e) {
+            // don't care
+        }
     }
 
     public synchronized Pair<String,String> getCredentials() {
@@ -42,15 +65,15 @@ public class LoginForm {
     public synchronized void showForm() {
         if (!visible) {
             visible = true;
-            username = new JTextField(props.getProperty("username", ""));
-            password = new JPasswordField(props.getProperty("password", ""));
 
-            JButton button = new JButton();
-            button.setDefaultCapable(true);
-            button.setAction(new AbstractAction() {
+            Action login = new AbstractAction() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    credentials = new Pair<String,String>(username.getText(), new String(password.getPassword()));
+                    String username = LoginForm.this.username.getText();
+                    String password = new String(LoginForm.this.password.getPassword());
+                    props.put("jca.username", username);
+                    props.put("jca.password", password);
+                    credentials = new Pair<String, String>(username, password);
                     frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
                     frame.dispose();
                     visible = false;
@@ -59,7 +82,16 @@ public class LoginForm {
                         LoginForm.this.notifyAll();
                     }
                 }
-            });
+            };
+
+            username = new JTextField(props.getProperty("jca.username", ""));
+            password = new JPasswordField(props.getProperty("jca.password", ""));
+
+            JButton button = new JButton();
+            button.setDefaultCapable(true);
+            button.setAction(login);
+            button.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), "LOGIN");
+            button.getActionMap().put("LOGIN", login);
             button.setText("Login");
 
             JLabel label1 = new JLabel("Username:");
@@ -86,11 +118,20 @@ public class LoginForm {
             password.setSize(130,30);
             button.setLocation(150,80);
             button.setSize(80,30);
+
+            if (username.getText().length() == 0) {
+                username.requestFocus();
+            } else if (password.getPassword().length == 0) {
+                password.requestFocus();
+            } else {
+                button.requestFocus();
+            }
         }
     }
 
     public static void main(String[] args) {
-        LoginForm loginForm = new LoginForm(new Properties());
+        LoginForm loginForm = new LoginForm();
         System.out.println(loginForm.getCredentials());
+        loginForm.rememberCredentials();
     }
 }

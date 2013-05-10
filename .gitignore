@@ -1,5 +1,6 @@
 *.class
 out
+jca.credentials.properties
 
 # Package Files #
 *.war
