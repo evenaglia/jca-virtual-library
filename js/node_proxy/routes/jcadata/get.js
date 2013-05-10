@@ -1,10 +1,18 @@
 var FS = require('fs'),
     q = require('q'),
     url = require('url'),
+    util = require('./util'),
     jca_data = require('./jca_data');
 
 
 exports.handler = function (req, res) {
+
+    if ( !util.validateSecret(req) ) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end('Invalid authorization');
+        return;
+    }
+
     var reqUrl = req.url;
     var url_parts = url.parse(reqUrl, true);
     var query = url_parts.query;
