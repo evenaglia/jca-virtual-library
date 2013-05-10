@@ -2,6 +2,7 @@ package com.jivesoftware.jcalibrary.structures;
 
 import com.jivesoftware.jcalibrary.api.rest.CustomerInfo;
 import com.jivesoftware.jcalibrary.api.rest.CustomerInstallation;
+import com.jivesoftware.jcalibrary.api.rest.InstallationPageViewBean;
 import com.jivesoftware.jcalibrary.objects.Objects;
 import net.venaglia.realms.common.physical.decorators.Color;
 import net.venaglia.realms.common.projection.GeometryBuffer;
@@ -17,6 +18,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * Time: 5:22 PM
  */
 public class JiveInstance implements Projectable {
+
+    public InstallationPageViewBean getInstallationPageViewBean() {
+        return installationPageViewBean;
+    }
+
+    public void setInstallationPageViewBean(InstallationPageViewBean installationPageViewBean) {
+        this.installationPageViewBean = installationPageViewBean;
+    }
 
     public enum Grouping {
         Production(Color.GREEN),
@@ -97,6 +106,9 @@ public class JiveInstance implements Projectable {
     protected long customerInstallationId;
     private CustomerInfo customer;
     private CustomerInstallation installation;
+    private InstallationPageViewBean installationPageViewBean = new InstallationPageViewBean();
+
+
     private Map<String,NodeDetails> nodeDetails = new ConcurrentHashMap<String,NodeDetails>();
 
     public CustomerInfo getCustomer() {
