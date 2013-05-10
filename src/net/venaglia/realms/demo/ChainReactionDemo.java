@@ -1,24 +1,19 @@
 package net.venaglia.realms.demo;
 
-import com.apple.eawt.Application;
 import net.venaglia.realms.common.physical.bounds.BoundingBox;
 import net.venaglia.realms.common.physical.bounds.BoundingSphere;
 import net.venaglia.realms.common.physical.decorators.Color;
 import net.venaglia.realms.common.physical.decorators.Material;
 import net.venaglia.realms.common.physical.geom.Axis;
-import net.venaglia.realms.common.physical.geom.detail.DetailLevel;
 import net.venaglia.realms.common.physical.geom.Point;
 import net.venaglia.realms.common.physical.geom.Vector;
 import net.venaglia.realms.common.physical.geom.complex.Origin;
-import net.venaglia.realms.common.physical.geom.primitives.*;
+import net.venaglia.realms.common.physical.geom.detail.DetailLevel;
 import net.venaglia.realms.common.physical.geom.primitives.Box;
+import net.venaglia.realms.common.physical.geom.primitives.Sphere;
 import net.venaglia.realms.common.physical.lights.FixedPointSourceLight;
 import net.venaglia.realms.common.physical.lights.Light;
-import net.venaglia.realms.common.projection.Camera;
-import net.venaglia.realms.common.projection.DisplayList;
-import net.venaglia.realms.common.projection.GeometryBuffer;
-import net.venaglia.realms.common.projection.Projectable;
-import net.venaglia.realms.common.projection.ProjectionBuffer;
+import net.venaglia.realms.common.projection.*;
 import net.venaglia.realms.common.projection.impl.DisplayListBuffer;
 import net.venaglia.realms.common.util.SpatialMap;
 import net.venaglia.realms.common.util.impl.OctreeMap;
@@ -35,11 +30,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -237,8 +228,6 @@ public class ChainReactionDemo implements View3DMainLoop, ViewEventHandler {
 
     public void start() {
         View3D view3D = new View3D(new Dimension(1024,768));
-        Application application = Application.getApplication();
-        application.setDockIconImage(loadAppIcon());
         camera = new Camera();
         camera.setPosition(new Point(15.0, -100.0, 35.0));
         camera.setDirection(new Vector(-15.0, 100, -35.0));

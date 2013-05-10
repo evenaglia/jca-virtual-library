@@ -1,6 +1,5 @@
 package net.venaglia.realms.demo;
 
-import com.apple.eawt.Application;
 import net.venaglia.realms.common.physical.bounds.BoundingVolume;
 import net.venaglia.realms.common.physical.decorators.Brush;
 import net.venaglia.realms.common.physical.geom.Point;
@@ -10,11 +9,7 @@ import net.venaglia.realms.common.physical.lights.Light;
 import net.venaglia.realms.common.projection.Camera;
 import net.venaglia.realms.common.projection.GeometryBuffer;
 import net.venaglia.realms.common.projection.ProjectionBuffer;
-import net.venaglia.realms.common.view.KeyHandler;
-import net.venaglia.realms.common.view.MouseTargets;
-import net.venaglia.realms.common.view.View3D;
-import net.venaglia.realms.common.view.View3DMainLoop;
-import net.venaglia.realms.common.view.ViewEventHandler;
+import net.venaglia.realms.common.view.*;
 import org.lwjgl.util.Dimension;
 
 import java.awt.*;
@@ -40,8 +35,6 @@ public abstract class AbstractDemo implements View3DMainLoop, ViewEventHandler {
 
         Image image = loadAppIcon();
         if (image != null) {
-            Application application = Application.getApplication();
-            application.setDockIconImage(image);
         }
 
         camera = new Camera();

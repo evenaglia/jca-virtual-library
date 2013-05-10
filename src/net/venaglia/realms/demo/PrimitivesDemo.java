@@ -1,29 +1,22 @@
 package net.venaglia.realms.demo;
 
-import com.apple.eawt.Application;
 import net.venaglia.realms.common.physical.decorators.Brush;
 import net.venaglia.realms.common.physical.decorators.Color;
 import net.venaglia.realms.common.physical.decorators.Material;
+import net.venaglia.realms.common.physical.geom.Point;
 import net.venaglia.realms.common.physical.geom.Shape;
 import net.venaglia.realms.common.physical.geom.Vector;
-import net.venaglia.realms.common.physical.geom.Point;
 import net.venaglia.realms.common.physical.lights.FixedPointSourceLight;
 import net.venaglia.realms.common.physical.lights.Light;
 import net.venaglia.realms.common.projection.Camera;
 import net.venaglia.realms.common.projection.GeometryBuffer;
 import net.venaglia.realms.common.projection.ProjectionBuffer;
 import net.venaglia.realms.common.util.CallLogger;
-import net.venaglia.realms.common.view.KeyHandler;
-import net.venaglia.realms.common.view.MouseTarget;
-import net.venaglia.realms.common.view.MouseTargetEventListener;
-import net.venaglia.realms.common.view.MouseTargets;
-import net.venaglia.realms.common.view.View3D;
-import net.venaglia.realms.common.view.View3DMainLoop;
-import net.venaglia.realms.common.view.ViewEventHandler;
+import net.venaglia.realms.common.view.*;
 import org.lwjgl.util.Dimension;
 
 import javax.swing.*;
-import java.awt.Image;
+import java.awt.*;
 import java.net.URL;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -42,9 +35,6 @@ public class PrimitivesDemo {
         final AtomicReference<Shape<?>> highlightObject = new AtomicReference<Shape<?>>();
         view3D.setTitle("Primitives Demo");
         view3D.registerKeyHandlers(KeyHandler.EXIT_JVM_ON_ESCAPE);
-
-        Application application = Application.getApplication();
-        application.setDockIconImage(loadAppIcon());
 
         final DemoObjects objects = new DemoObjects(timescale, divisionCount, objectCategory, wireFrame);
 

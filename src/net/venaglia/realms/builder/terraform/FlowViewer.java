@@ -1,9 +1,9 @@
 package net.venaglia.realms.builder.terraform;
 
-import com.apple.eawt.Application;
 import net.venaglia.realms.common.physical.bounds.BoundingSphere;
-import net.venaglia.realms.common.physical.decorators.*;
-import net.venaglia.realms.common.physical.geom.*;
+import net.venaglia.realms.common.physical.decorators.Brush;
+import net.venaglia.realms.common.physical.geom.Point;
+import net.venaglia.realms.common.physical.geom.Vector;
 import net.venaglia.realms.common.physical.geom.complex.GeodesicSphere;
 import net.venaglia.realms.common.physical.geom.detail.DetailLevel;
 import net.venaglia.realms.common.physical.geom.primitives.Sphere;
@@ -20,7 +20,7 @@ import net.venaglia.realms.common.view.View3DMainLoop;
 import net.venaglia.realms.common.view.ViewEventHandler;
 
 import javax.swing.*;
-import java.awt.Image;
+import java.awt.*;
 import java.net.URL;
 
 /**
@@ -135,8 +135,6 @@ public class FlowViewer implements View3DMainLoop, ViewEventHandler {
     }
 
     public static void main(String[] args) {
-        Application application = Application.getApplication();
-        application.setDockIconImage(loadAppIcon());
         FlowSimulator flowSimulator =
 //                new FlowSimulator(10,280,500,10.0);
                 new FlowSimulator(25,1000,240,12.0);

@@ -1,12 +1,10 @@
 package net.venaglia.realms.common.util;
 
-import com.sun.source.tree.ModifiersTree;
-
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.ConcurrentModificationException;
 
 /**
  * Performs a 100% code coverage unit test of RangeBasedIntegerSet. :)
