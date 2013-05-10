@@ -1,5 +1,6 @@
 package com.jivesoftware.jcalibrary.api;
 
+import com.jivesoftware.jcalibrary.JiveInstancesRegistry;
 import com.jivesoftware.jcalibrary.api.rest.CustomerInstallationResponse;
 import com.jivesoftware.jcalibrary.api.rest.manager.RestClientManager;
 import com.jivesoftware.jcalibrary.structures.JiveInstance;
