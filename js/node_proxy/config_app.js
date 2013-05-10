@@ -20,5 +20,5 @@ exports.do_config = function(app) {
 }
 
 exports.start_app = function(app) {
-    app.listen(options["port"]);
+    app.listen(options["port"] || process.env['port']);
 }
