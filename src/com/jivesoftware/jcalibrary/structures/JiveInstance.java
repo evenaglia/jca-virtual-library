@@ -13,9 +13,11 @@ import net.venaglia.realms.common.view.MouseTarget;
 public class JiveInstance extends AbstractLibraryElement<JiveInstance> {
 
     public enum Grouping {
-        grouping1,
-        grouping2,
-        grouping3
+        Standard,
+        UAT,
+        Production,
+        Test,
+        Thunder
     }
 
     /**
