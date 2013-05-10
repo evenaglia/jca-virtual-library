@@ -52,6 +52,13 @@
       <JAVADOC />
       <SOURCES />
     </library>
+    <library name="json">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/runtime/json/json-20090211.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
     <library name="kryo">
       <CLASSES>
         <root url="jar://$PROJECT_DIR$/lib/runtime/kryo-2.20-all.jar!/" />

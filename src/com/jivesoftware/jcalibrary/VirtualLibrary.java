@@ -252,6 +252,7 @@ public class VirtualLibrary {
     }
 
     public static void main(String[] args) {
+//        LibraryProps.INSTANCE.getJCACredentials();
         new VirtualLibrary();
     }
 }

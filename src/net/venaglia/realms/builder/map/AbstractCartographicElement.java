@@ -236,7 +236,7 @@ public abstract class AbstractCartographicElement implements GeoPointBasedElemen
 
     public <G extends AbstractCartographicElement> G findByID(long id) {
         if (this.id == id) {
-            return unsafe(this);
+            return AbstractCartographicElement.<G>unsafe(this);
         }
         if (this.id != 0 && ((this.id & mask) != (id & mask) || (this.id & 0xFFFE000000000000L) != 0L)) {
             return null; // not in this element
@@ -244,7 +244,7 @@ public abstract class AbstractCartographicElement implements GeoPointBasedElemen
         if ((id & ACRE_BIT) == ACRE_BIT) {
             long sectorId1 = id & 0xFFFF00000000L;
             long sectorId2 = (id & 0xFFFF0000L) << 16;
-            return unsafe(findAcreByID((sectorId1 & 0xF80000000000L),
+            return AbstractCartographicElement.<G>unsafe(findAcreByID((sectorId1 & 0xF80000000000L),
                           sectorId1,
                           (sectorId2 & 0xF80000000000L),
                           sectorId2,
@@ -252,12 +252,12 @@ public abstract class AbstractCartographicElement implements GeoPointBasedElemen
         }
         if ((id & 0xFFL) == 0) {
             if ((id & 0x7FF00000000L) == 0) {
-                return unsafe(findGlobalSectorById(id));
+                return AbstractCartographicElement.<G>unsafe(findGlobalSectorById(id));
             } else {
-                return unsafe(findSectorById((id & 0xFFFF00000000L), id));
+                return AbstractCartographicElement.<G>unsafe(findSectorById((id & 0xFFFF00000000L), id));
             }
         } else {
-            return unsafe(findTriangleById((id & 0xF80000000000L), (id & 0xFFFF00000000L), id));
+            return AbstractCartographicElement.<G>unsafe(findTriangleById((id & 0xF80000000000L), (id & 0xFFFF00000000L), id));
         }
     }
 
