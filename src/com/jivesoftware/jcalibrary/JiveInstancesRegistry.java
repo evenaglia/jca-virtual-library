@@ -3,6 +3,7 @@ package com.jivesoftware.jcalibrary;
 import com.jivesoftware.jcalibrary.structures.JiveInstance;
 import com.jivesoftware.jcalibrary.structures.ServerRack;
 import com.jivesoftware.jcalibrary.structures.ServerSlot;
+import com.jivesoftware.jcalibrary.structures.SlotTransformation;
 
 import java.util.Collections;
 import java.util.Map;
@@ -99,11 +100,13 @@ public class JiveInstancesRegistry {
         }
         if (existingSlottedInstance != null) {
             // We need to return this existing slotted JiveInstance to the pool of available
+            existingSlottedInstance.setSlotTransformation(null);
             availableInstances.add(existingSlottedInstance);
         }
         // Mark that the newly slotted instance is no longer unslotted
         availableInstances.remove(jiveInstance);
         // Put ths new JiveInstance in the slot
+        jiveInstance.setSlotTransformation(new SlotTransformation(serverSlot));
         serverSlot.setJiveInstance(jiveInstance);
     }
 

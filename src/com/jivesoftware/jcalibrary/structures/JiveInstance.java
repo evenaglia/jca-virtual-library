@@ -63,11 +63,24 @@ public class JiveInstance extends AbstractLibraryElement<JiveInstance> {
     /**
      * ************************ GRAPHIC** *******************************************************
      */
-    private Transformation transformation = new Transformation();
+    private SlotTransformation slotTransformation = null;
+
+    public SlotTransformation getSlotTransformation() {
+        return slotTransformation;
+    }
+
+    public void setSlotTransformation(SlotTransformation slotTransformation) {
+        this.slotTransformation = slotTransformation;
+    }
 
     @Override
     protected void projectImpl(long nowMS, GeometryBuffer buffer) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        if (slotTransformation != null) {
+            buffer.pushTransform();
+            slotTransformation.apply(nowMS, buffer);
+            // todo: render the box, and all the components inside it
+            buffer.popTransform();
+        }
     }
 
     @Override

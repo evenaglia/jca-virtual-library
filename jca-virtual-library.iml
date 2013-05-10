@@ -13,6 +13,13 @@
     <orderEntry type="library" name="kryo" level="project" />
     <orderEntry type="library" name="apache" level="project" />
     <orderEntry type="library" name="json" level="project" />
+    <orderEntry type="library" name="cxf-2.6.7" level="project" />
+    <orderEntry type="library" name="jsr311-api-1.1.1" level="project" />
+    <orderEntry type="library" name="commons-io-2.4" level="project" />
+    <orderEntry type="library" name="jackson-mapper-asl-1.9.12" level="project" />
+    <orderEntry type="library" name="jackson-core-asl-1.9.12" level="project" />
+    <orderEntry type="library" name="neethi-3.0.1" level="project" />
+    <orderEntry type="library" name="wsdl4j-1.6.3" level="project" />
   </component>
 </module>
 
