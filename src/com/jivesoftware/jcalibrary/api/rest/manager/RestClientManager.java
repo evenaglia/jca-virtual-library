@@ -30,6 +30,9 @@ public class RestClientManager {
     public Response get(String endpoint, String queryName, String queryValue) {
         // timeout default is 30 seconds
         WebClient webClient = getWebClient();
+        HTTPConduit conduit = WebClient.getConfig(webClient).getHttpConduit();
+        conduit.getClient().setReceiveTimeout(300000);
+        conduit.getClient().setConnectionTimeout(300000);
         webClient.path(endpoint);
         if (null != queryName && null != queryValue) {
             webClient.query(queryName, queryValue);
