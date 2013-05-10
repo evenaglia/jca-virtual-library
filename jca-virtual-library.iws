@@ -2,18 +2,20 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="eb432b89-1681-45ab-9f67-afe2eedc073b" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/js/node_proxy/app.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/js/node_proxy/config.json" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/js/node_proxy/config_app.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/js/node_proxy/routes/jcadata/get.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/js/node_proxy/package.json" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/js/sample.json" afterPath="$PROJECT_DIR$/js/node_proxy/data/sample.json" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/lib/runtime/apache/commons-codec-1.6.jar" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/lib/runtime/apache/commons-logging-1.1.1.jar" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/lib/runtime/apache/httpclient-4.2.5.jar" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/lib/runtime/apache/httpcore-4.2.4.jar" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/lib/runtime/apache/httpmime-4.2.5.jar" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/LibraryProps.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/jcavl.properties" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/VirtualLibrary.java" afterPath="$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/VirtualLibrary.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/jca-virtual-library.iws" afterPath="$PROJECT_DIR$/jca-virtual-library.iws" />
     </list>
     <ignored path="jca-virtual-library.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/Dummy.txt" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368198591776" ignored="false" />
-    <file path="/fragment.java" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368199846391" ignored="false" />
+    <file path="/Dummy.txt" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368204624901" ignored="false" />
+    <file path="/fragment.java" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368203677953" ignored="false" />
     <file path="/sample.json" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368146811615" ignored="false" />
     <file path="/HttpUtil.java" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368165311573" ignored="false" />
     <file path="/scheduler.java" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368166173813" ignored="false" />
@@ -22,6 +24,9 @@
     <file path="/app.js" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368199414508" ignored="false" />
     <file path="/config.json" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368199075105" ignored="false" />
     <file path="/config_app.js" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368199324969" ignored="false" />
+    <file path="/LibraryProps.java" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368203416263" ignored="false" />
+    <file path="/VirtualLibrary.java" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368204572647" ignored="false" />
+    <file path="/jcavl.properties" changelist="eb432b89-1681-45ab-9f67-afe2eedc073b" time="1368203405062" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -82,6 +87,15 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
+      <file leaf-file-name="VirtualLibrary.java" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/VirtualLibrary.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="221" column="13" selection-start="9875" selection-end="9875" vertical-scroll-proportion="0.50647247">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="UserNavigation.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/net/venaglia/realms/common/navigation/UserNavigation.java">
           <provider selected="true" editor-type-id="text-editor">
@@ -91,73 +105,55 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Server.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/structures/Server.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="26" column="0" selection-start="830" selection-end="830" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="sample.json" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/js/node_proxy/data/sample.json">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="6" column="29" selection-start="158" selection-end="159" vertical-scroll-proportion="-3.84">
+            <state line="7" column="20" selection-start="180" selection-end="180" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="app.js" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/js/node_proxy/app.js">
+      <file leaf-file-name="ServerRack.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/structures/ServerRack.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="1" column="33" selection-start="34" selection-end="34" vertical-scroll-proportion="0.023529412">
+            <state line="22" column="13" selection-start="949" selection-end="949" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="package.json" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/js/node_proxy/package.json">
+      <file leaf-file-name="ServerSlot.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/structures/ServerSlot.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="14" column="25" selection-start="385" selection-end="385" vertical-scroll-proportion="-8.96">
+            <state line="22" column="0" selection-start="832" selection-end="832" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="config_app.js" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/js/node_proxy/config_app.js">
+      <file leaf-file-name="jcavl.properties" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/jcavl.properties">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="23" column="1" selection-start="519" selection-end="519" vertical-scroll-proportion="0.0">
+            <state line="3" column="0" selection-start="173" selection-end="173" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="config.json" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/js/node_proxy/config.json">
+      <file leaf-file-name="JiveInstance.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/structures/JiveInstance.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="0" column="1" selection-start="1" selection-end="1" vertical-scroll-proportion="-0.0">
+            <state line="12" column="22" selection-start="376" selection-end="376" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="get.js" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/js/node_proxy/routes/jcadata/get.js">
+      <file leaf-file-name="LibraryProps.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/LibraryProps.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="9" column="24" selection-start="244" selection-end="244" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="WorkScheduler.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/scheduler/WorkScheduler.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="80" column="0" selection-start="2781" selection-end="2781" vertical-scroll-proportion="0.0">
+            <state line="27" column="5" selection-start="670" selection-end="670" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -191,13 +187,16 @@
         <option value="$PROJECT_DIR$/js/node_proxy/app.js" />
         <option value="$PROJECT_DIR$/js/node_proxy/config_app.js" />
         <option value="$PROJECT_DIR$/js/node_proxy/routes/jcadata/get.js" />
+        <option value="$PROJECT_DIR$/jcavl.properties" />
+        <option value="$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/LibraryProps.java" />
+        <option value="$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/VirtualLibrary.java" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="1920" />
+    <option name="y" value="22" />
     <option name="width" value="1920" />
-    <option name="height" value="1200" />
+    <option name="height" value="1058" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -247,6 +246,8 @@
       <sortByType />
     </navigator>
     <panes>
+      <pane id="Scope" />
+      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -289,37 +290,11 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="js" />
+              <option name="myItemId" value="src" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="node_proxy" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="jca-virtual-library" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="jca-virtual-library" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="js" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="node_proxy" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="routes" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="jcadata" />
+              <option name="myItemId" value="jcalibrary" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -333,22 +308,118 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="js" />
+              <option name="myItemId" value="src" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="node_proxy" />
+              <option name="myItemId" value="jcalibrary" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="data" />
+              <option name="myItemId" value="structures" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jca-virtual-library" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jca-virtual-library" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jcalibrary" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="scheduler" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jca-virtual-library" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jca-virtual-library" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jcalibrary" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="objects" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jca-virtual-library" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jca-virtual-library" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="lib" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jca-virtual-library" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jca-virtual-library" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="lib" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="runtime" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jca-virtual-library" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="jca-virtual-library" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="lib" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="runtime" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="apache" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
         </subPane>
       </pane>
-      <pane id="PackagesPane" />
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -364,8 +435,8 @@
     <property name="GoToClass.toSaveIncludeLibraries" value="false" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="restartRequiresConfirmation" value="true" />
-    <property name="MemberChooser.showClasses" value="true" />
     <property name="FullScreen" value="false" />
+    <property name="MemberChooser.showClasses" value="true" />
     <property name="GoToClass.includeLibraries" value="false" />
     <property name="dynamic.classpath" value="false" />
   </component>
@@ -380,16 +451,39 @@
       <recent name="com.jivesoftware.jcalibrary.scheduler" />
     </key>
   </component>
-  <component name="RunManager" selected="Node.js.run_node_proxy">
+  <component name="RunManager" selected="Application.GlyphIdentifier">
+    <configuration default="false" name="GlyphIdentifier" type="Application" factoryName="Application" temporary="true">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
+        <pattern>
+          <option name="PATTERN" value="com.jivesoftware.jcalibrary.objects.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="MAIN_CLASS_NAME" value="com.jivesoftware.jcalibrary.objects.GlyphIdentifier" />
+      <option name="VM_PARAMETERS" value="-Djava.library.path=lib/native/macosx -ea -Xmx2G" />
+      <option name="PROGRAM_PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" value="" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="jca-virtual-library" />
+      <envs />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="" />
+        <option name="TRANSPORT" value="0" />
+        <option name="LOCAL" value="true" />
+      </RunnerSettings>
+      <ConfigurationWrapper RunnerId="Debug" />
+      <method />
+    </configuration>
     <configuration default="true" type="Remote" factoryName="Remote">
       <option name="USE_SOCKET_TRANSPORT" value="true" />
       <option name="SERVER_MODE" value="false" />
       <option name="SHMEM_ADDRESS" value="javadebug" />
       <option name="HOST" value="localhost" />
       <option name="PORT" value="5005" />
-      <method />
-    </configuration>
-    <configuration default="true" type="NodeJSConfigurationType" factoryName="Node.js" working-dir="$PROJECT_DIR$">
       <method />
     </configuration>
     <configuration default="true" type="Applet" factoryName="Applet">
@@ -405,14 +499,17 @@
       <option name="ALTERNATIVE_JRE_PATH" />
       <method />
     </configuration>
+    <configuration default="true" type="NodeJSConfigurationType" factoryName="Node.js" working-dir="$PROJECT_DIR$">
+      <method />
+    </configuration>
     <configuration default="true" type="Application" factoryName="Application">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
-      <option name="MAIN_CLASS_NAME" />
-      <option name="VM_PARAMETERS" />
-      <option name="PROGRAM_PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="MAIN_CLASS_NAME" value="" />
+      <option name="VM_PARAMETERS" value="-Djava.library.path=lib/native/macosx -ea -Xmx2G" />
+      <option name="PROGRAM_PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ALTERNATIVE_JRE_PATH" value="" />
       <option name="ENABLE_SWING_INSPECTOR" value="false" />
       <option name="ENV_VARIABLES" />
       <option name="PASS_PARENT_ENVS" value="true" />
@@ -482,11 +579,17 @@
       <ConfigurationWrapper RunnerId="NodeJS.run" />
       <method />
     </configuration>
-    <list size="3">
+    <list size="4">
       <item index="0" class="java.lang.String" itemvalue="Application.VirtualLibrary - OS X" />
       <item index="1" class="java.lang.String" itemvalue="Application.VirtualLibrary - Linux" />
       <item index="2" class="java.lang.String" itemvalue="Node.js.run_node_proxy" />
+      <item index="3" class="java.lang.String" itemvalue="Application.GlyphIdentifier" />
     </list>
+    <recent_temporary>
+      <list size="1">
+        <item index="0" class="java.lang.String" itemvalue="Application.GlyphIdentifier" />
+      </list>
+    </recent_temporary>
     <configuration name="&lt;template&gt;" type="TestNG" default="true" selected="false">
       <option name="MAIN_CLASS_NAME" />
       <option name="VM_PARAMETERS" value="-ea" />
@@ -500,28 +603,28 @@
   </component>
   <component name="ShelveChangesManager" show_recycled="false" />
   <component name="ToolWindowManager">
-    <frame x="1920" y="0" width="1920" height="1200" extended-state="6" />
-    <editor active="true" />
+    <frame x="0" y="22" width="1920" height="1058" extended-state="0" />
+    <editor active="false" />
     <layout>
-      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32922202" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32917964" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39756593" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.2497332" sideWeight="0.670778" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39958376" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32922202" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.2497332" sideWeight="0.67082036" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3286004" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32917964" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
     </layout>
@@ -592,97 +695,9 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/net/venaglia/realms/common/navigation/UserNavigation.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="104" column="13" selection-start="4774" selection-end="4774" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/structures/Server.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="26" column="0" selection-start="830" selection-end="830" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/js/node_proxy/data/sample.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="54" column="0" selection-start="1399" selection-end="1399" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/scheduler/WorkScheduler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="80" column="0" selection-start="2781" selection-end="2781" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/structures/Server.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="4" column="54" selection-start="240" selection-end="240" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/net/venaglia/realms/common/map/WorldMap.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="2" column="32" selection-start="73" selection-end="73" vertical-scroll-proportion="0.048701297" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/net/venaglia/realms/demo/invaders/Sprite.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="35" column="30" selection-start="1643" selection-end="1643" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/structures/Server.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="26" column="0" selection-start="830" selection-end="830" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/net/venaglia/realms/common/view/View3D.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="278" column="0" selection-start="9992" selection-end="9992" vertical-scroll-proportion="0.01604278" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/net/venaglia/realms/common/navigation/UserNavigation.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="104" column="13" selection-start="4774" selection-end="4774" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/net/venaglia/realms/common/util/work/WorkHandler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="21" column="13" selection-start="613" selection-end="613" vertical-scroll-proportion="0.33262032" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/net/venaglia/realms/common/util/work/WorkManager.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="21" column="13" selection-start="596" selection-end="596" vertical-scroll-proportion="-0.79037434" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/scheduler/WorkScheduler.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="80" column="0" selection-start="2781" selection-end="2781" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/js/node_proxy/data/sample.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="6" column="29" selection-start="158" selection-end="159" vertical-scroll-proportion="-3.84">
-          <folding />
-        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/js/node_proxy/config.json">
@@ -694,7 +709,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/js/node_proxy/package.json">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="14" column="25" selection-start="385" selection-end="385" vertical-scroll-proportion="-8.96">
+        <state line="14" column="25" selection-start="385" selection-end="385" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
@@ -706,16 +721,86 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/js/node_proxy/routes/jcadata/get.js">
+    <entry file="file://$PROJECT_DIR$/js/node_proxy/app.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="9" column="24" selection-start="244" selection-end="244" vertical-scroll-proportion="0.0">
+        <state line="12" column="0" selection-start="158" selection-end="158" vertical-scroll-proportion="0.29126215">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/js/node_proxy/app.js">
+    <entry file="file://$PROJECT_DIR$/js/node_proxy/routes/jcadata/get.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="1" column="33" selection-start="34" selection-end="34" vertical-scroll-proportion="0.023529412">
+        <state line="9" column="24" selection-start="244" selection-end="244" vertical-scroll-proportion="0.2184466">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/js/node_proxy/data/sample.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="7" column="20" selection-start="180" selection-end="180" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/structures/ServerRack.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="22" column="13" selection-start="949" selection-end="949" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/structures/ServerSlot.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="22" column="0" selection-start="832" selection-end="832" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/scheduler/WorkScheduler.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="76" column="54" selection-start="2641" selection-end="2649" vertical-scroll-proportion="0.72727275">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/structures/JiveInstance.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="12" column="22" selection-start="376" selection-end="376" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/LibraryProps.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="27" column="5" selection-start="670" selection-end="670" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/objects/GlyphTextureImageSource.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="40" column="0" selection-start="2942" selection-end="2942" vertical-scroll-proportion="0.7305503">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/objects/GlyphIdentifier.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="25" column="13" selection-start="993" selection-end="993" vertical-scroll-proportion="-2.3945456">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/jcavl.properties">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="3" column="0" selection-start="173" selection-end="173" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/jivesoftware/jcalibrary/VirtualLibrary.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="221" column="13" selection-start="9875" selection-end="9875" vertical-scroll-proportion="0.50647247">
           <folding />
         </state>
       </provider>
