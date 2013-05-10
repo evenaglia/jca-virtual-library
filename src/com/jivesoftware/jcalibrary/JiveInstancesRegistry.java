@@ -1,4 +1,8 @@
-package com.jivesoftware.jcalibrary.structures;
+package com.jivesoftware.jcalibrary;
+
+import com.jivesoftware.jcalibrary.structures.JiveInstance;
+import com.jivesoftware.jcalibrary.structures.ServerRack;
+import com.jivesoftware.jcalibrary.structures.ServerSlot;
 
 import java.util.Collections;
 import java.util.Map;
@@ -14,7 +18,7 @@ public class JiveInstancesRegistry {
     // Create and keep track of single instance of this class
     private static JiveInstancesRegistry instance = new JiveInstancesRegistry();
 
-
+    protected VirtualLibrary virtualLibrary;
     protected Map<Long, JiveInstance> instances = new ConcurrentHashMap<Long, JiveInstance>();
     protected Set<JiveInstance> availableInstances = new CopyOnWriteArraySet<JiveInstance>();
 
@@ -22,8 +26,12 @@ public class JiveInstancesRegistry {
         super();
     }
 
-    public JiveInstancesRegistry getInstance() {
+    public static JiveInstancesRegistry getInstance() {
         return instance;
+    }
+
+    public void init(VirtualLibrary virtualLibrary) {
+        this.virtualLibrary = virtualLibrary;
     }
 
     /**
@@ -37,21 +45,36 @@ public class JiveInstancesRegistry {
     }
 
     /**
-     * Adds a new instance to the registry. If this instance was already in the registry
-     * then this is a no op.
+     * Adds a new instance to the registry. Newly added instances will also be set in a {@link com.jivesoftware.jcalibrary.structures.ServerSlot}. If
+     * no more slots are available then the instance will be left un-slotted. If this instance was already
+     * in the registry then this is a no op.
      *
-     * @param jiveInstance
+     * @param jiveInstance  the JiveInstance to add to the registry.
      */
     public void addJiveInstance(JiveInstance jiveInstance) {
         JiveInstance existing = instances.put(jiveInstance.getCustomerInstallationId(), jiveInstance);
         if (existing == null) {
-            // This is a real new instance
-            availableInstances.add(jiveInstance);
+            // This is a real new instance so lets find a slot for this instance
+            ServerSlot serverSlot = null;
+            // Lets first find the proper rack
+            for (ServerRack serverRack : virtualLibrary.getServerRacks()) {
+                // TODO Find by rack category
+                // Now lets find the first available slot
+                serverSlot = serverRack.getFirstAvailableSlot();
+                if (serverSlot != null) {
+                    addJiveInstanceTo(jiveInstance, serverSlot);
+                    break;
+                }
+            }
+            if (serverSlot == null) {
+                // No slots were available so let this instance un-slotted
+                availableInstances.add(jiveInstance);
+            }
         }
     }
 
     /**
-     * Returns the {@link JiveInstance}s that have not been added to any {@link ServerSlot}.
+     * Returns the {@link JiveInstance}s that have not been added to any {@link com.jivesoftware.jcalibrary.structures.ServerSlot}.
      * <i>Note: Any attempt to modify the returned collection will result in an error</i>
      *
      * @return JiveInstances that have not been added to any ServerSlot.
@@ -61,7 +84,7 @@ public class JiveInstancesRegistry {
     }
 
     /**
-     * Sets the specified {@link JiveInstance} into the requested {@link ServerSlot}. If the slot
+     * Sets the specified {@link JiveInstance} into the requested {@link com.jivesoftware.jcalibrary.structures.ServerSlot}. If the slot
      * already had a JiveInstance then this instance will be removed from the slot and returned to
      * the list of unslotted instances.
      *

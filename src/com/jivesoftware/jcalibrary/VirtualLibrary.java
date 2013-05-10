@@ -5,6 +5,7 @@ import com.jivesoftware.jcalibrary.objects.Objects;
 import com.jivesoftware.jcalibrary.structures.ServerRack;
 import com.jivesoftware.jcalibrary.structures.ServerSlot;
 import net.venaglia.realms.common.navigation.Position;
+import net.venaglia.realms.common.navigation.UserNavigation;
 import net.venaglia.realms.common.physical.bounds.BoundingSphere;
 import net.venaglia.realms.common.physical.decorators.Brush;
 import net.venaglia.realms.common.physical.decorators.Color;
@@ -21,14 +22,7 @@ import net.venaglia.realms.common.physical.lights.Light;
 import net.venaglia.realms.common.projection.Camera;
 import net.venaglia.realms.common.projection.GeometryBuffer;
 import net.venaglia.realms.common.projection.ProjectionBuffer;
-import net.venaglia.realms.common.view.KeyboardManager;
-import net.venaglia.realms.common.view.MouseTarget;
-import net.venaglia.realms.common.view.MouseTargetEventListener;
-import net.venaglia.realms.common.view.MouseTargets;
-import net.venaglia.realms.common.navigation.UserNavigation;
-import net.venaglia.realms.common.view.View3D;
-import net.venaglia.realms.common.view.View3DMainLoop;
-import net.venaglia.realms.common.view.ViewEventHandler;
+import net.venaglia.realms.common.view.*;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.Dimension;
 
@@ -231,7 +225,12 @@ public class VirtualLibrary {
         });
         view.setCamera(camera);
         view.setDefaultBrush(Brush.TEXTURED);
+        JiveInstancesRegistry.getInstance().init(this);
         view.start();
+    }
+
+    public ServerRack[] getServerRacks() {
+        return serverRacks;
     }
 
     private ServerRack[] buildServerRacks(MouseTargetEventListener<ServerSlot> eventListener) {

@@ -4,9 +4,7 @@ import com.jivesoftware.jcalibrary.objects.AbstractLibraryElement;
 import com.jivesoftware.jcalibrary.objects.Objects;
 import com.jivesoftware.jcalibrary.objects.ServerRackSource;
 import net.venaglia.realms.common.physical.decorators.Material;
-import net.venaglia.realms.common.physical.decorators.Transformation;
 import net.venaglia.realms.common.physical.geom.Axis;
-import net.venaglia.realms.common.physical.geom.Shape;
 import net.venaglia.realms.common.physical.geom.Vector;
 import net.venaglia.realms.common.physical.geom.primitives.Box;
 import net.venaglia.realms.common.projection.GeometryBuffer;
@@ -52,6 +50,15 @@ public class ServerRack extends AbstractLibraryElement<ServerRack> {
                 children.add(new MouseTarget<ServerSlot>(mouseTarget, eventListener, serverSlot));
             }
         }
+    }
+
+    public ServerSlot getFirstAvailableSlot() {
+        for (ServerSlot serverSlot : slots) {
+            if (serverSlot.getJiveInstance() == null) {
+                return serverSlot;
+            }
+        }
+        return null;
     }
 
     public int getSeq() {
