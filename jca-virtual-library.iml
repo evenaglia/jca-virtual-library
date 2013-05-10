@@ -12,6 +12,7 @@
     <orderEntry type="library" name="lwjgl" level="project" />
     <orderEntry type="library" name="kryo" level="project" />
     <orderEntry type="library" name="apache" level="project" />
+    <orderEntry type="library" name="json" level="project" />
   </component>
 </module>
 
