@@ -22,7 +22,7 @@ public class ServerSlot extends AbstractLibraryElement<ServerSlot> {
     private final MouseTargetEventListener<ServerSlot> delegateListener;
 
     private boolean hover;
-    private Server server;
+    private JiveInstance jiveInstance;
 
     public ServerSlot(ServerRack serverRack, Box bounds, MouseTargetEventListener<ServerSlot> listener, int seq) {
         this.serverRack = serverRack;
@@ -69,12 +69,12 @@ public class ServerSlot extends AbstractLibraryElement<ServerSlot> {
         return mouseTarget;
     }
 
-    public Server getServer() {
-        return server;
+    public JiveInstance getJiveInstance() {
+        return jiveInstance;
     }
 
-    public void setServer(Server server) {
-        this.server = server;
+    public void setJiveInstance(JiveInstance jiveInstance) {
+        this.jiveInstance = jiveInstance;
     }
 
     public boolean isHover() {
@@ -83,12 +83,12 @@ public class ServerSlot extends AbstractLibraryElement<ServerSlot> {
 
     @Override
     public void project(long nowMS, GeometryBuffer buffer) {
-        if (server == null) {
+        if (jiveInstance == null) {
             buffer.pushTransform();
             getTransformation().apply(nowMS, buffer);
-            if (server != null) {
+            if (jiveInstance != null) {
                 Objects.SERVER_FRAME.project(nowMS, buffer);
-                server.project(nowMS, buffer);
+                jiveInstance.project(nowMS, buffer);
             }
             buffer.popTransform();
         } else {
@@ -98,8 +98,8 @@ public class ServerSlot extends AbstractLibraryElement<ServerSlot> {
 
     @Override
     protected void projectImpl(long nowMS, GeometryBuffer buffer) {
-        if (server != null) {
-            server.project(nowMS, buffer);
+        if (jiveInstance != null) {
+            jiveInstance.project(nowMS, buffer);
         }
     }
 }
