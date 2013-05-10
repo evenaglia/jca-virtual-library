@@ -60,13 +60,15 @@ public class VirtualLibrary {
             @Override
             public void mouseDown(MouseTarget<? extends ServerSlot> target, MouseButton button) {
                 ServerSlot value = target.getValue();
-                System.out.printf("mouseDown on Rack[%d], Shelf[%d], Slot[%d]\n", value.getServerRack().getSeq(), value.getSeq() / 9 + 1, value.getSeq() % 9 + 1);
+                long instanceID = value.getJiveInstance() != null ? value.getJiveInstance().getCustomerInstallationId() : -1;
+                System.out.printf("mouseDown on Rack[%d], Shelf[%d], Slot[%d], JiveInstance[%d]\n", value.getServerRack().getSeq(), value.getSeq() / 9 + 1, value.getSeq() % 9 + 1, instanceID);
             }
 
             @Override
             public void mouseUp(MouseTarget<? extends ServerSlot> target, MouseButton button) {
                 ServerSlot value = target.getValue();
-                System.out.printf("mouseUp on Rack[%d], Shelf[%d], Slot[%d]\n", value.getServerRack().getSeq(), value.getSeq() / 9 + 1, value.getSeq() % 9 + 1);
+                long instanceID = value.getJiveInstance() != null ? value.getJiveInstance().getCustomerInstallationId() : -1;
+                System.out.printf("mouseUp on Rack[%d], Shelf[%d], Slot[%d], JiveInstance[%d]\n", value.getServerRack().getSeq(), value.getSeq() / 9 + 1, value.getSeq() % 9 + 1, instanceID);
             }
         };
         final UserNavigation userNavigation = new UserNavigation(keyboardManager, camera, new BoundingSphere(Point.ORIGIN, Math.sqrt(425))) {
