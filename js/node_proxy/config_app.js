@@ -14,9 +14,8 @@ exports.do_config = function(app) {
     app.use(express.methodOverride());
     app.use(app.router);
 
-
     //Set up routes...
-    app.get('/update', require('./routes/jcadata/post').handler);
+    app.post('/update', require('./routes/jcadata/post').handler);
     app.get('/jcadata', require('./routes/jcadata/get').handler);
 
 };

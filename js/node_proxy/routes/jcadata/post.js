@@ -1,11 +1,10 @@
-var FS = require('fs'),
-    q = require('q'),
+var q = require('q'),
     jca_data = require('./jca_data');
 
 exports.handler = function (req, res) {
 
     var body = req.body;
-    jca_data.set_jca_data(JSON.parse(body)).then(
+    jca_data.set_jca_data(body).then(
         // success
         function(saved) {
             res.writeHead(204, { 'Content-Type': 'application/json' });
