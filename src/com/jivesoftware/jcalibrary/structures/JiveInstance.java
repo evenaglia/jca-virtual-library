@@ -60,6 +60,10 @@ public class JiveInstance extends AbstractLibraryElement<JiveInstance> {
         return customerInstallationId;
     }
 
+    public void setCustomerInstallationId(long customerInstallationId) {
+        this.customerInstallationId = customerInstallationId;
+    }
+
     /**
      * ************************ GRAPHIC** *******************************************************
      */

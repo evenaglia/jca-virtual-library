@@ -45,6 +45,11 @@ public class JCAManager {
         JiveInstance[] jiveInstanceArray= mapper.readValue(responseBody, JiveInstance[].class);
 
         List<JiveInstance> jiveInstances = Arrays.asList(jiveInstanceArray);
+
+        for (JiveInstance jiveInstance : jiveInstances) {
+            jiveInstance.setCustomerInstallationId(jiveInstance.getInstallation().getCustomerInstallationId());
+        }
+
         return jiveInstances;
     }
 }
