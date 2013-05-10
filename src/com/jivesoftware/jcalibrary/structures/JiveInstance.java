@@ -12,6 +12,12 @@ import net.venaglia.realms.common.view.MouseTarget;
  */
 public class JiveInstance extends AbstractLibraryElement<JiveInstance> {
 
+    public enum Grouping {
+        grouping1,
+        grouping2,
+        grouping3
+    }
+
     /**
      * We need to hide this constructor so we force instances to have an ID
      */
