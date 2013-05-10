@@ -8,7 +8,9 @@ import net.venaglia.realms.common.physical.decorators.Color;
 import net.venaglia.realms.common.projection.GeometryBuffer;
 import net.venaglia.realms.common.projection.Projectable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,14 +20,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * Time: 5:22 PM
  */
 public class JiveInstance implements Projectable {
-
-    public InstallationPageViewBean getInstallationPageViewBean() {
-        return installationPageViewBean;
-    }
-
-    public void setInstallationPageViewBean(InstallationPageViewBean installationPageViewBean) {
-        this.installationPageViewBean = installationPageViewBean;
-    }
 
     public enum Grouping {
         Production(Color.GREEN),
@@ -106,8 +100,7 @@ public class JiveInstance implements Projectable {
     protected long customerInstallationId;
     private CustomerInfo customer;
     private CustomerInstallation installation;
-    private InstallationPageViewBean installationPageViewBean = new InstallationPageViewBean();
-
+    private List<InstallationPageViewBean> pageViews = new ArrayList();
 
     private Map<String,NodeDetails> nodeDetails = new ConcurrentHashMap<String,NodeDetails>();
 
@@ -133,6 +126,14 @@ public class JiveInstance implements Projectable {
 
     public void setCustomerInstallationId(long customerInstallationId) {
         this.customerInstallationId = customerInstallationId;
+    }
+
+    public List<InstallationPageViewBean> getPageViews() {
+        return pageViews;
+    }
+
+    public void setPageViews(List<InstallationPageViewBean> pageViews) {
+        this.pageViews = pageViews;
     }
 
     public NodeDetails getNodeDetails(String nodeId) {
