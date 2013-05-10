@@ -12,6 +12,25 @@ import net.venaglia.realms.common.view.MouseTarget;
  */
 public class JiveInstance extends AbstractLibraryElement<JiveInstance> {
 
+    /**
+     * We need to hide this constructor so we force instances to have an ID
+     */
+    private JiveInstance() {
+        super();
+    }
+
+    public JiveInstance(long customerInstallationId) {
+        this.customerInstallationId = customerInstallationId;
+    }
+
+    /*************************** PROPERTIES ********************************************************/
+    protected long customerInstallationId;
+
+    public long getCustomerInstallationId() {
+        return customerInstallationId;
+    }
+
+    /*************************** GRAPHIC** ********************************************************/
     private Transformation transformation = new Transformation();
 
     @Override
