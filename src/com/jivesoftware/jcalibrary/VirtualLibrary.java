@@ -49,6 +49,7 @@ public class VirtualLibrary {
     private List<DynamicDetail<?>> demoObjects;
     private Origin origin = null; // new Origin(1.0);
     private AtomicReference<ServerSlot> hoverSlot = new AtomicReference<ServerSlot>();
+    private View3D view;
 
     public VirtualLibrary() {
         final KeyboardManager keyboardManager = new KeyboardManager();
@@ -140,7 +141,7 @@ public class VirtualLibrary {
         };
         final List<MouseTargets> testedMouseTargets = new ArrayList<MouseTargets>(4);
         final AtomicReference<MouseTarget<?>> activeMouseTarget = new AtomicReference<MouseTarget<?>>();
-        View3D view = new View3D(new Dimension(1600, 1024)) {
+        view = new View3D(new Dimension(1600, 1024)) {
             @Override
             protected void userRenderTargets(ProjectionBuffer buffer,
                                              GeometryBuffer targetBuffer,
@@ -241,6 +242,9 @@ public class VirtualLibrary {
         view.setCamera(camera);
         view.setDefaultBrush(Brush.TEXTURED);
         JiveInstancesRegistry.getInstance().init(this);
+    }
+
+    public void start() {
         view.start();
     }
 
@@ -273,9 +277,11 @@ public class VirtualLibrary {
         return mouseTargets;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         LibraryProps.INSTANCE.getJCACredentials();
+        VirtualLibrary virtualLibrary = new VirtualLibrary();
         WorkScheduler.interval(new InstanceDataFetcher(), 60, TimeUnit.SECONDS);
-        new VirtualLibrary();
+//        virtualLibrary.start();
+        Thread.sleep(600000);
     }
 }

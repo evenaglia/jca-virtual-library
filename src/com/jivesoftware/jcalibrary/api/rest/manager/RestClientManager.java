@@ -14,7 +14,7 @@ import javax.ws.rs.core.Response;
 public class RestClientManager {
 
     private WebClient getWebClient() {
-        LibraryProps libraryProps = new LibraryProps();
+        LibraryProps libraryProps = LibraryProps.INSTANCE;
         Pair<String,String> jcaCredentials = libraryProps.getJCACredentials();
 
         String serverUrl = LibraryProps.INSTANCE.getProperty(LibraryProps.JCA_URL);

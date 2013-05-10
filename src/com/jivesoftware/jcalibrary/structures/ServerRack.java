@@ -57,6 +57,10 @@ public class ServerRack extends AbstractLibraryElement<ServerRack> {
         }
     }
 
+    public JiveInstance.Grouping getGrouping() {
+        return grouping;
+    }
+
     public ServerSlot getFirstAvailableSlot() {
         for (ServerSlot serverSlot : slots) {
             if (serverSlot.getJiveInstance() == null) {

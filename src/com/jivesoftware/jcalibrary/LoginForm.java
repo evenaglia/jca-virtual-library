@@ -22,8 +22,8 @@ public class LoginForm {
     private JTextField username;
     private JPasswordField password;
 
-    private boolean visible = false;
-    private boolean ready = false;
+    private volatile boolean visible = false;
+    private volatile boolean ready = false;
     private Pair<String,String> credentials;
 
     public LoginForm() {

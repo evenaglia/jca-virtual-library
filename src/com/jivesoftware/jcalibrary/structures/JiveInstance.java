@@ -161,6 +161,10 @@ public class JiveInstance implements Projectable {
         }
     }
 
+    public void importFrom(JiveInstance that) {
+        // todo: update fields
+    }
+
     /**
      * ************************ GRAPHIC** *******************************************************
      */

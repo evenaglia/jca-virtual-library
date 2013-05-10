@@ -10,7 +10,7 @@ import java.util.List;
 public class TestJCAMain {
 
     public static void main(String[] args) throws Exception{
-        JCAManager jcaManager = new JCAManager();
+        JCAManager jcaManager = JCAManager.INSTANCE;
         List<JiveInstance> jiveinstances = jcaManager.fetchInstallations();
 
     }

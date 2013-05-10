@@ -2,6 +2,7 @@ package com.jivesoftware.jcalibrary.scheduler;
 
 import com.jivesoftware.jcalibrary.JiveInstancesRegistry;
 import com.jivesoftware.jcalibrary.LibraryProps;
+import com.jivesoftware.jcalibrary.api.JCAManager;
 import com.jivesoftware.jcalibrary.structures.JiveInstance;
 import com.jivesoftware.jcalibrary.structures.NodeDetails;
 import net.venaglia.realms.common.util.Pair;
@@ -21,7 +22,7 @@ import java.util.Map;
 
 public class InstanceDataFetcher implements Runnable{
 
-    private Map<String,Pair<Long,String>> instanceMapping = new HashMap<String,Pair<Long,String>>();
+    private Map<String,Pair<Long,String>> instanceMapping;
     private boolean firstRun = true;
 
     public InstanceDataFetcher() {
@@ -62,10 +63,22 @@ public class InstanceDataFetcher implements Runnable{
     @Override
     public void run() {
         JiveInstancesRegistry registry = JiveInstancesRegistry.getInstance();
+        try {
+            for (JiveInstance jiveInstance : JCAManager.INSTANCE.fetchInstallations()) {
+                JiveInstance registeredInstance = registry.getJiveInstance(jiveInstance.getCustomerInstallationId());
+                if (registeredInstance == null) {
+                    registry.addJiveInstance(jiveInstance);
+                } else {
+                    registeredInstance.importFrom(jiveInstance);
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         Map<String,Pair<Long,String>> instanceMapping = getMapping();
         if (firstRun) {
             firstRun = false;
-            doFirstRun(registry, instanceMapping);
+//            doFirstRun(registry, instanceMapping);
         }
         String nodeJSUrl = LibraryProps.INSTANCE.getProperty(LibraryProps.NODEJS_PROXY_URL);
         String nodeJSAuth = LibraryProps.INSTANCE.getProperty(LibraryProps.NODEJS_PROXY_AUTHENTICATION);
@@ -108,17 +121,17 @@ public class InstanceDataFetcher implements Runnable{
         }
     }
 
-    private void doFirstRun(JiveInstancesRegistry registry, Map<String,Pair<Long,String>> instanceMapping) {
-        for (Map.Entry<String,Pair<Long,String>> entry : instanceMapping.entrySet()) {
-            Pair<Long,String> pair = entry.getValue();
-            JiveInstance jiveInstance = registry.getJiveInstance(pair.getA());
-            if (jiveInstance == null) {
-                jiveInstance = new JiveInstance(pair.getA());
-                registry.addJiveInstance(jiveInstance);
-            }
-            jiveInstance.getNodeDetails(entry.getKey());
-        }
-    }
+//    private void doFirstRun(JiveInstancesRegistry registry, Map<String,Pair<Long,String>> instanceMapping) {
+//        for (Map.Entry<String,Pair<Long,String>> entry : instanceMapping.entrySet()) {
+//            Pair<Long,String> pair = entry.getValue();
+//            JiveInstance jiveInstance = registry.getJiveInstance(pair.getA());
+//            if (jiveInstance == null) {
+//                jiveInstance = new JiveInstance(pair.getA());
+//                registry.addJiveInstance(jiveInstance);
+//            }
+//            jiveInstance.getNodeDetails(entry.getKey());
+//        }
+//    }
 
     public static String fetchData(String serverUrl, String auth) {
         URL url;

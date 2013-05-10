@@ -53,13 +53,16 @@ public class JiveInstancesRegistry {
      * @param jiveInstance  the JiveInstance to add to the registry.
      */
     public void addJiveInstance(JiveInstance jiveInstance) {
+        JiveInstance.Grouping grouping = jiveInstance.getGrouping();
         JiveInstance existing = instances.put(jiveInstance.getCustomerInstallationId(), jiveInstance);
         if (existing == null) {
             // This is a real new instance so lets find a slot for this instance
             ServerSlot serverSlot = null;
             // Lets first find the proper rack
             for (ServerRack serverRack : virtualLibrary.getServerRacks()) {
-                // TODO Find by rack category
+                if (serverRack.getGrouping() != grouping) {
+                    continue;
+                }
                 // Now lets find the first available slot
                 serverSlot = serverRack.getFirstAvailableSlot();
                 if (serverSlot != null) {

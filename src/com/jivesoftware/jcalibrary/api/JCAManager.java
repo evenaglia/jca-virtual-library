@@ -22,6 +22,11 @@ public class JCAManager {
 
     private static final String GET_ALL_INSTALLATIONS = "/users/installations";
 
+    public static final JCAManager INSTANCE = new JCAManager();
+
+    private JCAManager() {
+    }
+
     public List<JiveInstance> fetchInstallations() throws Exception{
         //TODO Check registry if exists
 

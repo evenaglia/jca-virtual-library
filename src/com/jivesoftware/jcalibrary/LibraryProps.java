@@ -19,6 +19,9 @@ public class LibraryProps extends Properties {
 
     public static final LibraryProps INSTANCE;
 
+    private LibraryProps() {
+    }
+
     static {
         INSTANCE = new LibraryProps();
         try {
