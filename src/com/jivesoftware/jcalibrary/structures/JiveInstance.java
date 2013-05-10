@@ -1,5 +1,7 @@
 package com.jivesoftware.jcalibrary.structures;
 
+import com.jivesoftware.jcalibrary.api.rest.CustomerInfo;
+import com.jivesoftware.jcalibrary.api.rest.CustomerInstallation;
 import com.jivesoftware.jcalibrary.objects.AbstractLibraryElement;
 import net.venaglia.realms.common.physical.decorators.Transformation;
 import net.venaglia.realms.common.projection.GeometryBuffer;
@@ -31,14 +33,36 @@ public class JiveInstance extends AbstractLibraryElement<JiveInstance> {
         this.customerInstallationId = customerInstallationId;
     }
 
-    /*************************** PROPERTIES ********************************************************/
+    /**
+     * ************************ PROPERTIES *******************************************************
+     */
     protected long customerInstallationId;
+    private CustomerInfo customer;
+    private CustomerInstallation installation;
+
+    public CustomerInfo getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(CustomerInfo customer) {
+        this.customer = customer;
+    }
+
+    public CustomerInstallation getInstallation() {
+        return installation;
+    }
+
+    public void setInstallation(CustomerInstallation installation) {
+        this.installation = installation;
+    }
 
     public long getCustomerInstallationId() {
         return customerInstallationId;
     }
 
-    /*************************** GRAPHIC** ********************************************************/
+    /**
+     * ************************ GRAPHIC** *******************************************************
+     */
     private Transformation transformation = new Transformation();
 
     @Override

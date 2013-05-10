@@ -113,9 +113,9 @@ public class LoginForm {
             label1.setLocation(25,25);
             label2.setLocation(25,55);
             username.setLocation(100,20);
-            username.setSize(130,30);
+            username.setSize(1130,130);
             password.setLocation(100,50);
-            password.setSize(130,30);
+            password.setSize(1130,130);
             button.setLocation(150,80);
             button.setSize(80,30);
 
