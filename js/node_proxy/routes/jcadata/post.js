@@ -2,7 +2,6 @@ var FS = require('fs'),
     q = require('q'),
     jca_data = require('./jca_data');
 
-
 exports.handler = function (req, res) {
 
     var body = req.body;

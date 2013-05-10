@@ -6,7 +6,7 @@ var options = JSON.parse(FS.readFileSync('config.json').toString());
 
 exports.options = function() {
     return options;
-}
+};
 
 exports.do_config = function(app) {
     app.use(express.bodyParser());
@@ -16,9 +16,13 @@ exports.do_config = function(app) {
 
 
     //Set up routes...
+    app.get('/update', require('./routes/jcadata/post').handler);
     app.get('/jcadata', require('./routes/jcadata/get').handler);
-}
+
+};
 
 exports.start_app = function(app) {
-    app.listen(options["port"] || process.env['port']);
-}
+    var port = options["port"] || process.env['port'];
+    console.log("Express server listening on port " + port);
+    app.listen(port);
+};
