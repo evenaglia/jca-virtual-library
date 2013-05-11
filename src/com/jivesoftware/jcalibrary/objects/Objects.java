@@ -7,6 +7,16 @@ import net.venaglia.realms.common.physical.geom.detail.DetailLevel;
 import net.venaglia.realms.common.physical.geom.detail.DynamicDetail;
 import net.venaglia.realms.common.physical.geom.detail.DynamicDetailSource;
 import net.venaglia.realms.common.physical.geom.primitives.Box;
+import net.venaglia.realms.common.physical.geom.primitives.Cog;
+import net.venaglia.realms.common.physical.geom.primitives.Crescent;
+import net.venaglia.realms.common.physical.geom.primitives.Cylinder;
+import net.venaglia.realms.common.physical.geom.primitives.Heart;
+import net.venaglia.realms.common.physical.geom.primitives.Icosahedron;
+import net.venaglia.realms.common.physical.geom.primitives.Scroll;
+import net.venaglia.realms.common.physical.geom.primitives.Sphere;
+import net.venaglia.realms.common.physical.geom.primitives.Star;
+import net.venaglia.realms.common.physical.geom.primitives.Tetrahedron;
+import net.venaglia.realms.common.physical.geom.primitives.Torus;
 import net.venaglia.realms.common.projection.GeometryBuffer;
 import net.venaglia.realms.common.projection.Projectable;
 import net.venaglia.realms.demo.DemoObjects;
@@ -27,17 +37,17 @@ public enum Objects implements Projectable {
     BOX_CURSOR_SMALL(new BoxCursor(1,1,1, 0.125, 0.0125, 0.1875,DetailLevel.MEDIUM)),
     EMPTY_SERVER_FRAME(new Box().setMaterial(Material.makeWireFrame(new Color(0.1f, 0.1f, 0.1f)))),
     SERVER_FRAME(new Box().setMaterial(Material.makeWireFrame(Color.GRAY_25))),
-    HEART(DemoObjects.ObjectCategory.INTERESTING_SHAPES.getDynamicDetailSource(1)),
-    SCROLL(DemoObjects.ObjectCategory.INTERESTING_SHAPES.getDynamicDetailSource(2)),
-    STAR(DemoObjects.ObjectCategory.EXTRUDED_SHAPES.getDynamicDetailSource(0)),
-    COG(DemoObjects.ObjectCategory.EXTRUDED_SHAPES.getDynamicDetailSource(1)),
-    CRESCENT(DemoObjects.ObjectCategory.EXTRUDED_SHAPES.getDynamicDetailSource(2)),
-    CYLINDER(DemoObjects.ObjectCategory.ROUND_SOLIDS.getDynamicDetailSource(0)),
-    TORUS(DemoObjects.ObjectCategory.ROUND_SOLIDS.getDynamicDetailSource(1)),
-    SPHERE(DemoObjects.ObjectCategory.ROUND_SOLIDS.getDynamicDetailSource(2)),
-    TERTAHEDRON(DemoObjects.ObjectCategory.PLATONIC_SOLIDS.getDynamicDetailSource(0)),
-    CUBE(DemoObjects.ObjectCategory.PLATONIC_SOLIDS.getDynamicDetailSource(1)),
-    ICOSAHEDRON(DemoObjects.ObjectCategory.PLATONIC_SOLIDS.getDynamicDetailSource(2)),
+    HEART(new Heart(DetailLevel.MEDIUM_LOW).setMaterial(Material.INHERIT)),
+    SCROLL(new Scroll(DetailLevel.MEDIUM_LOW).setMaterial(Material.INHERIT)),
+    STAR(new Star(0.5, 0.2, 5, 0.125).setMaterial(Material.INHERIT)),
+    COG(new Cog(6, 0.25, 0.1875, DetailLevel.LOW).setMaterial(Material.INHERIT)),
+    CRESCENT(new Crescent(0.25, 0.125, DetailLevel.MEDIUM_LOW).setMaterial(Material.INHERIT)),
+    CYLINDER(new Cylinder(0.333, 1.0, DetailLevel.MEDIUM).setMaterial(Material.INHERIT)),
+    TORUS(new Torus(16, 0.25, 0.1, false).setMaterial(Material.INHERIT)),
+    SPHERE(new Sphere(DetailLevel.MEDIUM).scale(0.5).setMaterial(Material.INHERIT)),
+    TERTAHEDRON(new Tetrahedron().scale(0.3333).setMaterial(Material.INHERIT)),
+    CUBE(new Box().scale(0.5).setMaterial(Material.INHERIT)),
+    ICOSAHEDRON(new Icosahedron().scale(0.3333).setMaterial(Material.INHERIT)),
 
     DEMO_OBJECT_0(DemoObjects.ObjectCategory.INTERESTING_SHAPES.getDynamicDetailSource(0)),
     DEMO_OBJECT_1(DemoObjects.ObjectCategory.INTERESTING_SHAPES.getDynamicDetailSource(1)),

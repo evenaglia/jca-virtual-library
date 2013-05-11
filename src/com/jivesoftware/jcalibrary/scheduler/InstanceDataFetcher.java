@@ -3,6 +3,7 @@ package com.jivesoftware.jcalibrary.scheduler;
 import com.jivesoftware.jcalibrary.JiveInstancesRegistry;
 import com.jivesoftware.jcalibrary.LibraryProps;
 import com.jivesoftware.jcalibrary.api.JCAManager;
+import com.jivesoftware.jcalibrary.api.rest.InstallationPageViewBean;
 import com.jivesoftware.jcalibrary.structures.JiveInstance;
 import com.jivesoftware.jcalibrary.structures.NodeDetails;
 import net.venaglia.realms.common.util.Pair;
@@ -18,6 +19,7 @@ import java.net.URLConnection;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -25,6 +27,7 @@ public class InstanceDataFetcher implements Runnable{
 
     private Map<String,Pair<Long,String>> instanceMapping;
     private boolean firstRun = true;
+    private boolean firstRunCompleted = false;
 
     public InstanceDataFetcher() {
         
@@ -64,23 +67,15 @@ public class InstanceDataFetcher implements Runnable{
     @Override
     public void run() {
         JiveInstancesRegistry registry = JiveInstancesRegistry.getInstance();
-        try {
-            for (JiveInstance jiveInstance : JCAManager.INSTANCE.fetchInstallations()) {
-                JiveInstance registeredInstance = registry.getJiveInstance(jiveInstance.getCustomerInstallationId());
-                if (registeredInstance == null) {
-                    registry.addJiveInstance(jiveInstance);
-                } else {
-                    registeredInstance.importFrom(jiveInstance);
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        Map<String,Pair<Long,String>> instanceMapping = getMapping();
         if (firstRun) {
             firstRun = false;
-//            doFirstRun(registry, instanceMapping);
+            doFirstRun(registry);
+            firstRunCompleted = true;
+            System.out.println("First run completed");
+        } else if (!firstRunCompleted) {
+            return;
         }
+        Map<String,Pair<Long,String>> instanceMapping = getMapping();
         String nodeJSUrl = LibraryProps.INSTANCE.getProperty(LibraryProps.NODEJS_PROXY_URL);
         String nodeJSAuth = LibraryProps.INSTANCE.getProperty(LibraryProps.NODEJS_PROXY_AUTHENTICATION);
         String fetchedData = fetchData(nodeJSUrl, nodeJSAuth);
@@ -128,17 +123,29 @@ public class InstanceDataFetcher implements Runnable{
         }
     }
 
-//    private void doFirstRun(JiveInstancesRegistry registry, Map<String,Pair<Long,String>> instanceMapping) {
-//        for (Map.Entry<String,Pair<Long,String>> entry : instanceMapping.entrySet()) {
-//            Pair<Long,String> pair = entry.getValue();
-//            JiveInstance jiveInstance = registry.getJiveInstance(pair.getA());
-//            if (jiveInstance == null) {
-//                jiveInstance = new JiveInstance(pair.getA());
-//                registry.addJiveInstance(jiveInstance);
-//            }
-//            jiveInstance.getNodeDetails(entry.getKey());
-//        }
-//    }
+    private void doFirstRun(JiveInstancesRegistry registry) {
+        try {
+            for (JiveInstance jiveInstance : JCAManager.INSTANCE.fetchInstallations()) {
+                long installationId = jiveInstance.getCustomerInstallationId();
+                JiveInstance registeredInstance = registry.getJiveInstance(installationId);
+                if (registeredInstance == null) {
+                    registeredInstance = jiveInstance;
+                    registry.addJiveInstance(jiveInstance);
+                } else {
+                    registeredInstance.importFrom(jiveInstance);
+                }
+                long sum = 0;
+                for (InstallationPageViewBean view : JCAManager.INSTANCE.fetchPageViews(installationId)) {
+                    for (Long c : view.getPageViews()) {
+                        sum += c;
+                    }
+                }
+                registeredInstance.setPageViews(sum);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static String fetchData(String serverUrl, String auth) {
         URL url;

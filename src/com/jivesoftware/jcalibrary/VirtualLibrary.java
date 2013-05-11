@@ -85,12 +85,12 @@ public class VirtualLibrary {
                 System.out.printf("mouseUp on Rack[%d], Shelf[%d], Slot[%d], JiveInstance[%d]\n", value.getServerRack().getSeq(), value.getSeq() / 9 + 1, value.getSeq() % 9 + 1, instanceID);
             }
         };
+        serverRacks = buildServerRacks(eventListener);
         final UserNavigation userNavigation = new UserNavigation(keyboardManager, camera, new BoundingSphere(Point.ORIGIN, Math.sqrt(425))) {
             @Override
             public void handleInit() {
                 super.handleInit();
                 library = new Library();
-                serverRacks = buildServerRacks(eventListener);
                 mouseTargets = buildMouseTargets(serverRacks);
                 demoObjects = new ArrayList<DynamicDetail<?>>(15);
                 for (Objects objects : Objects.values()) {

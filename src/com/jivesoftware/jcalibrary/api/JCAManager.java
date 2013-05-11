@@ -1,22 +1,17 @@
 package com.jivesoftware.jcalibrary.api;
 
-import com.jivesoftware.jcalibrary.JiveInstancesRegistry;
-import com.jivesoftware.jcalibrary.api.rest.CustomerInstallationResponse;
 import com.jivesoftware.jcalibrary.api.rest.InstallationPageViewBean;
+import com.jivesoftware.jcalibrary.api.rest.manager.Response;
 import com.jivesoftware.jcalibrary.api.rest.manager.RestClientManager;
+import com.jivesoftware.jcalibrary.api.rest.manager.Status;
 import com.jivesoftware.jcalibrary.structures.JiveInstance;
-import org.apache.commons.io.IOUtils;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import javax.ws.rs.core.Response;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -38,12 +33,12 @@ public class JCAManager {
 
     public List<InstallationPageViewBean> fetchPageViews(long customerInstallationId) throws Exception {
 
-        RestClientManager restClientManager = new RestClientManager();
+        RestClientManager restClientManager = RestClientManager.INSTANCE;
         List<InstallationPageViewBean> pageViews = new ArrayList<InstallationPageViewBean>();
 
         Response response = restClientManager.get(GET_PAGEVIEWAS_BY_HOUR_FOR_LAST_DAY + "/" + customerInstallationId);
 
-        if (Response.Status.OK.getStatusCode() == response.getStatus()) {
+        if (Status.OK.getCode() == response.getStatus()) {
             pageViews = processGetPageViewsByDay(response);
         } else {
             System.out.println("SignupManager getCloudStatus response status: " + response.getStatus());
@@ -53,12 +48,12 @@ public class JCAManager {
 
     public List<JiveInstance> fetchInstallations() throws Exception {
 
-        RestClientManager restClientManager = new RestClientManager();
+        RestClientManager restClientManager = RestClientManager.INSTANCE;
         List<JiveInstance> jiveInstances = new ArrayList<JiveInstance>();
 
         Response response = restClientManager.get(GET_ALL_INSTALLATIONS, "timePeriod", "DAY");
 
-        if (Response.Status.OK.getStatusCode() == response.getStatus()) {
+        if (Status.OK.getCode() == response.getStatus()) {
             jiveInstances = processGetAllInstallationsResponse(response);
         } else {
             System.out.println("JCAManager getCloudStatus response status: " + response.getStatus());
@@ -68,7 +63,7 @@ public class JCAManager {
 
 
     private List<JiveInstance> processGetAllInstallationsResponse(Response response) throws Exception {
-        String responseBody = IOUtils.toString((InputStream) response.getEntity());
+        String responseBody = response.getBody();
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         JiveInstance[] jiveInstanceArray = mapper.readValue(responseBody, JiveInstance[].class);
@@ -82,7 +77,7 @@ public class JCAManager {
     }
 
     private List<InstallationPageViewBean> processGetPageViewsByDay(Response response) throws Exception {
-        String responseBody = IOUtils.toString((InputStream) response.getEntity());
+        String responseBody = response.getBody();
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         InstallationPageViewBean[] jivePageViewArray = mapper.readValue(responseBody, InstallationPageViewBean[].class);

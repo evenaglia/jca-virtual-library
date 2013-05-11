@@ -16,7 +16,7 @@ public class TestJCAMain {
 
         for (JiveInstance instance : jiveinstances) {
             List<InstallationPageViewBean> pageViews = jcaManager.fetchPageViews(instance.getCustomerInstallationId());
-            instance.setPageViews(pageViews);
+//            instance.setPageViews(pageViews);
         }
         System.out.print("End");
     }

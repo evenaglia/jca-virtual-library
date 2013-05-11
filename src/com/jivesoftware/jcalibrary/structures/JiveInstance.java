@@ -100,7 +100,7 @@ public class JiveInstance implements Projectable {
     protected long customerInstallationId;
     private CustomerInfo customer;
     private CustomerInstallation installation;
-    private List<InstallationPageViewBean> pageViews = new ArrayList();
+    private long pageViews = -1;
 
     private Map<String,NodeDetails> nodeDetails = new ConcurrentHashMap<String,NodeDetails>();
 
@@ -128,11 +128,11 @@ public class JiveInstance implements Projectable {
         this.customerInstallationId = customerInstallationId;
     }
 
-    public List<InstallationPageViewBean> getPageViews() {
+    public long getPageViews() {
         return pageViews;
     }
 
-    public void setPageViews(List<InstallationPageViewBean> pageViews) {
+    public void setPageViews(long pageViews) {
         this.pageViews = pageViews;
     }
 
