@@ -30,21 +30,24 @@ public class SlotTransformation implements Decorator {
     public SlotTransformation(ServerSlot slot) {
         int rackNum = slot.getServerRack().getSeq();
         double rackAngle = Math.PI * 2.0 * rackNum / 40.0;
-        double sin = Math.sin(rackAngle);
-        double cos = Math.cos(rackAngle);
 
         int slotsPerShelf = (int)(ServerRackSource.WIDTH / 1.1111f);
         double slotWidth = ServerRackSource.WIDTH / slotsPerShelf;
-        double slotX = ServerRackSource.WIDTH * -0.5 + slotWidth * ((slot.getSeq() % slotsPerShelf) + 0.5);
+        int shelfSeq = slot.getSeq() / slotsPerShelf;
+        int shelfNum = slot.getSeq() % slotsPerShelf;
+        float shelfHeight = (ServerRackSource.HEIGHT - ServerRackSource.LOWEST_SHELF) / (ServerRackSource.SHELVES - 1);
+        double slotX = ServerRackSource.WIDTH * -0.15 + slotWidth * (shelfSeq + 0.15);
         double slotY = 19.625;
-        double slotZ = (slot.getSeq() % slotsPerShelf) * (ServerRackSource.HEIGHT - ServerRackSource.LOWEST_SHELF) / (ServerRackSource.SHELVES - 1) + ServerRackSource.LOWEST_SHELF;
+        double slotZ = shelfNum * shelfHeight * 0.3 + ServerRackSource.LOWEST_SHELF;
 
-        homeX = cos * slotX + sin * slotY;
-        homeY = cos * slotY - sin * slotX;
+        homeX = slotX;
+        homeY = slotY;
+//        homeX = cos * slotX + sin * slotY;
+//        homeY = cos * slotY - sin * slotX;
         homeZ = slotZ;
         homeRadius = Math.sqrt(homeX * homeX + homeY * homeY);
-        homeAngle = Math.atan2(homeY, homeX);
-        homeAngleVector = new Vector(homeX / homeRadius, homeY / homeRadius, 0);
+        homeAngle = Math.atan2(homeY, homeX) + rackAngle;
+        homeAngleVector = new Vector(Math.sin(homeAngle) * homeRadius, Math.cos(homeAngle) * homeRadius, 0);
         homeZVector = Vector.Z.scale(homeZ);
     }
 
@@ -59,8 +62,8 @@ public class SlotTransformation implements Decorator {
         currentTelescope = animate(nowMS, currentTelescope, targetTelescope, 4.0);
         buffer.rotate(Axis.Z, homeAngle);
         buffer.translate(homeZVector);
-        buffer.scale(currentScale);
         buffer.translate(homeAngleVector.scale(homeRadius - currentTelescope));
+        buffer.scale(currentScale * 0.3);
         lastMS = nowMS;
     }
 
@@ -75,5 +78,13 @@ public class SlotTransformation implements Decorator {
         }
         double sign = target < current ? -1 : 1;
         return current + move * sign;
+    }
+
+    public void setTargetScale(double targetScale) {
+        this.targetScale = targetScale;
+    }
+
+    public void setTargetTelescope(double targetTelescope) {
+        this.targetTelescope = targetTelescope;
     }
 }

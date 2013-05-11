@@ -31,6 +31,8 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.Dimension;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -266,6 +268,7 @@ public class VirtualLibrary {
             serverRack.getTransformation().rotate(Axis.Z, angle);
             serverRacks[i] = serverRack;
         }
+        Collections.reverse(Arrays.asList(serverRacks));
         return serverRacks;
     }
 

@@ -54,7 +54,7 @@ public class Library implements Projectable {
         final int segments1 = segmentsBase * 3;
         final int segments2 = segmentsBase * 4;
         final int segments3 = segmentsBase * 6;
-        final double ceilingHeight = 3.5;
+        final double ceilingHeight = 3.8;
 //        Texture hexGrid = new TextureFactory().loadClasspathResource("images/hex-grid-2048.png").setForceAlpha(true).build();
         Texture hexGrid = new TextureFactory().loadClasspathResource("images/hex-grid-256.png").setMipMapped(true).build();
         Texture grid = new TextureFactory().loadClasspathResource("images/grid-256.png").setMipMapped(true).build();

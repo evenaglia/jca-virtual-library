@@ -21,11 +21,11 @@ import net.venaglia.realms.common.projection.impl.DisplayListBuffer;
  */
 public class ServerRackSource implements DynamicDetailSource<DisplayList> {
 
-    public static final float HEIGHT = 10.4166f;
-    public static final float WIDTH = 10.0f;
+    public static final float HEIGHT = 11.4166f;
+    public static final float WIDTH = 11.0f;
     public static final float DEPTH = 1.6666f;
     public static final float LOWEST_SHELF = 0.4166f;
-    public static final int SHELVES = 10;
+    public static final int SHELVES = 11;
 
     private Shape<?> target;
 //    private Material material = Material.makeSelfIlluminating(Color.CYAN);
@@ -50,7 +50,7 @@ public class ServerRackSource implements DynamicDetailSource<DisplayList> {
 
         Shape<?> shelf = new RoundedRectangle3D(WIDTH - 0.25, DEPTH, 0.125, 0.0125, 0, detailLevel);
         for (int i = 0; i < SHELVES; i++) {
-            double z = i * (HEIGHT - LOWEST_SHELF) / (SHELVES - 1) + ServerRackSource.LOWEST_SHELF;
+            double z = i * (HEIGHT - LOWEST_SHELF) / (SHELVES - 1) + LOWEST_SHELF;
             delegate.addShape(shelf.translate(Vector.Z.scale(z)));
         }
         delegate.setMaterial(material);

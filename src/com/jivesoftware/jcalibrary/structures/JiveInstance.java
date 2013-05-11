@@ -8,9 +8,6 @@ import net.venaglia.realms.common.physical.decorators.Color;
 import net.venaglia.realms.common.projection.GeometryBuffer;
 import net.venaglia.realms.common.projection.Projectable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,11 +26,32 @@ public class JiveInstance implements Projectable {
         Other(Color.MAGENTA);
 
         private static Grouping[] byRack = {
-                Production,
-                Production,
-                Production,
-                Production,
-                Production,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
+                Thunder,
                 Production,
                 Production,
                 Production,
@@ -48,28 +66,6 @@ public class JiveInstance implements Projectable {
                 UAT,
                 UAT,
                 UAT,
-                UAT,
-                Test,
-                Thunder,
-                Thunder,
-                Thunder,
-                Thunder,
-                Thunder,
-                Thunder,
-                Thunder,
-                Thunder,
-                Thunder,
-                Thunder,
-                Thunder,
-                Thunder,
-                Thunder,
-                Thunder,
-                Thunder,
-                Thunder,
-                Thunder,
-                Thunder,
-                Thunder,
-                Other
         };
 
         public final Color color;
