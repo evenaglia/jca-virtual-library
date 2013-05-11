@@ -281,7 +281,7 @@ public class VirtualLibrary {
         LibraryProps.INSTANCE.getJCACredentials();
         VirtualLibrary virtualLibrary = new VirtualLibrary();
         WorkScheduler.interval(new InstanceDataFetcher(), 60, TimeUnit.SECONDS);
-//        virtualLibrary.start();
-        Thread.sleep(600000);
+        virtualLibrary.start();
+//        Thread.sleep(18000000);
     }
 }

@@ -54,6 +54,7 @@ public class Library implements Projectable {
         final int segments1 = segmentsBase * 3;
         final int segments2 = segmentsBase * 4;
         final int segments3 = segmentsBase * 6;
+        final double ceilingHeight = 3.5;
 //        Texture hexGrid = new TextureFactory().loadClasspathResource("images/hex-grid-2048.png").setForceAlpha(true).build();
         Texture hexGrid = new TextureFactory().loadClasspathResource("images/hex-grid-256.png").setMipMapped(true).build();
         Texture grid = new TextureFactory().loadClasspathResource("images/grid-256.png").setMipMapped(true).build();
@@ -63,7 +64,7 @@ public class Library implements Projectable {
         environmentBrush.setDepth(null);
 
         this.floor = new CompositeShape();
-        this.floor.addShape(new Dome(new Point(0,0,6), new Point(0,20,2), new Point(20,0,2), new Point(-20,0,2), segments2));
+        this.floor.addShape(new Dome(new Point(0,0,ceilingHeight + 4), new Point(0,20,ceilingHeight), new Point(20,0,ceilingHeight), new Point(-20,0,ceilingHeight), segments2));
         this.floor.addShape(new Ring(segments2, 20.05, 14));
         this.floor.addShape(new Ring(segments1, 14.05, 4).translate(Vector.Z.reverse()));
         this.floor.addShape(new Disc(segments0, 4.1).translate(Vector.Z.scale(-2)));
@@ -78,13 +79,13 @@ public class Library implements Projectable {
 //        Material grid2 = Material.makeTexture(hexGrid, new CylindricalMapping(2,103));
 //        Material grid3 = Material.makeTexture(hexGrid, new CylindricalMapping(2,29));
         this.room = new CompositeShape();
-//        this.room.addShape(new Tube(segments3, 20, 2).flip().translate(Vector.Z.scale(1)).setMaterial(grid1));
+//        this.room.addShape(new Tube(segments3, 20, ceilingHeight).flip().translate(Vector.Z.scale(ceilingHeight * 0.5)).setMaterial(grid1));
         this.room.addShape(new Tube(segments2, 14, 1).flip().translate(Vector.Z.scale(-0.5)).setMaterial(grid2));
         this.room.addShape(new Tube(segments1, 4, 1).flip().translate(Vector.Z.scale(-1.5)).setMaterial(grid3));
         this.room.setMaterial(Material.INHERIT);
 
         this.stripLights = new CompositeShape();
-        this.stripLights.addShape(new Torus(segments3, 4, 20, 0.025, false).translate(new Vector(0,0,2)));
+        this.stripLights.addShape(new Torus(segments3, 4, 20, 0.025, false).translate(new Vector(0,0,ceilingHeight)));
         this.stripLights.addShape(new Torus(segments3, 4, 20, 0.025, false));
         this.stripLights.addShape(new Torus(segments2, 4, 14, 0.025, false));
         this.stripLights.addShape(new Torus(segments2, 4, 14, 0.025, false).translate(new Vector(0,0,-1)));
