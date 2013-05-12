@@ -15,4 +15,14 @@ public enum DetailLevel {
         this.steps = steps;
         this.fraction = 1.0 / (steps - 1);
     }
+
+    public DetailLevel less(int n) {
+        int o = ordinal() - n;
+        return o >= 0 ? values()[o] : null;
+    }
+
+    public DetailLevel more(int n) {
+        int o = ordinal() + n;
+        return o < 5 ? values()[o] : HIGH;
+    }
 }

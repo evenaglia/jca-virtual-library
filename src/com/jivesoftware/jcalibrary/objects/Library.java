@@ -3,11 +3,13 @@ package com.jivesoftware.jcalibrary.objects;
 import net.venaglia.realms.common.physical.decorators.Brush;
 import net.venaglia.realms.common.physical.decorators.Color;
 import net.venaglia.realms.common.physical.decorators.Material;
+import net.venaglia.realms.common.physical.geom.Axis;
 import net.venaglia.realms.common.physical.geom.CompositeShape;
 import net.venaglia.realms.common.physical.geom.Point;
 import net.venaglia.realms.common.physical.geom.Vector;
 import net.venaglia.realms.common.physical.geom.primitives.Disc;
 import net.venaglia.realms.common.physical.geom.primitives.Dome;
+import net.venaglia.realms.common.physical.geom.primitives.QuadSequence;
 import net.venaglia.realms.common.physical.geom.primitives.Ring;
 import net.venaglia.realms.common.physical.geom.primitives.Torus;
 import net.venaglia.realms.common.physical.geom.primitives.Tube;
@@ -44,7 +46,10 @@ public class Library implements Projectable {
     private CompositeShape floor;
     private CompositeShape room;
     private CompositeShape stripLights;
-//    private int[] demoIndexes;
+    private CompositeShape overheadLights;
+
+    private final double ceilingHeight;
+    //    private int[] demoIndexes;
 //    private Vector[] demoTranslations;
 //    private DemoObjects[] demoObjects;
 
@@ -54,7 +59,7 @@ public class Library implements Projectable {
         final int segments1 = segmentsBase * 3;
         final int segments2 = segmentsBase * 4;
         final int segments3 = segmentsBase * 6;
-        final double ceilingHeight = 3.8;
+        this.ceilingHeight = 3.8;
 //        Texture hexGrid = new TextureFactory().loadClasspathResource("images/hex-grid-2048.png").setForceAlpha(true).build();
         Texture hexGrid = new TextureFactory().loadClasspathResource("images/hex-grid-256.png").setMipMapped(true).build();
         Texture grid = new TextureFactory().loadClasspathResource("images/grid-256.png").setMipMapped(true).build();
@@ -64,7 +69,9 @@ public class Library implements Projectable {
         environmentBrush.setDepth(null);
 
         this.floor = new CompositeShape();
-        this.floor.addShape(new Dome(new Point(0,0,ceilingHeight + 4), new Point(0,20,ceilingHeight), new Point(20,0,ceilingHeight), new Point(-20,0,ceilingHeight), segments2));
+        this.floor.addShape(new Dome(new Point(0,0, ceilingHeight + 4), new Point(0,20, ceilingHeight), new Point(20,0,
+                                                                                                                  ceilingHeight), new Point(-20,0,
+                                                                                                                                            ceilingHeight), segments2));
         this.floor.addShape(new Ring(segments2, 20, 14));
         this.floor.addShape(new Ring(segments1, 14, 4).translate(Vector.Z.scale(0.5)));
         this.floor.addShape(new Disc(segments0, 4).translate(Vector.Z.scale(1)));
@@ -85,7 +92,7 @@ public class Library implements Projectable {
         this.room.setMaterial(Material.INHERIT);
 
         this.stripLights = new CompositeShape();
-        this.stripLights.addShape(new Torus(segments3, 4, 20, 0.025, false).translate(new Vector(0,0,ceilingHeight)));
+        this.stripLights.addShape(new Torus(segments3, 4, 20, 0.025, false).translate(new Vector(0,0, ceilingHeight)));
         this.stripLights.addShape(new Torus(segments3, 4, 20, 0.025, false));
         this.stripLights.addShape(new Torus(segments2, 4, 14, 0.025, false));
         this.stripLights.addShape(new Torus(segments2, 4, 14, 0.025, false).translate(new Vector(0,0,0.5)));
@@ -127,6 +134,30 @@ public class Library implements Projectable {
 //                new DemoObjects(0.5, 1        , DemoObjects.ObjectCategory.PLATONIC_SOLIDS, wireframe),
 //                new DemoObjects(0.5, segments0, DemoObjects.ObjectCategory.EXTRUDED_SHAPES, wireframe),
 //        };
+
+        this.overheadLights = new CompositeShape();
+        QuadSequence baseLight = new QuadSequence(new Point(-2,0,-0.25), new Point(-2,0,0.25), new Point(2,0,0.25), new Point(2,0,-0.25))
+                .rotate(Axis.X, Math.PI * 0.45)
+                .translate(rotatedVector(0,0));
+        this.overheadLights.addShape(baseLight.rotate(Axis.Z, rotatedAngle(1,3)));
+        this.overheadLights.addShape(baseLight.rotate(Axis.Z, rotatedAngle(2,3)));
+        this.overheadLights.addShape(baseLight);
+        this.overheadLights.inheritMaterialToContainedShapes();
+        this.overheadLights.setMaterial(Material.makeSelfIlluminating(Color.WHITE));
+    }
+
+    public Vector rotatedVector(int n, int m) {
+        double radius = 16;
+        double angle = rotatedAngle(n, m);
+        return new Vector(Math.sin(angle) * radius, Math.cos(angle) * radius, ceilingHeight + 1);
+    }
+
+    private double rotatedAngle(int n, int m) {
+        return n == 0 ? 0 : Math.PI * 2 * n / m;
+    }
+
+    public double getCeilingHeight() {
+        return ceilingHeight;
     }
 
     public boolean isStatic() {
@@ -148,6 +179,7 @@ public class Library implements Projectable {
         floor.project(nowMS, buffer);
         room.project(nowMS, buffer);
         stripLights.project(nowMS, buffer);
+        overheadLights.project(nowMS, buffer);
 
 //        for (int i = 0; i < demoIndexes.length; i++) {
 //            buffer.pushTransform();

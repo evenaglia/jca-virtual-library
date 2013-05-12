@@ -19,6 +19,8 @@ import java.util.List;
  */
 public final class TriangleSequence extends AbstractTriangleFacetedType<TriangleSequence> implements Faceted {
 
+    private Vector[] normals;
+
     public TriangleSequence(Point... points) {
         super(assertMultiple(points, 3));
     }
@@ -104,7 +106,6 @@ public final class TriangleSequence extends AbstractTriangleFacetedType<Triangle
             points.add(facet.a);
             points.add(facet.b);
             points.add(facet.c);
-            points.add(facet.d);
         }
         return points.toArray(new Point[points.size()]);
     }

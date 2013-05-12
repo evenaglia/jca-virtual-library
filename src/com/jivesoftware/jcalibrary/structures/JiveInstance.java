@@ -99,6 +99,7 @@ public class JiveInstance implements Projectable {
     private CustomerInfo customer;
     private CustomerInstallation installation;
     private long pageViews = -1;
+    private boolean selected = false;
 
     private Map<String,NodeDetails> nodeDetails = new ConcurrentHashMap<String,NodeDetails>();
 
@@ -177,7 +178,19 @@ public class JiveInstance implements Projectable {
     }
 
     public void importFrom(JiveInstance that) {
-        // todo: update fields
+        this.customer = that.customer;
+        this.installation = that.installation;
+        this.pageViews = that.pageViews;
+        this.visualObjects.clear();
+    }
+
+
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
     }
 
     /**
@@ -196,9 +209,9 @@ public class JiveInstance implements Projectable {
 
     @Override
     public void project(long nowMS, GeometryBuffer buffer) {
-        if (customerInstallationId == 13989) {
-            "".toString();
-        }
+//        if (customerInstallationId == 13989) { // Apple
+//            "".toString();
+//        }
         Objects.JIVE_INSTANCE.project(nowMS, buffer);
     }
 

@@ -18,7 +18,6 @@ import net.venaglia.realms.common.physical.geom.Point;
 import net.venaglia.realms.common.physical.geom.Shape;
 import net.venaglia.realms.common.physical.geom.Vector;
 import net.venaglia.realms.common.physical.geom.complex.Origin;
-import net.venaglia.realms.common.physical.geom.detail.DetailBanner;
 import net.venaglia.realms.common.physical.geom.detail.DynamicDetail;
 import net.venaglia.realms.common.physical.lights.FixedPointSourceLight;
 import net.venaglia.realms.common.physical.lights.Light;
@@ -51,6 +50,7 @@ public class VirtualLibrary {
     private List<DynamicDetail<?>> demoObjects;
     private Origin origin = null; // new Origin(1.0);
     private AtomicReference<ServerSlot> hoverSlot = new AtomicReference<ServerSlot>();
+    private AtomicReference<ServerSlot> selectedSlot = new AtomicReference<ServerSlot>();
     private View3D view;
 
     public VirtualLibrary() {
@@ -76,23 +76,39 @@ public class VirtualLibrary {
             @Override
             public void mouseDown(MouseTarget<? extends ServerSlot> target, MouseButton button) {
                 ServerSlot value = target.getValue();
-                long instanceID = value.getJiveInstance() != null ? value.getJiveInstance().getCustomerInstallationId() : -1;
+                ServerSlot previousSlot = selectedSlot.getAndSet(value);
+                if (previousSlot != null) {
+                    previousSlot.getSlotTransformation().setTargetTelescope(0);
+                    previousSlot.getSlotTransformation().setTargetScale(1);
+                }
+                JiveInstance jiveInstance = value.getJiveInstance();
+                if (jiveInstance != null) {
+                    value.getSlotTransformation().setTargetTelescope(6);
+                    value.getSlotTransformation().setTargetScale(4);
+                }
+                long instanceID = jiveInstance != null ? jiveInstance.getCustomerInstallationId() : -1;
                 System.out.printf("mouseDown on Rack[%d], Shelf[%d], Slot[%d], JiveInstance[%d]\n", value.getServerRack().getSeq(), value.getSeq() / 9 + 1, value.getSeq() % 9 + 1, instanceID);
             }
 
             @Override
             public void mouseUp(MouseTarget<? extends ServerSlot> target, MouseButton button) {
                 ServerSlot value = target.getValue();
-                long instanceID = value.getJiveInstance() != null ? value.getJiveInstance().getCustomerInstallationId() : -1;
+                JiveInstance jiveInstance = value.getJiveInstance();
+                long instanceID = jiveInstance != null ? jiveInstance.getCustomerInstallationId() : -1;
                 System.out.printf("mouseUp on Rack[%d], Shelf[%d], Slot[%d], JiveInstance[%d]\n", value.getServerRack().getSeq(), value.getSeq() / 9 + 1, value.getSeq() % 9 + 1, instanceID);
             }
         };
-        serverRacks = buildServerRacks(eventListener);
+        this.serverRacks = buildServerRacks(eventListener);
+        final Light[] lights = { null, null, null, null };
         final UserNavigation userNavigation = new UserNavigation(keyboardManager, camera, new BoundingSphere(Point.ORIGIN, Math.sqrt(425))) {
             @Override
             public void handleInit() {
                 super.handleInit();
                 library = new Library();
+                lights[0] = new FixedPointSourceLight(new Point(0,0,library.getCeilingHeight() + 1.5));
+                for (int i = 1, l = lights.length; i < l; i++) {
+                    lights[i] = new FixedPointSourceLight(Point.ORIGIN.translate(library.rotatedVector(i, l)));
+                }
                 mouseTargets = buildMouseTargets(serverRacks);
                 demoObjects = new ArrayList<DynamicDetail<?>>(15);
                 for (Objects objects : Objects.values()) {
@@ -135,11 +151,6 @@ public class VirtualLibrary {
                 }
 //                if ()
             }
-        };
-        final Light[] lights = {
-                new FixedPointSourceLight(new Point(1.1f, 5.0f, 3.5f)),
-                new FixedPointSourceLight(new Point(-2.1f, 0.0f, 1.5f)),
-                new FixedPointSourceLight(new Point(-0.1f, -4.0f, -2.5f))
         };
         final List<MouseTargets> testedMouseTargets = new ArrayList<MouseTargets>(4);
         final AtomicReference<MouseTarget<?>> activeMouseTarget = new AtomicReference<MouseTarget<?>>();

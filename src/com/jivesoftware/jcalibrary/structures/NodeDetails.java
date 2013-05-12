@@ -1,6 +1,25 @@
 package com.jivesoftware.jcalibrary.structures;
 
+import com.jivesoftware.jcalibrary.objects.ColorCycle;
+import net.venaglia.realms.common.physical.decorators.Brush;
+import net.venaglia.realms.common.physical.decorators.Color;
+import net.venaglia.realms.common.physical.decorators.Material;
+import net.venaglia.realms.common.physical.decorators.Transformation;
+import net.venaglia.realms.common.physical.geom.Axis;
+import net.venaglia.realms.common.physical.geom.detail.DetailLevel;
+import net.venaglia.realms.common.physical.geom.primitives.Cylinder;
+import net.venaglia.realms.common.physical.geom.primitives.Icosahedron;
+import net.venaglia.realms.common.physical.geom.primitives.Scroll;
+import net.venaglia.realms.common.physical.geom.primitives.Star;
+import net.venaglia.realms.common.physical.geom.primitives.TriangleSequence;
+import net.venaglia.realms.common.projection.GeometryBuffer;
+import net.venaglia.realms.common.projection.Projectable;
+import net.venaglia.realms.common.util.Pair;
+
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
 * User: ed
@@ -8,6 +27,39 @@ import java.util.Date;
 * Time: 2:45 PM
 */
 public class NodeDetails {
+
+    private static final Material DEEP_RED = new ColorCycle(Brush.FRONT_SHADED, new Color(0.7f,0,0,1), 333);
+//    private static final Material WHITE = Material.makeFrontShaded(Color.WHITE);
+    private static final Material OFF_WHITE = Material.makeFrontShaded(new Color(1,0.95f,0.9f));
+    private static final Material YELLOW = Material.makeFrontShaded(new Color(0.9f,0.7f,0));
+    private static final Material MAGENTA = Material.makeFrontShaded(new Color(0.7f,0,0.7f));
+    private static final Material GREEN = Material.makeFrontShaded(new Color(0,0.7f,0.3f));
+    private static final Map<String,Projectable> SHAPES_BY_TYPE;
+    private static final Map<String,Pair<Material,Material>> COLORS_BY_TYPE;
+
+    static {
+        Map<String,Projectable> shapes = new HashMap<String,Projectable>();
+        shapes.put("thunder", new Cylinder(0.5, 0.125, DetailLevel.MEDIUM_LOW).rotate(Axis.X, Math.PI / 2).setMaterial(Material.INHERIT));
+        shapes.put("dbvirtual", new Cylinder(0.25, 0.85, DetailLevel.MEDIUM_LOW).setMaterial(Material.INHERIT));
+        shapes.put("cache", new Scroll(DetailLevel.MEDIUM_LOW).scale(0.2).setMaterial(Material.INHERIT));
+        shapes.put("dedicatedsearch", new TriangleSequence(new Icosahedron().scale(0.2)).setMaterial(Material.INHERIT));
+        shapes.put("dbanalytics", new Cylinder(0.25, 0.85, DetailLevel.MEDIUM_LOW).setMaterial(Material.INHERIT));
+        shapes.put("webapp", new TriangleSequence(new Icosahedron().scale(0.2)).setMaterial(Material.INHERIT));
+        shapes.put("dbeae", new Cylinder(0.25, 0.85, DetailLevel.MEDIUM_LOW).setMaterial(Material.INHERIT));
+        shapes.put("eaeservice", new Star(0.5, 0.1875, 5, 0.125).setMaterial(Material.INHERIT));
+        SHAPES_BY_TYPE = Collections.unmodifiableMap(shapes);
+        Map<String,Pair<Material,Material>> colors = new HashMap<String,Pair<Material,Material>>();
+        colors.put("thunder", new Pair<Material,Material>(OFF_WHITE, DEEP_RED));
+        colors.put("dbvirtual", new Pair<Material,Material>(OFF_WHITE, DEEP_RED));
+        colors.put("cache", new Pair<Material,Material>(OFF_WHITE, DEEP_RED));
+        colors.put("dedicatedsearch", new Pair<Material,Material>(YELLOW, DEEP_RED));
+        colors.put("dbanalytics", new Pair<Material,Material>(MAGENTA, DEEP_RED));
+        colors.put("webapp", new Pair<Material,Material>(OFF_WHITE, DEEP_RED));
+        colors.put("dbeae", new Pair<Material,Material>(GREEN, DEEP_RED));
+        colors.put("eaeservice", new Pair<Material,Material>(GREEN, DEEP_RED));
+        COLORS_BY_TYPE = Collections.unmodifiableMap(colors);
+    }
+
     private Date timestamp;
     private String details;
     private String type; // thunder, dbvirtual, cache, dedicatedsearch, dbanalytics, webapp, dbeae, eaeservice
@@ -80,5 +132,24 @@ public class NodeDetails {
 
     public void setLoadAverage(long loadAverage) {
         this.loadAverage = loadAverage;
+    }
+
+    public void project(long nowMS, GeometryBuffer buffer, DetailLevel detailLevel, Transformation xform) {
+        if (detailLevel == null) return;
+        Projectable shape = SHAPES_BY_TYPE.get(type);
+        if (shape != null) {
+            buffer.pushTransform();
+            try {
+                Pair<Material,Material> pair = COLORS_BY_TYPE.get(type);
+                if (pair != null) {
+                    Material material = "down".equals(status) ? pair.getB() : pair.getA();
+                    material.apply(nowMS, buffer);
+                }
+                xform.apply(nowMS, buffer);
+                shape.project(nowMS, buffer);
+            } finally {
+                buffer.popTransform();
+            }
+        }
     }
 }

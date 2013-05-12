@@ -220,9 +220,9 @@ public class BoundingBox extends AbstractBoundingVolume<BoundingBox> {
     }
 
     public boolean isNull() {
-        return corner1.x >= corner2.x &&
-               corner1.y >= corner2.y &&
-               corner1.z >= corner2.z;
+        return corner1.x == corner2.x &&
+               corner1.y == corner2.y &&
+               corner1.z == corner2.z;
     }
 
     public double getLongestDimension() {

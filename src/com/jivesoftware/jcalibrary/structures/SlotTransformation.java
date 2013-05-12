@@ -68,8 +68,8 @@ public class SlotTransformation implements Decorator, DetailComputer {
 
     @Override
     public void apply(long nowMS, GeometryBuffer buffer) {
-        currentScale = animate(nowMS, currentScale, targetScale, 0.25);
-        currentTelescope = animate(nowMS, currentTelescope, targetTelescope, 4.0);
+        currentScale = animate(nowMS, currentScale, targetScale, 4.0);
+        currentTelescope = animate(nowMS, currentTelescope, targetTelescope, 12.0);
         buffer.translate(homeAngleVector.scale(homeRadius - currentTelescope));
         buffer.rotate(Axis.Z, -homeAngle);
         buffer.translate(homeZVector);
@@ -82,7 +82,7 @@ public class SlotTransformation implements Decorator, DetailComputer {
         if (delta == 0) {
             return target;
         }
-        double move = (nowMS - lastMS) / (perSecond * 1000.0);
+        double move = perSecond * (nowMS - lastMS) / 1000.0;
         if (move > delta) {
             return target;
         }
@@ -103,12 +103,12 @@ public class SlotTransformation implements Decorator, DetailComputer {
             return null; // do not render
         }
         double telescope = (homeRadius - currentTelescope);
-        double scale = currentScale * 0.3;
+        double scale = currentScale;
         double dimension = longestDimension * 0.5;
         double x = homeAngleVector.i * telescope;
         double y = homeAngleVector.j * telescope;
-        double z = homeAngleVector.k * telescope + homeZVector.k;
-        double distance = Vector.computeDistance(observer.x - x, observer.y - y, observer.z - z);
+        double z = homeAngleVector.k * telescope + homeZVector.k + telescope * 0.25;
+        double distance = Vector.computeDistance(observer.x - x, observer.y - y, observer.z - z) / scale;
         double angle = dimension / distance;
         Map.Entry<Double,DetailLevel> entry = DETAIL_LEVELS_BY_VISIBLE_ANGLE.ceilingEntry(angle);
         return entry == null ? null : entry.getValue();

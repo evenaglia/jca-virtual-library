@@ -9,14 +9,17 @@ import net.venaglia.realms.common.physical.bounds.BoundingVolume;
 import net.venaglia.realms.common.physical.decorators.Brush;
 import net.venaglia.realms.common.physical.decorators.Color;
 import net.venaglia.realms.common.physical.decorators.Material;
+import net.venaglia.realms.common.physical.decorators.Transformation;
 import net.venaglia.realms.common.physical.geom.Point;
 import net.venaglia.realms.common.physical.geom.Shape;
+import net.venaglia.realms.common.physical.geom.Vector;
 import net.venaglia.realms.common.physical.geom.detail.DetailLevel;
 import net.venaglia.realms.common.physical.geom.primitives.Box;
 import net.venaglia.realms.common.physical.geom.primitives.QuadSequence;
 import net.venaglia.realms.common.projection.GeometryBuffer;
 import net.venaglia.realms.common.projection.Projectable;
 
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -28,6 +31,13 @@ public class JiveInstancePresentation implements Projectable, Bounded {
 
     private static final Shape<?> FRAME = new Box().setMaterial(Material.INHERIT);
     private static final Shape<?> FRAME_LOW = new QuadSequence(new Point(-1,-1,-1), new Point(-1,-1,1), new Point(1,-1,1), new Point(1,-1,-1)).scale(0.5).setMaterial(Material.INHERIT);
+
+    private static final Material STATE_EMPTY_SLOT = Material.makeWireFrame(Color.GRAY_25);
+    private static final Material STATE_UNKNOWN = Material.makeWireFrame(Color.GRAY_50);
+    private static final Material STATE_OK = Material.makeWireFrame(Color.WHITE);
+    private static final Material STATE_OFFLINE = Material.makeWireFrame(new Color(0.5f,0,0,1));
+    private static final Material STATE_PARTIAL_DOWN = new ColorCycle(Brush.WIRE_FRAME, Color.ORANGE, 750);
+
 
     private final DetailLevel detailLevel;
     private final BoundingVolume<?> bounds = new BoundingBox(new Point(-0.5,-0.5,-0.5), new Point(0.5,0.5,0.5));
@@ -69,6 +79,9 @@ public class JiveInstancePresentation implements Projectable, Bounded {
             } else {
                 project(VisualObjects.BLANK_ICONS.get(instance), nowMS, buffer);
             }
+            if (canShow(DetailLevel.MEDIUM)) {
+                projectNodeDetails(instance, nowMS,  buffer);
+            }
         }
     }
 
@@ -77,12 +90,6 @@ public class JiveInstancePresentation implements Projectable, Bounded {
             projectable.project(nowMS, buffer);
         }
     }
-
-    private static final Material STATE_EMPTY_SLOT = Material.makeWireFrame(Color.GRAY_25);
-    private static final Material STATE_UNKNOWN = Material.makeWireFrame(Color.GRAY_50);
-    private static final Material STATE_OK = Material.makeWireFrame(Color.WHITE);
-    private static final Material STATE_OFFLINE = Material.makeWireFrame(new Color(0.5f,0,0,1));
-    private static final Material STATE_PARTIAL_DOWN = new ColorCycle(Brush.WIRE_FRAME, Color.ORANGE, 750);
 
     private void projectFrame(Map<String, NodeDetails> detailsMap, long nowMS, GeometryBuffer buffer) {
         int up = 0, down = 0;
@@ -109,32 +116,69 @@ public class JiveInstancePresentation implements Projectable, Bounded {
         }
     }
 
-    private static class ColorCycle extends Material {
-
-        private final Brush brush;
-        private final int pulseDurationMS;
-        private final Color[] colorCycle;
-
-        private ColorCycle(Brush brush, Color baseColor, int pulseDurationMS) {
-            this.brush = brush;
-            this.pulseDurationMS = pulseDurationMS;
-            this.colorCycle = new Color[Math.round(pulseDurationMS / 8.0f + 1)]; // 125fps max
-            for (int i = 0, l = colorCycle.length; i < l; i++) {
-                float p = (float)Math.sin(Math.PI * i / l);
-                this.colorCycle[i] = new Color(baseColor.r * p, baseColor.g * p, baseColor.b * p, 1.0f);
-            }
-        }
-
-        @Override
-        public boolean isStatic() {
-            return false;
-        }
-
-        @Override
-        public void apply(long nowMS, GeometryBuffer buffer) {
-            buffer.applyBrush(brush);
-            int now = (int)(nowMS % pulseDurationMS);
-            buffer.color(colorCycle[Math.round(now / 8.0f)]);
+    private void projectNodeDetails(JiveInstance instance, long nowMS, GeometryBuffer buffer) {
+        Map<String,NodeDetails> allNodeDetails = instance.getAllNodeDetails();
+        Iterator<NodeDetails> detailsIterator = allNodeDetails.values().iterator();
+        for (Transformation xform : TRANSFORMATIONS[allNodeDetails.size()]) {
+            detailsIterator.next().project(nowMS, buffer, detailLevel.less(2), xform);
         }
     }
+
+    private static final Transformation[][] TRANSFORMATIONS = {
+            { },
+            buildXForms(0,0,1,0,0),
+            buildXForms(0.25,0,2,0,0),
+            buildXForms(0.25,0,3,0,0),
+            buildXForms(0.25,0.25,3,0,0),
+            buildXForms(0.3,0.25,0,2,2),
+            buildXForms(0.3,0.25,0,2,3),
+            buildXForms(0.3,0.25,0,3,3),
+            buildXForms(0.3,0.35,3,2,2),
+            buildXForms(0.3,0.35,2,3,3),
+            buildXForms(0.3,0.35,3,3,3),
+            buildXForms(0.3,0.35,3,4,3),
+            buildXForms(0.3,0.35,4,3,4),
+            buildXForms(0.3,0.35,4,2,4),
+    };
+
+    private static Transformation[] buildXForms(double radius, double z, int n, int m, int o) {
+        Transformation[] result = new Transformation[n + m + o];
+        double a1 = Math.PI * (n == 0 ? 1.0 : 0.66667);
+        double a2 = Math.PI * (n == 0 ? 0.0 : -0.66667);
+        for (int i = 0; i < n; i++) {
+            Transformation xForm = new Transformation();
+            xForm.scale(0.5 - radius);
+            if (radius > 0) {
+                xForm.translate(new Vector(0,-radius,0));
+            }
+            if (i != 0) {
+                xForm.rotate(new Vector(-3, -1, 10).normalize(), Math.PI * 2 * i / n);
+            }
+            result[i] = xForm;
+        }
+        for (int i = 0; i < m; i++) {
+            Transformation xForm = new Transformation();
+            xForm.scale(0.5 - radius);
+            if (radius > 0 || z != 0) {
+                xForm.translate(new Vector(0,-radius,z));
+            }
+            if (i != 0) {
+                xForm.rotate(new Vector(-3, -1, 10).normalize(), a1 + Math.PI * 2 * i / m);
+            }
+            result[i + n] = xForm;
+        }
+        for (int i = 0; i < o; i++) {
+            Transformation xForm = new Transformation();
+            xForm.scale(0.5 - radius);
+            if (radius > 0 || z != 0) {
+                xForm.translate(new Vector(0,-radius,-z));
+            }
+            if (i != 0) {
+                xForm.rotate(new Vector(-3, -1, 10).normalize(), a2 + Math.PI * 2 * i / o);
+            }
+            result[i + n + m] = xForm;
+        }
+        return result;
+    }
+
 }

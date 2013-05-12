@@ -4,7 +4,9 @@ import com.jivesoftware.jcalibrary.objects.AbstractLibraryElement;
 import com.jivesoftware.jcalibrary.objects.Objects;
 import net.venaglia.realms.common.physical.decorators.Brush;
 import net.venaglia.realms.common.physical.decorators.Transformation;
+import net.venaglia.realms.common.physical.geom.Point;
 import net.venaglia.realms.common.physical.geom.detail.DetailComputer;
+import net.venaglia.realms.common.physical.geom.detail.DetailLevel;
 import net.venaglia.realms.common.physical.geom.primitives.Box;
 import net.venaglia.realms.common.projection.GeometryBuffer;
 import net.venaglia.realms.common.util.Ref;
@@ -72,7 +74,16 @@ public class ServerSlot extends AbstractLibraryElement<ServerSlot> {
                 }
             }
         }, this);
-        slotTransformation = new SlotTransformation(this);
+        slotTransformation = new SlotTransformation(this) {
+            @Override
+            public DetailLevel computeDetail(Point observer, double longestDimension) {
+                DetailLevel detailLevel = super.computeDetail(observer, longestDimension);
+                if (detailLevel != null && jiveInstance != null && jiveInstance.isSelected()) {
+                    return detailLevel.more(2);
+                }
+                return detailLevel;
+            }
+        };
     }
 
     public ServerRack getServerRack() {
@@ -101,6 +112,10 @@ public class ServerSlot extends AbstractLibraryElement<ServerSlot> {
 
     public boolean isHover() {
         return hover;
+    }
+
+    public SlotTransformation getSlotTransformation() {
+        return slotTransformation;
     }
 
     @Override

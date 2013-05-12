@@ -53,6 +53,10 @@ public class VisualObjects {
 
     private final Map<Key<?>,Object> data = new HashMap<Key<?>,Object>();
 
+    public void clear() {
+        data.clear();
+    }
+
     public abstract static class Key<T> {
 
         public T get(JiveInstance instance) {
