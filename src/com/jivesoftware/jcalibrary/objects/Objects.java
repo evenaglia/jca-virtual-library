@@ -1,9 +1,11 @@
 package com.jivesoftware.jcalibrary.objects;
 
+import com.jivesoftware.jcalibrary.structures.JiveInstance;
 import net.venaglia.realms.common.physical.decorators.Color;
 import net.venaglia.realms.common.physical.decorators.Material;
 import net.venaglia.realms.common.physical.geom.Shape;
 import net.venaglia.realms.common.physical.geom.complex.Origin;
+import net.venaglia.realms.common.physical.geom.detail.AbstractDynamicDetailSource;
 import net.venaglia.realms.common.physical.geom.detail.DetailLevel;
 import net.venaglia.realms.common.physical.geom.detail.DynamicDetail;
 import net.venaglia.realms.common.physical.geom.detail.DynamicDetailSource;
@@ -37,8 +39,8 @@ public enum Objects implements Projectable {
 //    BOX_CURSOR_SMALL(new BoxCursor(0.333,0.333,0.333,0.125,0.025,0.25,DetailLevel.MEDIUM)),
 //    BOX_CURSOR_SMALL(new BoxCursor(0.333,0.333,0.333,0.0625,0.025/4,0.25,DetailLevel.MEDIUM)),
     BOX_CURSOR_SMALL(new BoxCursor(1,1,1, 0.125, 0.0125, 0.1875,DetailLevel.MEDIUM)),
-    EMPTY_SERVER_FRAME(new Box().setMaterial(Material.makeWireFrame(Color.GRAY_25))),
-//    EMPTY_SERVER_FRAME(new Box().setMaterial(Material.makeWireFrame(new Color(0.1f, 0.1f, 0.1f)))),
+//    EMPTY_SERVER_FRAME(new Box().setMaterial(Material.makeWireFrame(Color.GRAY_25))),
+    EMPTY_SERVER_FRAME(new Box().setMaterial(Material.makeWireFrame(new Color(0.1f, 0.1f, 0.1f)))),
     SERVER_FRAME(new Box().setMaterial(Material.makeWireFrame(Color.GRAY_25))),
     HEART(new Heart(DetailLevel.MEDIUM_LOW).setMaterial(Material.INHERIT)),
     SCROLL(new Scroll(DetailLevel.MEDIUM_LOW).setMaterial(Material.INHERIT)),
@@ -51,6 +53,7 @@ public enum Objects implements Projectable {
     TERTAHEDRON(new Tetrahedron().scale(0.3333).setMaterial(Material.INHERIT)),
     CUBE(new Box().scale(0.5).setMaterial(Material.INHERIT)),
     ICOSAHEDRON(new Icosahedron().scale(0.3333).setMaterial(Material.INHERIT)),
+    JIVE_INSTANCE(JiveInstancePresentationSource.class),
 
     DEMO_OBJECT_0(DemoObjects.ObjectCategory.INTERESTING_SHAPES.getDynamicDetailSource(0)),
     DEMO_OBJECT_1(DemoObjects.ObjectCategory.INTERESTING_SHAPES.getDynamicDetailSource(1)),
@@ -83,17 +86,9 @@ public enum Objects implements Projectable {
     }
 
     private Objects(final Shape<?> source) {
-        this(new DynamicDetailSource<Shape<?>>() {
-            public float getSizeFactor() {
-                return 6;
-            }
-
+        this(new AbstractDynamicDetailSource<Shape<?>>(6) {
             public Shape<?> produceAt(DetailLevel detailLevel) {
                 return source;
-            }
-
-            public Shape<?> getTarget() {
-                return null; // compute default target from shape
             }
         });
     }
@@ -102,7 +97,7 @@ public enum Objects implements Projectable {
         DynamicDetail<?> detail = this.detail.get();
         if (detail == null) {
             //noinspection unchecked
-            detail = new DynamicDetail(getSource(), DetailLevel.LOW);
+            detail = new DynamicDetail(getSource(), DetailLevel.LOW, JiveInstance.DETAIL_COMPUTER_REF);
             this.detail.set(detail);
         }
         return detail;

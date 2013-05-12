@@ -40,7 +40,7 @@ public class ServerRack extends AbstractLibraryElement<ServerRack> {
         Box baseBox  = new Box().scale(0.8888).translate(Vector.Z.scale(0.57291625)).translate(Vector.Y.scale(-0.83333));
         int k = 0;
         for (int i = 0; i < ServerRackSource.SHELVES; i++) {
-            double z = i * (ServerRackSource.HEIGHT - ServerRackSource.LOWEST_SHELF) / (ServerRackSource.SHELVES - 1) + ServerRackSource.LOWEST_SHELF;
+            double z = i * (ServerRackSource.HEIGHT - ServerRackSource.LOWEST_SHELF) / (ServerRackSource.SHELVES - 1) + ServerRackSource.LOWEST_SHELF * 0.85;
             for (int j = 0; j < slotsPerShelf; j++) {
                 double x = ServerRackSource.WIDTH * -0.5 + slotWidth * (j + 0.5);
                 Vector xlate = new Vector(x, 0, z);

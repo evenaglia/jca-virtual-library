@@ -6,6 +6,7 @@ import net.venaglia.realms.common.physical.bounds.BoundingVolume;
 import net.venaglia.realms.common.projection.GeometryBuffer;
 import net.venaglia.realms.common.projection.Projectable;
 import net.venaglia.realms.common.projection.ProjectionBuffer;
+import net.venaglia.realms.common.util.Ref;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -27,14 +28,18 @@ public class DynamicDetail<P extends Projectable & Bounded> implements Projectab
 
     private final Map<DetailLevel,P> alternates;
     private final DetailLevel defaultDetailLevel;
+    private final Ref<DetailComputer> detailComputer;
     private final BoundingBox bounds;
     private final float sizeFactor;
 
     private DetailListener detailListener;
 
-    public DynamicDetail (DynamicDetailSource<P> source, DetailLevel defaultDetailLevel) {
+    public DynamicDetail (DynamicDetailSource<P> source,
+                          DetailLevel defaultDetailLevel,
+                          Ref<DetailComputer> detailComputer) {
         this.alternates = new EnumMap<DetailLevel,P>(DetailLevel.class);
         this.defaultDetailLevel = defaultDetailLevel;
+        this.detailComputer = detailComputer;
         List<BoundingBox> boxes = new ArrayList<BoundingBox>(DETAIL_LEVELS.length);
         for (DetailLevel detailLevel : DetailLevel.values()) {
             P projectable = source.produceAt(detailLevel);
@@ -64,20 +69,19 @@ public class DynamicDetail<P extends Projectable & Bounded> implements Projectab
     }
 
     public void project(long nowMS, ProjectionBuffer buffer) {
-//        double viewingAngle = buffer.viewingAngle(bounds, buffer.getCameraViewPoint());
-//        if (!Double.isNaN(viewingAngle)) {
-//            int size = Math.getExponent(viewingAngle * VIEW_ANGLE_FACTOR * sizeFactor);
-//            if (size > 0) {
-//                int detailIndex = Math.min(Math.round(size), DETAIL_LEVELS.length) - 1;
-//                DetailLevel detailLevel = DETAIL_LEVELS[detailIndex];
-                DetailLevel detailLevel = DetailLevel.MEDIUM;
-                P projectable = alternates.get(detailLevel);
-                if (projectable != null) {
-                    usingDetail(detailLevel);
-                    projectable.project(nowMS, buffer);
-                }
-//            }
-//        }
+        DetailLevel detailLevel = null;
+        if (detailComputer != null) {
+            DetailComputer computer = detailComputer.get();
+            detailLevel = computer == null ? null : computer.computeDetail(buffer.getCameraViewPoint(), getBounds().getLongestDimension());
+        }
+        if (detailLevel == null) {
+            detailLevel = defaultDetailLevel == null ? DetailLevel.MEDIUM : defaultDetailLevel;
+        }
+        P projectable = alternates.get(detailLevel);
+        if (projectable != null) {
+            usingDetail(detailLevel);
+            projectable.project(nowMS, buffer);
+        }
     }
 
     private void usingDetail(DetailLevel detailLevel) {

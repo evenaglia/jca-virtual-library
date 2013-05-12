@@ -6,6 +6,7 @@ import net.venaglia.realms.common.physical.decorators.Material;
 import net.venaglia.realms.common.physical.decorators.Transformation;
 import net.venaglia.realms.common.physical.geom.Axis;
 import net.venaglia.realms.common.physical.geom.CompositeShape;
+import net.venaglia.realms.common.physical.geom.detail.AbstractDynamicDetailSource;
 import net.venaglia.realms.common.physical.geom.detail.DetailLevel;
 import net.venaglia.realms.common.physical.geom.Faceted;
 import net.venaglia.realms.common.physical.geom.FlippableShape;
@@ -369,18 +370,10 @@ public class DemoObjects implements Series<Shape<?>> {
                                                                           final int shapeNum,
                                                                           final double timescale,
                                                                           final boolean wireframe) {
-        return new DynamicDetailSource<Shape<?>>() {
-            public float getSizeFactor() {
-                return 0.5f;
-            }
-
+        return new AbstractDynamicDetailSource<Shape<?>>() {
             public Shape<?> produceAt(DetailLevel detailLevel) {
                 int divisions = objectCategory == ObjectCategory.PLATONIC_SOLIDS ? 0 : detailLevel.steps;
                 return new DemoObjects(timescale, divisions, objectCategory, wireframe).shapes[shapeNum];
-            }
-
-            public Shape<?> getTarget() {
-                return null; // compute default target from shape
             }
         };
     }

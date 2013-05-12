@@ -225,6 +225,10 @@ public class BoundingBox extends AbstractBoundingVolume<BoundingBox> {
                corner1.z >= corner2.z;
     }
 
+    public double getLongestDimension() {
+        return Vector.computeDistance(corner2.x - corner1.x, corner2.y - corner1.y, corner2.z - corner1.z);
+    }
+
     public double volume() {
         return (corner2.x - corner1.x) * (corner2.y - corner1.y) * (corner2.z - corner1.z);
     }
@@ -284,8 +288,13 @@ public class BoundingBox extends AbstractBoundingVolume<BoundingBox> {
         }
 
         @Override
+        public double getLongestDimension() {
+            return isNull ? 0 : Double.POSITIVE_INFINITY;
+        }
+
+        @Override
         public double volume() {
-            return corner2.x;
+            return isNull ? 0 : Double.POSITIVE_INFINITY;
         }
 
         @Override

@@ -60,5 +60,7 @@ public interface BoundingVolume<T extends BoundingVolume<T>> extends Element<T>,
 
     Point center();
 
+    double getLongestDimension();
+
     double volume();
 }

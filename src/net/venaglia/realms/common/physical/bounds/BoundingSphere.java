@@ -176,6 +176,10 @@ public class BoundingSphere extends AbstractBoundingVolume<BoundingSphere> {
         return center;
     }
 
+    public double getLongestDimension() {
+        return radius * 2.0;
+    }
+
     public double volume() {
         double c = 4.0 * Math.PI / 3.0;
         return c * radius * radius * radius; // 4/3 * pi * r^3
@@ -308,8 +312,13 @@ public class BoundingSphere extends AbstractBoundingVolume<BoundingSphere> {
         }
 
         @Override
+        public double getLongestDimension() {
+            return isNull ? 0 : Double.POSITIVE_INFINITY;
+        }
+
+        @Override
         public double volume() {
-            return radius;
+            return isNull ? 0 : Double.POSITIVE_INFINITY;
         }
 
         @Override

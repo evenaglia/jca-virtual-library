@@ -1,7 +1,6 @@
 package com.jivesoftware.jcalibrary.objects;
 
 import net.venaglia.realms.common.physical.bounds.BoundingBox;
-import net.venaglia.realms.common.physical.decorators.Color;
 import net.venaglia.realms.common.physical.decorators.Material;
 import net.venaglia.realms.common.physical.geom.CompositeShape;
 import net.venaglia.realms.common.physical.geom.detail.DetailLevel;

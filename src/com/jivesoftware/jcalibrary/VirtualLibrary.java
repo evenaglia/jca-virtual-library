@@ -45,7 +45,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class VirtualLibrary {
 
     private Library library;
-    private DetailBanner detailBanner = new DetailBanner(null).scale(2).translate(new Vector(0,-0.5,5));
+//    private DetailBanner detailBanner = new DetailBanner(null).scale(2).translate(new Vector(0,-0.5,5));
     private ServerRack[] serverRacks;
     private MouseTargets mouseTargets;
     private List<DynamicDetail<?>> demoObjects;
@@ -170,7 +170,7 @@ public class VirtualLibrary {
         view.addViewEventHandler(new ViewEventHandler() {
             public void handleInit() {
                 GL11.glEnable(GL11.GL_BLEND);
-                Objects.SERVER_RACK.getDynamicDetail().setDetailListener(detailBanner);
+//                Objects.SERVER_RACK.getDynamicDetail().setDetailListener(detailBanner);
             }
 
             public void handleClose() {
@@ -204,15 +204,15 @@ public class VirtualLibrary {
                 for (ServerRack serverRack : serverRacks) {
                     serverRack.project(nowMS, buffer);
                 }
-                if (detailBanner != null) {
-                    buffer.pushTransform();
-                    detailBanner.project(nowMS, buffer);
-                    buffer.rotate(Axis.Z, Math.PI * 0.666667);
-                    detailBanner.project(nowMS, buffer);
-                    buffer.rotate(Axis.Z, Math.PI * 0.666667);
-                    detailBanner.project(nowMS, buffer);
-                    buffer.popTransform();
-                }
+//                if (detailBanner != null) {
+//                    buffer.pushTransform();
+//                    detailBanner.project(nowMS, buffer);
+//                    buffer.rotate(Axis.Z, Math.PI * 0.666667);
+//                    detailBanner.project(nowMS, buffer);
+//                    buffer.rotate(Axis.Z, Math.PI * 0.666667);
+//                    detailBanner.project(nowMS, buffer);
+//                    buffer.popTransform();
+//                }
                 ServerSlot hoverSlot = VirtualLibrary.this.hoverSlot.get();
                 if (hoverSlot != null) {
                     buffer.pushTransform();

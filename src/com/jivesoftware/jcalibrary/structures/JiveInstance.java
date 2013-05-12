@@ -2,11 +2,12 @@ package com.jivesoftware.jcalibrary.structures;
 
 import com.jivesoftware.jcalibrary.api.rest.CustomerInfo;
 import com.jivesoftware.jcalibrary.api.rest.CustomerInstallation;
-import com.jivesoftware.jcalibrary.api.rest.InstallationPageViewBean;
 import com.jivesoftware.jcalibrary.objects.Objects;
 import net.venaglia.realms.common.physical.decorators.Color;
+import net.venaglia.realms.common.physical.geom.detail.DetailComputer;
 import net.venaglia.realms.common.projection.GeometryBuffer;
 import net.venaglia.realms.common.projection.Projectable;
+import net.venaglia.realms.common.util.Ref;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,9 +19,19 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class JiveInstance implements Projectable {
 
+    public static final Ref<DetailComputer> DETAIL_COMPUTER_REF = new Ref<DetailComputer>() {
+        @Override
+        public DetailComputer get() {
+            JiveInstance instance = ACTIVE_JIVE_INSTANCE.get();
+            return instance == null ? null : instance.getSlotTransformation();
+        }
+    };
+    public static final ThreadLocal<JiveInstance> ACTIVE_JIVE_INSTANCE = new ThreadLocal<JiveInstance>();
+
+
     public enum Grouping {
         Production(Color.GREEN),
-        UAT(new Color(1.0f, 0.9f, 0.0f)),
+        UAT(Color.ORANGE),
         Test(Color.BLUE),
         Thunder(Color.CYAN),
         Other(Color.MAGENTA);
@@ -141,6 +152,10 @@ public class JiveInstance implements Projectable {
         return details;
     }
 
+    public Map<String,NodeDetails> getAllNodeDetails() {
+        return nodeDetails;
+    }
+
     public Grouping getGrouping() {
         switch (installation.getInstallationType()) {
             case UAT:
@@ -198,9 +213,14 @@ public class JiveInstance implements Projectable {
             buffer.pushTransform();
             buffer.identity();
             slotTransformation.apply(nowMS, buffer);
-            Objects.ORIGIN.project(nowMS, buffer);
-//            Objects.CUBE.project(nowMS, buffer);
-            // todo: render the box, and all the components inside it
+            ACTIVE_JIVE_INSTANCE.set(this);
+
+            try {
+                Objects.JIVE_INSTANCE.project(nowMS, buffer);
+                // todo: render the box, and all the components inside it
+            } finally {
+                ACTIVE_JIVE_INSTANCE.remove();
+            }
             buffer.popTransform();
         }
     }

@@ -2,16 +2,21 @@ package com.jivesoftware.jcalibrary.structures;
 
 import com.jivesoftware.jcalibrary.objects.ServerRackSource;
 import net.venaglia.realms.common.physical.geom.Axis;
+import net.venaglia.realms.common.physical.geom.Point;
 import net.venaglia.realms.common.physical.geom.Vector;
+import net.venaglia.realms.common.physical.geom.detail.DetailLevel;
 import net.venaglia.realms.common.projection.Decorator;
+import net.venaglia.realms.common.physical.geom.detail.DetailComputer;
 import net.venaglia.realms.common.projection.GeometryBuffer;
+
+import java.util.Map;
 
 /**
  * User: ed
  * Date: 5/10/13
  * Time: 11:51 AM
  */
-public class SlotTransformation implements Decorator {
+public class SlotTransformation implements Decorator, DetailComputer {
 
     private final double homeX;
     private final double homeY;
@@ -91,5 +96,21 @@ public class SlotTransformation implements Decorator {
 
     public void setTargetTelescope(double targetTelescope) {
         this.targetTelescope = targetTelescope;
+    }
+
+    public DetailLevel computeDetail(Point observer, double longestDimension) {
+        if (longestDimension <= 0) {
+            return null; // do not render
+        }
+        double telescope = (homeRadius - currentTelescope);
+        double scale = currentScale * 0.3;
+        double dimension = longestDimension * scale * 0.5;
+        double x = homeAngleVector.i * telescope;
+        double y = homeAngleVector.j * telescope;
+        double z = homeAngleVector.k * telescope + homeZVector.k;
+        double distance = Vector.computeDistance(observer.x - x, observer.y - y, observer.z - z) / scale;
+        double angle = Math.atan2(dimension, distance);
+        Map.Entry<Double,DetailLevel> entry = DETAIL_LEVELS_BY_VISIBLE_ANGLE.ceilingEntry(angle);
+        return entry == null ? null : entry.getValue();
     }
 }

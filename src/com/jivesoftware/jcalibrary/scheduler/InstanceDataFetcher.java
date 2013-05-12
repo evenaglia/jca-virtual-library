@@ -19,9 +19,11 @@ import java.net.URLConnection;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 public class InstanceDataFetcher implements Runnable{
 
@@ -36,7 +38,7 @@ public class InstanceDataFetcher implements Runnable{
     public Map<String,Pair<Long,String>> getMapping() {
         if (this.instanceMapping == null) {
             Map<String,Pair<Long,String>> instanceMapping = new HashMap<String,Pair<Long,String>>();
-            final URL url = Thread.currentThread().getContextClassLoader().getResource("customerinstallationToHostMap.csv");
+            final URL url = Thread.currentThread().getContextClassLoader().getResource("customerInstallationToHostMap.csv");
             BufferedReader rd;
             URLConnection conn;
             String line;

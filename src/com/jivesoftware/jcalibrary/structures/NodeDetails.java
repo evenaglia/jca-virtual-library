@@ -10,7 +10,7 @@ import java.util.Date;
 public class NodeDetails {
     private Date timestamp;
     private String details;
-    private String type;
+    private String type; // thunder, dbvirtual, cache, dedicatedsearch, dbanalytics, webapp, dbeae, eaeservice
     private String status;
     private String url;
 
