@@ -47,7 +47,7 @@ public class ServerRackSource implements DynamicDetailSource<DisplayList> {
 //        delegate.addShape(end.translate(Vector.X.scale(WIDTH * -0.5)));
 //        delegate.addShape(end.translate(Vector.X.scale(WIDTH * 0.5)));
 
-        Shape<?> shelf = new RoundedRectangle3D(WIDTH - 0.25, DEPTH, 0.125, 0.0125, 0, detailLevel);
+        Shape<?> shelf = new RoundedRectangle3D(WIDTH - 0.25, DEPTH, 0.125, 0.025, 0, detailLevel);
         for (int i = 0; i < SHELVES; i++) {
             double z = i * (HEIGHT - LOWEST_SHELF) / (SHELVES - 1) + LOWEST_SHELF;
             delegate.addShape(shelf.translate(Vector.Z.scale(z)));

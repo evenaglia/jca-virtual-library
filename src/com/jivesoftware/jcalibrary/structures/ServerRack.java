@@ -70,6 +70,10 @@ public class ServerRack extends AbstractLibraryElement<ServerRack> {
         return null;
     }
 
+    public ServerSlot[] getSlots() {
+        return slots;
+    }
+
     public int getSeq() {
         return seq;
     }

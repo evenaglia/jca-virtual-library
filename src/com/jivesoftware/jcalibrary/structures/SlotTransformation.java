@@ -77,6 +77,14 @@ public class SlotTransformation implements Decorator, DetailComputer {
         lastMS = nowMS;
     }
 
+    public void getXYScale(double[] xys) {
+        double r = homeRadius - currentTelescope;
+        xys[0] = homeAngleVector.i * r;
+        xys[1] = homeAngleVector.j * r;
+        xys[2] = currentScale;
+//        xys[3] = homeAngle;
+    }
+
     private double animate(long nowMS, double current, double target, double perSecond) {
         double delta = Math.abs(target - current);
         if (delta == 0) {

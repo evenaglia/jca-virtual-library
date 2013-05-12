@@ -5,13 +5,12 @@ import com.jivesoftware.jcalibrary.api.rest.CustomerInstallation;
 import com.jivesoftware.jcalibrary.objects.Objects;
 import com.jivesoftware.jcalibrary.objects.VisualObjects;
 import net.venaglia.realms.common.physical.decorators.Color;
-import net.venaglia.realms.common.physical.geom.detail.DetailComputer;
 import net.venaglia.realms.common.projection.GeometryBuffer;
 import net.venaglia.realms.common.projection.Projectable;
-import net.venaglia.realms.common.util.Ref;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * User: ed
@@ -100,6 +99,7 @@ public class JiveInstance implements Projectable {
     private CustomerInstallation installation;
     private long pageViews = -1;
     private boolean selected = false;
+    private AtomicBoolean dirty = new AtomicBoolean();
 
     private Map<String,NodeDetails> nodeDetails = new ConcurrentHashMap<String,NodeDetails>();
 
@@ -108,7 +108,10 @@ public class JiveInstance implements Projectable {
     }
 
     public void setCustomer(CustomerInfo customer) {
-        this.customer = customer;
+        if (!eq(this.customer, customer)) {
+            this.customer = customer;
+            dirty.set(true);
+        }
     }
 
     public CustomerInstallation getInstallation() {
@@ -116,7 +119,10 @@ public class JiveInstance implements Projectable {
     }
 
     public void setInstallation(CustomerInstallation installation) {
-        this.installation = installation;
+        if (!eq(this.installation, installation)) {
+            this.installation = installation;
+            dirty.set(true);
+        }
     }
 
     public long getCustomerInstallationId() {
@@ -124,7 +130,10 @@ public class JiveInstance implements Projectable {
     }
 
     public void setCustomerInstallationId(long customerInstallationId) {
-        this.customerInstallationId = customerInstallationId;
+        if (this.customerInstallationId != customerInstallationId) {
+            this.customerInstallationId = customerInstallationId;
+            dirty.set(true);
+        }
     }
 
     public long getPageViews() {
@@ -132,14 +141,18 @@ public class JiveInstance implements Projectable {
     }
 
     public void setPageViews(long pageViews) {
-        this.pageViews = pageViews;
+        if (this.pageViews != pageViews) {
+            this.pageViews = pageViews;
+            dirty.set(true);
+        }
     }
 
     public NodeDetails getNodeDetails(String nodeId) {
         NodeDetails details = nodeDetails.get(nodeId);
         if (details == null) {
-            details = new NodeDetails();
+            details = new NodeDetails(dirty);
             nodeDetails.put(nodeId, details);
+            dirty.set(true);
         }
         return details;
     }
@@ -182,6 +195,7 @@ public class JiveInstance implements Projectable {
         this.installation = that.installation;
         this.pageViews = that.pageViews;
         this.visualObjects.clear();
+        dirty.set(true);
     }
 
 
@@ -191,6 +205,18 @@ public class JiveInstance implements Projectable {
 
     public void setSelected(boolean selected) {
         this.selected = selected;
+    }
+
+    public boolean checkAndClearDirty() {
+        boolean dirty = this.dirty.getAndSet(false);
+        if (dirty) {
+            VisualObjects.OVERALL_STATE.clear(this);
+        }
+        return dirty;
+    }
+
+    private <T> boolean eq(T a, T b) {
+        return a == b || !(a == null || b == null) && a.equals(b);
     }
 
     /**

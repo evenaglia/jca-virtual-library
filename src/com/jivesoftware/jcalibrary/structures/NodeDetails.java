@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
 * User: ed
@@ -66,16 +67,25 @@ public class NodeDetails {
     private String status;
     private String url;
 
-    private long activeConnections;
-    private long activeSessions;
-    private long loadAverage;
+    private int activeConnections;
+    private int activeSessions;
+    private float loadAverage;
+
+    private AtomicBoolean dirty;
+
+    public NodeDetails(AtomicBoolean dirty) {
+        this.dirty = dirty;
+    }
 
     public Date getTimestamp() {
         return timestamp;
     }
 
     public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
+        if (!eq(this.timestamp, timestamp)) {
+            this.timestamp = timestamp;
+            dirty.set(true);
+        }
     }
 
     public String getDetails() {
@@ -83,7 +93,10 @@ public class NodeDetails {
     }
 
     public void setDetails(String details) {
-        this.details = details;
+        if (!eq(this.details, details)) {
+            this.details = details;
+            dirty.set(true);
+        }
     }
 
     public String getType() {
@@ -91,7 +104,10 @@ public class NodeDetails {
     }
 
     public void setType(String type) {
-        this.type = type;
+        if (!eq(this.type, type)) {
+            this.type = type;
+            dirty.set(true);
+        }
     }
 
     public String getStatus() {
@@ -99,7 +115,10 @@ public class NodeDetails {
     }
 
     public void setStatus(String status) {
-        this.status = status;
+        if (!eq(this.status, status)) {
+            this.status = status;
+            dirty.set(true);
+        }
     }
 
     public String getUrl() {
@@ -107,31 +126,46 @@ public class NodeDetails {
     }
 
     public void setUrl(String url) {
-        this.url = url;
+        if (!eq(this.url, url)) {
+            this.url = url;
+            dirty.set(true);
+        }
     }
 
-    public long getActiveConnections() {
+    public int getActiveConnections() {
         return activeConnections;
     }
 
-    public void setActiveConnections(long activeConnections) {
-        this.activeConnections = activeConnections;
+    public void setActiveConnections(int activeConnections) {
+        if (this.activeConnections != activeConnections) {
+            this.activeConnections = activeConnections;
+            dirty.set(true);
+        }
     }
 
-    public long getActiveSessions() {
+    public int getActiveSessions() {
         return activeSessions;
     }
 
-    public void setActiveSessions(long activeSessions) {
-        this.activeSessions = activeSessions;
+    public void setActiveSessions(int activeSessions) {
+        if (this.activeSessions != activeSessions) {
+            this.activeSessions = activeSessions;
+            dirty.set(true);
+        }
     }
 
-    public long getLoadAverage() {
+    public float getLoadAverage() {
         return loadAverage;
     }
 
-    public void setLoadAverage(long loadAverage) {
-        this.loadAverage = loadAverage;
+    public void setLoadAverage(float loadAverage) {
+        if (this.loadAverage != loadAverage) {
+            this.loadAverage = loadAverage;
+        }
+    }
+
+    private <T> boolean eq(T a, T b) {
+        return a == b || !(a == null || b == null) && a.equals(b);
     }
 
     public void project(long nowMS, GeometryBuffer buffer, DetailLevel detailLevel, Transformation xform) {
@@ -151,5 +185,39 @@ public class NodeDetails {
                 buffer.popTransform();
             }
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        NodeDetails that = (NodeDetails)o;
+
+        if (activeConnections != that.activeConnections) return false;
+        if (activeSessions != that.activeSessions) return false;
+        if (Float.compare(that.loadAverage, loadAverage) != 0) return false;
+        if (details != null ? !details.equals(that.details) : that.details != null) return false;
+        if (dirty != null ? !dirty.equals(that.dirty) : that.dirty != null) return false;
+        if (status != null ? !status.equals(that.status) : that.status != null) return false;
+        if (timestamp != null ? !timestamp.equals(that.timestamp) : that.timestamp != null) return false;
+        if (type != null ? !type.equals(that.type) : that.type != null) return false;
+        if (url != null ? !url.equals(that.url) : that.url != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = timestamp != null ? timestamp.hashCode() : 0;
+        result = 31 * result + (details != null ? details.hashCode() : 0);
+        result = 31 * result + (type != null ? type.hashCode() : 0);
+        result = 31 * result + (status != null ? status.hashCode() : 0);
+        result = 31 * result + (url != null ? url.hashCode() : 0);
+        result = 31 * result + activeConnections;
+        result = 31 * result + activeSessions;
+        result = 31 * result + (loadAverage != +0.0f ? Float.floatToIntBits(loadAverage) : 0);
+        result = 31 * result + (dirty != null ? dirty.hashCode() : 0);
+        return result;
     }
 }

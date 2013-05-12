@@ -108,9 +108,9 @@ public class InstanceDataFetcher implements Runnable{
 
                             // TODO Replace fake data with real data
                             Random r = new Random();
-                            nodeDetails.setActiveConnections(Math.abs((long) (r.nextGaussian() * 25)));
-                            nodeDetails.setActiveSessions(Math.abs((long) (r.nextGaussian() * 25)));
-                            nodeDetails.setLoadAverage(Math.abs((long) (r.nextGaussian() * 2)));
+                            nodeDetails.setActiveConnections(Math.abs((int)Math.round(r.nextGaussian() * 25)));
+                            nodeDetails.setActiveSessions(Math.abs((int)Math.round(r.nextGaussian() * 25)));
+                            nodeDetails.setLoadAverage(Math.abs((float)(r.nextGaussian() * 2)));
                         }
                     }
 

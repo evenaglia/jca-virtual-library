@@ -52,6 +52,7 @@ public class VirtualLibrary {
     private AtomicReference<ServerSlot> hoverSlot = new AtomicReference<ServerSlot>();
     private AtomicReference<ServerSlot> selectedSlot = new AtomicReference<ServerSlot>();
     private View3D view;
+    private LibraryHUD hud;
 
     public VirtualLibrary() {
         final KeyboardManager keyboardManager = new KeyboardManager();
@@ -83,7 +84,7 @@ public class VirtualLibrary {
                 }
                 JiveInstance jiveInstance = value.getJiveInstance();
                 if (jiveInstance != null) {
-                    value.getSlotTransformation().setTargetTelescope(6);
+                    value.getSlotTransformation().setTargetTelescope(8);
                     value.getSlotTransformation().setTargetScale(4);
                 }
                 long instanceID = jiveInstance != null ? jiveInstance.getCustomerInstallationId() : -1;
@@ -138,7 +139,7 @@ public class VirtualLibrary {
             protected void update(double elapsedSeconds, Position nextPosition) {
                 super.update(elapsedSeconds, nextPosition);
                 double r = Math.sqrt(nextPosition.cameraX * nextPosition.cameraX + nextPosition.cameraY * nextPosition.cameraY);
-                double desiredZ = 0.5 - (r <= 3.8 ? -1 : r < 13.8 ? -0.5 : 0);
+                double desiredZ = 0.5 - (r <= 4.2 ? -0.5 : r < 13.8 ? 0.5 : 0);
                 if (nextPosition.cameraZ > desiredZ) {
                     deltaZ += 5 * elapsedSeconds;
                 } else {
@@ -149,12 +150,13 @@ public class VirtualLibrary {
                     nextPosition.cameraX *= 18.8 / r;
                     nextPosition.cameraY *= 18.8 / r;
                 }
-//                if ()
+                hud.updateCamera(nextPosition);
             }
         };
         final List<MouseTargets> testedMouseTargets = new ArrayList<MouseTargets>(4);
         final AtomicReference<MouseTarget<?>> activeMouseTarget = new AtomicReference<MouseTarget<?>>();
         view = new View3D(new Dimension(1600, 1024)) {
+//        view = new View3D(new Dimension(1024, 600)) {
             @Override
             protected void userRenderTargets(ProjectionBuffer buffer,
                                              GeometryBuffer targetBuffer,
@@ -255,9 +257,11 @@ public class VirtualLibrary {
         view.setCamera(camera);
         view.setDefaultBrush(Brush.TEXTURED);
         JiveInstancesRegistry.getInstance().init(this);
+        hud = new LibraryHUD(serverRacks);
     }
 
     public void start() {
+        hud.show();
         view.start();
     }
 
@@ -296,6 +300,7 @@ public class VirtualLibrary {
         VirtualLibrary virtualLibrary = new VirtualLibrary();
         WorkScheduler.interval(new InstanceDataFetcher(), 60, TimeUnit.SECONDS);
         virtualLibrary.start();
+
 //        Thread.sleep(18000000);
     }
 }

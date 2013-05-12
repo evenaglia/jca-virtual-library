@@ -37,4 +37,9 @@ public class ColorCycle extends Material {
         int now = (int)(nowMS % pulseDurationMS);
         buffer.color(colorCycle[Math.round(now / 8.0f)]);
     }
+
+    public Color getColor(long nowMS) {
+        int now = (int)(nowMS % pulseDurationMS);
+        return colorCycle[Math.round(now / 8.0f)];
+    }
 }
