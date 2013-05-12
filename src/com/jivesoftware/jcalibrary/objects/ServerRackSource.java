@@ -22,7 +22,7 @@ import net.venaglia.realms.common.projection.impl.DisplayListBuffer;
 public class ServerRackSource implements DynamicDetailSource<DisplayList> {
 
     public static final float HEIGHT = 11.4166f;
-    public static final float WIDTH = 11.0f;
+    public static final float WIDTH = 10.0f;
     public static final float DEPTH = 1.6666f;
     public static final float LOWEST_SHELF = 0.4166f;
     public static final int SHELVES = 11;

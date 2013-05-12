@@ -6,10 +6,10 @@ import com.jivesoftware.jcalibrary.structures.ServerSlot;
 import com.jivesoftware.jcalibrary.structures.SlotTransformation;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * The registry keeps track of all JiveInstances that exists in the system and helps with keeping track of
@@ -21,7 +21,7 @@ public class JiveInstancesRegistry {
 
     protected VirtualLibrary virtualLibrary;
     protected Map<Long, JiveInstance> instances = new ConcurrentHashMap<Long, JiveInstance>();
-    protected Set<JiveInstance> availableInstances = new CopyOnWriteArraySet<JiveInstance>();
+    protected Set<JiveInstance> availableInstances = new HashSet<JiveInstance>();
 
     private JiveInstancesRegistry() {
         super();

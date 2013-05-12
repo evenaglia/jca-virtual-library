@@ -2,6 +2,7 @@ package com.jivesoftware.jcalibrary.structures;
 
 import com.jivesoftware.jcalibrary.objects.AbstractLibraryElement;
 import com.jivesoftware.jcalibrary.objects.Objects;
+import net.venaglia.realms.common.physical.decorators.Brush;
 import net.venaglia.realms.common.physical.decorators.Transformation;
 import net.venaglia.realms.common.physical.geom.primitives.Box;
 import net.venaglia.realms.common.projection.GeometryBuffer;
@@ -93,8 +94,11 @@ public class ServerSlot extends AbstractLibraryElement<ServerSlot> {
     protected void projectImpl(long nowMS, GeometryBuffer buffer) {
         if (jiveInstance != null) {
             buffer.pushTransform();
+            buffer.pushBrush();
+            buffer.applyBrush(Brush.FRONT_SHADED);
             buffer.identity();
             jiveInstance.project(nowMS, buffer);
+            buffer.popBrush();
             buffer.popTransform();
         } else {
             Objects.EMPTY_SERVER_FRAME.project(nowMS, buffer);

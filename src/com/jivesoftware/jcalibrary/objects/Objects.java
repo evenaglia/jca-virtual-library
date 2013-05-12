@@ -3,6 +3,7 @@ package com.jivesoftware.jcalibrary.objects;
 import net.venaglia.realms.common.physical.decorators.Color;
 import net.venaglia.realms.common.physical.decorators.Material;
 import net.venaglia.realms.common.physical.geom.Shape;
+import net.venaglia.realms.common.physical.geom.complex.Origin;
 import net.venaglia.realms.common.physical.geom.detail.DetailLevel;
 import net.venaglia.realms.common.physical.geom.detail.DynamicDetail;
 import net.venaglia.realms.common.physical.geom.detail.DynamicDetailSource;
@@ -30,6 +31,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public enum Objects implements Projectable {
 
+    ORIGIN(new Origin(0.25)),
     SERVER_RACK(ServerRackSource.class),
 //    BOX_CURSOR_SMALL(new BoxCursor(4,4,4,DetailLevel.MEDIUM).scale(0.0833)),
 //    BOX_CURSOR_SMALL(new BoxCursor(0.333,0.333,0.333,0.125,0.025,0.25,DetailLevel.MEDIUM)),

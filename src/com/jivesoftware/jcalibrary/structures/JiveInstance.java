@@ -196,8 +196,10 @@ public class JiveInstance implements Projectable {
     public void project(long nowMS, GeometryBuffer buffer) {
         if (slotTransformation != null) {
             buffer.pushTransform();
+            buffer.identity();
             slotTransformation.apply(nowMS, buffer);
-            Objects.CUBE.project(nowMS, buffer);
+            Objects.ORIGIN.project(nowMS, buffer);
+//            Objects.CUBE.project(nowMS, buffer);
             // todo: render the box, and all the components inside it
             buffer.popTransform();
         }

@@ -78,7 +78,7 @@ public class Origin implements Shape<Origin> {
     }
 
     public BoundingVolume<?> getBounds() {
-        return BoundingSphere.NULL;
+        return stuff.getBounds();
     }
 
     public Origin scale(double magnitude) {

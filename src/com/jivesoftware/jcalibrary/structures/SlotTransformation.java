@@ -20,6 +20,8 @@ public class SlotTransformation implements Decorator {
     private final double homeAngle;
     private final Vector homeAngleVector;
     private final Vector homeZVector;
+    private final int rackSeq;
+    private final int slotSeq;
 
     private long lastMS = -1;
     private double currentScale = 1;
@@ -29,16 +31,16 @@ public class SlotTransformation implements Decorator {
 
     public SlotTransformation(ServerSlot slot) {
         int rackNum = slot.getServerRack().getSeq();
-        double rackAngle = Math.PI * 2.0 * rackNum / 40.0;
+        double rackAngle = Math.PI * -2.0 * rackNum / 40.0;
 
         int slotsPerShelf = (int)(ServerRackSource.WIDTH / 1.1111f);
-        double slotWidth = ServerRackSource.WIDTH / slotsPerShelf;
-        int shelfSeq = slot.getSeq() / slotsPerShelf;
-        int shelfNum = slot.getSeq() % slotsPerShelf;
+        double slotWidth = ServerRackSource.WIDTH * 0.3 / slotsPerShelf;
+        int shelfSeq = slot.getSeq() % slotsPerShelf;
+        int shelfNum = slot.getSeq() / slotsPerShelf;
         float shelfHeight = (ServerRackSource.HEIGHT - ServerRackSource.LOWEST_SHELF) / (ServerRackSource.SHELVES - 1);
-        double slotX = ServerRackSource.WIDTH * -0.15 + slotWidth * (shelfSeq + 0.15);
-        double slotY = 19.625;
-        double slotZ = shelfNum * shelfHeight * 0.3 + ServerRackSource.LOWEST_SHELF;
+        double slotX = 19.625;
+        double slotY = ServerRackSource.WIDTH * -0.15 + slotWidth * (shelfSeq + 0.5);
+        double slotZ = shelfNum * shelfHeight * 0.3 + shelfHeight * 0.15 + ServerRackSource.LOWEST_SHELF * 0.3;
 
         homeX = slotX;
         homeY = slotY;
@@ -47,8 +49,11 @@ public class SlotTransformation implements Decorator {
         homeZ = slotZ;
         homeRadius = Math.sqrt(homeX * homeX + homeY * homeY);
         homeAngle = Math.atan2(homeY, homeX) + rackAngle;
-        homeAngleVector = new Vector(Math.sin(homeAngle) * homeRadius, Math.cos(homeAngle) * homeRadius, 0);
+        homeAngleVector = new Vector(Math.sin(homeAngle), Math.cos(homeAngle), 0);
         homeZVector = Vector.Z.scale(homeZ);
+
+        this.rackSeq = rackNum;
+        this.slotSeq = slot.getSeq();
     }
 
     @Override
@@ -60,9 +65,9 @@ public class SlotTransformation implements Decorator {
     public void apply(long nowMS, GeometryBuffer buffer) {
         currentScale = animate(nowMS, currentScale, targetScale, 0.25);
         currentTelescope = animate(nowMS, currentTelescope, targetTelescope, 4.0);
-        buffer.rotate(Axis.Z, homeAngle);
-        buffer.translate(homeZVector);
         buffer.translate(homeAngleVector.scale(homeRadius - currentTelescope));
+        buffer.rotate(Axis.Z, -homeAngle);
+        buffer.translate(homeZVector);
         buffer.scale(currentScale * 0.3);
         lastMS = nowMS;
     }
