@@ -97,11 +97,11 @@ public class JCAManager {
                 String line = reader.readLine();
                 line = reader.readLine();
                 while (line != null) {
-                    line = reader.readLine();
                     String[] cols = line.split(",");
                     int icon1 = Integer.parseInt(cols[1]);
                     int icon2 = Integer.parseInt(cols[2]);
                     customerIcons.put(Long.parseLong(cols[0]), new int[]{ icon1, icon2 });
+                    line = reader.readLine();
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);

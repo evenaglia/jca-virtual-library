@@ -104,12 +104,12 @@ public class SlotTransformation implements Decorator, DetailComputer {
         }
         double telescope = (homeRadius - currentTelescope);
         double scale = currentScale * 0.3;
-        double dimension = longestDimension * scale * 0.5;
+        double dimension = longestDimension * 0.5;
         double x = homeAngleVector.i * telescope;
         double y = homeAngleVector.j * telescope;
         double z = homeAngleVector.k * telescope + homeZVector.k;
-        double distance = Vector.computeDistance(observer.x - x, observer.y - y, observer.z - z) / scale;
-        double angle = Math.atan2(dimension, distance);
+        double distance = Vector.computeDistance(observer.x - x, observer.y - y, observer.z - z);
+        double angle = dimension / distance;
         Map.Entry<Double,DetailLevel> entry = DETAIL_LEVELS_BY_VISIBLE_ANGLE.ceilingEntry(angle);
         return entry == null ? null : entry.getValue();
     }

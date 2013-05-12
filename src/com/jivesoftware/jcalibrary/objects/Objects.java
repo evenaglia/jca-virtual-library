@@ -1,6 +1,6 @@
 package com.jivesoftware.jcalibrary.objects;
 
-import com.jivesoftware.jcalibrary.structures.JiveInstance;
+import com.jivesoftware.jcalibrary.structures.ServerSlot;
 import net.venaglia.realms.common.physical.decorators.Color;
 import net.venaglia.realms.common.physical.decorators.Material;
 import net.venaglia.realms.common.physical.geom.Shape;
@@ -97,7 +97,7 @@ public enum Objects implements Projectable {
         DynamicDetail<?> detail = this.detail.get();
         if (detail == null) {
             //noinspection unchecked
-            detail = new DynamicDetail(getSource(), DetailLevel.LOW, JiveInstance.DETAIL_COMPUTER_REF);
+            detail = new DynamicDetail(getSource(), DetailLevel.LOW, ServerSlot.DETAIL_COMPUTER_REF);
             this.detail.set(detail);
         }
         return detail;

@@ -122,7 +122,7 @@ public class VirtualLibrary {
             protected void update(double elapsedSeconds, Position nextPosition) {
                 super.update(elapsedSeconds, nextPosition);
                 double r = Math.sqrt(nextPosition.cameraX * nextPosition.cameraX + nextPosition.cameraY * nextPosition.cameraY);
-                double desiredZ = 0.5 - (r <= 3.8 ? 2 : r < 13.8 ? 1 : 0);
+                double desiredZ = 0.5 - (r <= 3.8 ? -1 : r < 13.8 ? -0.5 : 0);
                 if (nextPosition.cameraZ > desiredZ) {
                     deltaZ += 5 * elapsedSeconds;
                 } else {

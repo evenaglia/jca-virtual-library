@@ -4,8 +4,10 @@ import com.jivesoftware.jcalibrary.objects.AbstractLibraryElement;
 import com.jivesoftware.jcalibrary.objects.Objects;
 import net.venaglia.realms.common.physical.decorators.Brush;
 import net.venaglia.realms.common.physical.decorators.Transformation;
+import net.venaglia.realms.common.physical.geom.detail.DetailComputer;
 import net.venaglia.realms.common.physical.geom.primitives.Box;
 import net.venaglia.realms.common.projection.GeometryBuffer;
+import net.venaglia.realms.common.util.Ref;
 import net.venaglia.realms.common.view.MouseTarget;
 import net.venaglia.realms.common.view.MouseTargetEventListener;
 
@@ -16,11 +18,21 @@ import net.venaglia.realms.common.view.MouseTargetEventListener;
  */
 public class ServerSlot extends AbstractLibraryElement<ServerSlot> {
 
+    public static final Ref<DetailComputer> DETAIL_COMPUTER_REF = new Ref<DetailComputer>() {
+        @Override
+        public DetailComputer get() {
+            ServerSlot slot = ACTIVE_SERVER_SLOT.get();
+            return slot == null ? null : slot.slotTransformation;
+        }
+    };
+    public static final ThreadLocal<ServerSlot> ACTIVE_SERVER_SLOT = new ThreadLocal<ServerSlot>();
+
     private final ServerRack serverRack;
     private final int seq;
     private final Box bounds;
     private final MouseTarget<ServerSlot> mouseTarget;
     private final MouseTargetEventListener<ServerSlot> delegateListener;
+    private final SlotTransformation slotTransformation;
 
     private boolean hover;
     private JiveInstance jiveInstance;
@@ -60,6 +72,7 @@ public class ServerSlot extends AbstractLibraryElement<ServerSlot> {
                 }
             }
         }, this);
+        slotTransformation = new SlotTransformation(this);
     }
 
     public ServerRack getServerRack() {
@@ -92,16 +105,21 @@ public class ServerSlot extends AbstractLibraryElement<ServerSlot> {
 
     @Override
     protected void projectImpl(long nowMS, GeometryBuffer buffer) {
-        if (jiveInstance != null) {
-            buffer.pushTransform();
+        ACTIVE_SERVER_SLOT.set(this);
+        try {
             buffer.pushBrush();
-            buffer.applyBrush(Brush.FRONT_SHADED);
+            buffer.pushTransform();
             buffer.identity();
-            jiveInstance.project(nowMS, buffer);
+            slotTransformation.apply(nowMS, buffer);
+            if (jiveInstance != null) {
+                jiveInstance.project(nowMS, buffer);
+            } else {
+                Objects.JIVE_INSTANCE.project(nowMS, buffer);
+            }
             buffer.popBrush();
             buffer.popTransform();
-        } else {
-            Objects.EMPTY_SERVER_FRAME.project(nowMS, buffer);
+        } finally {
+            ACTIVE_SERVER_SLOT.remove();
         }
     }
 }

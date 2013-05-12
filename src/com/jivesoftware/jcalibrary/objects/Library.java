@@ -65,9 +65,9 @@ public class Library implements Projectable {
 
         this.floor = new CompositeShape();
         this.floor.addShape(new Dome(new Point(0,0,ceilingHeight + 4), new Point(0,20,ceilingHeight), new Point(20,0,ceilingHeight), new Point(-20,0,ceilingHeight), segments2));
-        this.floor.addShape(new Ring(segments2, 20.05, 14));
-        this.floor.addShape(new Ring(segments1, 14.05, 4).translate(Vector.Z.reverse()));
-        this.floor.addShape(new Disc(segments0, 4.1).translate(Vector.Z.scale(-2)));
+        this.floor.addShape(new Ring(segments2, 20, 14));
+        this.floor.addShape(new Ring(segments1, 14, 4).translate(Vector.Z.scale(0.5)));
+        this.floor.addShape(new Disc(segments0, 4).translate(Vector.Z.scale(1)));
         this.floor.setMaterial(Material.makeTexture(hexGrid, new MatrixMapping(Matrix_4x4.scale(new Vector(1,12.0/7.0,1)))));
 //        this.floor.setMaterial(Material.makeTexture(grid, new MatrixMapping(Matrix_4x4.scale(new Vector(2,2,1)))));
         this.floor.inheritMaterialToContainedShapes();
@@ -80,17 +80,17 @@ public class Library implements Projectable {
 //        Material grid3 = Material.makeTexture(hexGrid, new CylindricalMapping(2,29));
         this.room = new CompositeShape();
 //        this.room.addShape(new Tube(segments3, 20, ceilingHeight).flip().translate(Vector.Z.scale(ceilingHeight * 0.5)).setMaterial(grid1));
-        this.room.addShape(new Tube(segments2, 14, 1).flip().translate(Vector.Z.scale(-0.5)).setMaterial(grid2));
-        this.room.addShape(new Tube(segments1, 4, 1).flip().translate(Vector.Z.scale(-1.5)).setMaterial(grid3));
+        this.room.addShape(new Tube(segments2, 14, 0.5).translate(Vector.Z.scale(0.25)).setMaterial(grid2));
+        this.room.addShape(new Tube(segments1, 4, 0.5).translate(Vector.Z.scale(0.75)).setMaterial(grid3));
         this.room.setMaterial(Material.INHERIT);
 
         this.stripLights = new CompositeShape();
         this.stripLights.addShape(new Torus(segments3, 4, 20, 0.025, false).translate(new Vector(0,0,ceilingHeight)));
         this.stripLights.addShape(new Torus(segments3, 4, 20, 0.025, false));
         this.stripLights.addShape(new Torus(segments2, 4, 14, 0.025, false));
-        this.stripLights.addShape(new Torus(segments2, 4, 14, 0.025, false).translate(new Vector(0,0,-1)));
-        this.stripLights.addShape(new Torus(segments1, 4, 4, 0.025, false).translate(new Vector(0,0,-1)));
-        this.stripLights.addShape(new Torus(segments1, 4, 4, 0.025, false).translate(new Vector(0,0,-2)));
+        this.stripLights.addShape(new Torus(segments2, 4, 14, 0.025, false).translate(new Vector(0,0,0.5)));
+        this.stripLights.addShape(new Torus(segments1, 4, 4, 0.025, false).translate(new Vector(0,0,0.5)));
+        this.stripLights.addShape(new Torus(segments1, 4, 4, 0.025, false).translate(new Vector(0,0,1)));
         this.stripLights.setMaterial(Material.makeSelfIlluminating(Color.CYAN));
         this.stripLights.inheritMaterialToContainedShapes();
 

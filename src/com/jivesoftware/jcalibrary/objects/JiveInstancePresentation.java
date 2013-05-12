@@ -2,6 +2,7 @@ package com.jivesoftware.jcalibrary.objects;
 
 import com.jivesoftware.jcalibrary.structures.JiveInstance;
 import com.jivesoftware.jcalibrary.structures.NodeDetails;
+import com.jivesoftware.jcalibrary.structures.ServerSlot;
 import net.venaglia.realms.common.physical.bounds.Bounded;
 import net.venaglia.realms.common.physical.bounds.BoundingBox;
 import net.venaglia.realms.common.physical.bounds.BoundingVolume;
@@ -9,8 +10,10 @@ import net.venaglia.realms.common.physical.decorators.Brush;
 import net.venaglia.realms.common.physical.decorators.Color;
 import net.venaglia.realms.common.physical.decorators.Material;
 import net.venaglia.realms.common.physical.geom.Point;
+import net.venaglia.realms.common.physical.geom.Shape;
 import net.venaglia.realms.common.physical.geom.detail.DetailLevel;
 import net.venaglia.realms.common.physical.geom.primitives.Box;
+import net.venaglia.realms.common.physical.geom.primitives.QuadSequence;
 import net.venaglia.realms.common.projection.GeometryBuffer;
 import net.venaglia.realms.common.projection.Projectable;
 
@@ -23,8 +26,10 @@ import java.util.Map;
  */
 public class JiveInstancePresentation implements Projectable, Bounded {
 
+    private static final Shape<?> FRAME = new Box().setMaterial(Material.INHERIT);
+    private static final Shape<?> FRAME_LOW = new QuadSequence(new Point(-1,-1,-1), new Point(-1,-1,1), new Point(1,-1,1), new Point(1,-1,-1)).scale(0.5).setMaterial(Material.INHERIT);
+
     private final DetailLevel detailLevel;
-    private final Box frame = new Box().setMaterial(Material.INHERIT);
     private final BoundingVolume<?> bounds = new BoundingBox(new Point(-0.5,-0.5,-0.5), new Point(0.5,0.5,0.5));
 
     public JiveInstancePresentation(DetailLevel detailLevel) {
@@ -47,13 +52,33 @@ public class JiveInstancePresentation implements Projectable, Bounded {
 
     @Override
     public void project(long nowMS, GeometryBuffer buffer) {
-        JiveInstance instance = JiveInstance.ACTIVE_JIVE_INSTANCE.get();
-        if (instance != null) {
+        ServerSlot serverSlot = ServerSlot.ACTIVE_SERVER_SLOT.get();
+        JiveInstance instance = serverSlot == null ? null : serverSlot.getJiveInstance();
+        if (instance == null) {
+            STATE_EMPTY_SLOT.apply(nowMS, buffer);
+            if (canShow(DetailLevel.MEDIUM)) {
+                FRAME.project(nowMS, buffer);
+            } else {
+                FRAME_LOW.project(nowMS, buffer);
+            }
+        } else {
             Map<String,NodeDetails> nodeDetails = instance.getAllNodeDetails();
             projectFrame(nodeDetails, nowMS, buffer);
+            if (canShow(DetailLevel.MEDIUM_LOW)) {
+                project(VisualObjects.ICONS.get(instance), nowMS, buffer);
+            } else {
+                project(VisualObjects.BLANK_ICONS.get(instance), nowMS, buffer);
+            }
         }
     }
 
+    private void project(Projectable projectable, long nowMS, GeometryBuffer buffer) {
+        if (projectable != null) {
+            projectable.project(nowMS, buffer);
+        }
+    }
+
+    private static final Material STATE_EMPTY_SLOT = Material.makeWireFrame(Color.GRAY_25);
     private static final Material STATE_UNKNOWN = Material.makeWireFrame(Color.GRAY_50);
     private static final Material STATE_OK = Material.makeWireFrame(Color.WHITE);
     private static final Material STATE_OFFLINE = Material.makeWireFrame(new Color(0.5f,0,0,1));
@@ -77,7 +102,11 @@ public class JiveInstancePresentation implements Projectable, Bounded {
             material = STATE_PARTIAL_DOWN;
         }
         material.apply(nowMS, buffer);
-        frame.project(nowMS, buffer);
+        if (canShow(DetailLevel.MEDIUM_HIGH)) {
+            FRAME.project(nowMS, buffer);
+        } else {
+            FRAME_LOW.project(nowMS, buffer);
+        }
     }
 
     private static class ColorCycle extends Material {

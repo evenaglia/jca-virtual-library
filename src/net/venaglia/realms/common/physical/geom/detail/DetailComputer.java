@@ -14,12 +14,12 @@ public interface DetailComputer {
 
     NavigableMap<Double,DetailLevel> DETAIL_LEVELS_BY_VISIBLE_ANGLE = new TreeMap<Double,DetailLevel>() {
         {
-            put(0.125 * Math.PI / 180.0, null);
-            put(8 * Math.PI / 180.0, DetailLevel.LOW);
-            put(12 * Math.PI / 180.0, DetailLevel.MEDIUM_LOW);
-            put(22 * Math.PI / 180.0, DetailLevel.MEDIUM);
-            put(40 * Math.PI / 180.0, DetailLevel.MEDIUM_HIGH);
-            put(360 * Math.PI / 180.0, DetailLevel.HIGH);
+            put(Math.tan(0.125 * Math.PI / 180.0), null);
+            put(Math.tan(3 * Math.PI / 180.0), DetailLevel.LOW);
+            put(Math.tan(6 * Math.PI / 180.0), DetailLevel.MEDIUM_LOW);
+            put(Math.tan(12 * Math.PI / 180.0), DetailLevel.MEDIUM);
+            put(Math.tan(24 * Math.PI / 180.0), DetailLevel.MEDIUM_HIGH);
+            put(Double.POSITIVE_INFINITY, DetailLevel.HIGH);
         }
     };
 
