@@ -94,7 +94,7 @@ public class JiveInstance implements Projectable {
     /**
      * ************************ PROPERTIES *******************************************************
      */
-    protected long customerInstallationId;
+    protected Long customerInstallationId;
     private CustomerInfo customer;
     private CustomerInstallation installation;
     private long pageViews = -1;
@@ -125,12 +125,12 @@ public class JiveInstance implements Projectable {
         }
     }
 
-    public long getCustomerInstallationId() {
+    public Long getCustomerInstallationId() {
         return customerInstallationId;
     }
 
-    public void setCustomerInstallationId(long customerInstallationId) {
-        if (this.customerInstallationId != customerInstallationId) {
+    public void setCustomerInstallationId(Long customerInstallationId) {
+        if (!eq(this.customerInstallationId, customerInstallationId)) {
             this.customerInstallationId = customerInstallationId;
             dirty.set(true);
         }

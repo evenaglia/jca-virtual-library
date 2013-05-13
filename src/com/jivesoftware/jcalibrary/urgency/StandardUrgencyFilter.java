@@ -1,5 +1,6 @@
 package com.jivesoftware.jcalibrary.urgency;
 
+import com.jivesoftware.jcalibrary.api.rest.CustomerInfo;
 import com.jivesoftware.jcalibrary.structures.JiveInstance;
 import com.jivesoftware.jcalibrary.structures.NodeDetails;
 import com.jivesoftware.jcalibrary.structures.SlotTransformation;
@@ -7,6 +8,7 @@ import net.venaglia.realms.common.util.Pair;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * User: ed
@@ -69,9 +71,29 @@ public enum StandardUrgencyFilter implements UrgencyFilter<Pair<Float,Float>> {
             }
             return max;
         }
+    },
+
+    SEARCH_STRING {
+        @Override
+        protected float getValue(JiveInstance jiveInstance) {
+            float sum = 0;
+            CustomerInfo customer = jiveInstance.getCustomer();
+            if (customer != null) {
+                String searchFor = SEARCH_FOR.get();
+                String test = customer.getName().toLowerCase();
+                int start = test.indexOf(searchFor);
+                while (start >= 0) {
+                    sum += ((float)test.length()) / (start + 1);
+                    start = test.indexOf(searchFor, start + searchFor.length());
+                }
+            }
+            return sum;
+        }
     };
 
     private static final float[] STATS_BUFFER = new float[4096];
+
+    public static final AtomicReference<String> SEARCH_FOR = new AtomicReference<String>("");
 
     protected abstract float getValue(JiveInstance jiveInstance);
 
@@ -88,12 +110,13 @@ public enum StandardUrgencyFilter implements UrgencyFilter<Pair<Float,Float>> {
         int eighty = Math.max(0, Math.round(i * 0.95f) - 1);
         float base = STATS_BUFFER[eighty];
         float max = STATS_BUFFER[i - 1];
-        return new Pair<Float,Float>(base, max - base);
+        return base < max ? new Pair<Float,Float>(base, max - base) : null;
     }
 
     @Override
     public void apply(JiveInstance jiveInstance, SlotTransformation slotTransformation, Pair<Float,Float> baseLine) {
         if (baseLine == null) {
+            slotTransformation.setTarget(1,0);
             return; // not enough data
         }
         float base = baseLine.getA();

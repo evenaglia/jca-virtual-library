@@ -16,6 +16,7 @@ public class LibraryProps extends Properties {
     public static final String NODEJS_PROXY_URL = "zenoss.nodejs.proxy.url";
     public static final String NODEJS_PROXY_AUTHENTICATION = "zenoss.nodejs.proxy.authentication";
     public static final String JCA_URL = "jca.url";
+    public static final String JCA_CLIENT_VIEW_URL = "jca.client-view.url";
 
     public static final LibraryProps INSTANCE;
 

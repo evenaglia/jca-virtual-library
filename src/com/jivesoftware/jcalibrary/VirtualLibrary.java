@@ -1,6 +1,7 @@
 package com.jivesoftware.jcalibrary;
 
 import com.jivesoftware.jcalibrary.objects.Library;
+import com.jivesoftware.jcalibrary.objects.LibraryBanner;
 import com.jivesoftware.jcalibrary.objects.Objects;
 import com.jivesoftware.jcalibrary.scheduler.InstanceDataFetcher;
 import com.jivesoftware.jcalibrary.scheduler.WorkScheduler;
@@ -9,6 +10,7 @@ import com.jivesoftware.jcalibrary.structures.ServerRack;
 import com.jivesoftware.jcalibrary.structures.ServerSlot;
 import com.jivesoftware.jcalibrary.urgency.StandardUrgencyFilter;
 import com.jivesoftware.jcalibrary.urgency.UrgencyFilter;
+import com.jivesoftware.jcalibrary.util.Browser;
 import net.venaglia.realms.common.navigation.Position;
 import net.venaglia.realms.common.navigation.UserNavigation;
 import net.venaglia.realms.common.physical.bounds.BoundingSphere;
@@ -60,22 +62,92 @@ public class VirtualLibrary {
 
     public VirtualLibrary() {
         final KeyboardManager keyboardManager = new KeyboardManager() {
+
             @Override
             public void keyDown(int keyCode) {
                 super.keyDown(keyCode);
                 switch (keyCode) {
-                    case Keyboard.KEY_1:
+                    case Keyboard.KEY_F1:
                         applyUrgencyFilter(StandardUrgencyFilter.LOAD_AVERAGE);
                         break;
-                    case Keyboard.KEY_2:
+                    case Keyboard.KEY_F2:
                         applyUrgencyFilter(StandardUrgencyFilter.ACTIVE_CONNECTIONS);
                         break;
-                    case Keyboard.KEY_3:
+                    case Keyboard.KEY_F3:
                         applyUrgencyFilter(StandardUrgencyFilter.ACTIVE_SESSIONS);
+                        break;
+                    case Keyboard.KEY_F10:
+                        ServerSlot slot = selectedSlot.get();
+                        JiveInstance inst = slot == null ? null : slot.getJiveInstance();
+                        if (inst != null) {
+                            String url = LibraryProps.INSTANCE.getProperty(LibraryProps.JCA_CLIENT_VIEW_URL);
+                            Browser.openURL(url.replace("{id}", inst.getCustomerInstallationId().toString()));
+                        }
                         break;
                     case Keyboard.KEY_ESCAPE:
                         applyUrgencyFilter(StandardUrgencyFilter.NONE);
+                        LibraryBanner.INSTANCE.setText("");
                         break;
+                    case Keyboard.KEY_0: search('0'); break;
+                    case Keyboard.KEY_1: search('1'); break;
+                    case Keyboard.KEY_2: search('2'); break;
+                    case Keyboard.KEY_3: search('3'); break;
+                    case Keyboard.KEY_4: search('4'); break;
+                    case Keyboard.KEY_5: search('5'); break;
+                    case Keyboard.KEY_6: search('6'); break;
+                    case Keyboard.KEY_7: search('7'); break;
+                    case Keyboard.KEY_8: search('8'); break;
+                    case Keyboard.KEY_9: search('9'); break;
+                    case Keyboard.KEY_A: search('a'); break;
+                    case Keyboard.KEY_B: search('b'); break;
+                    case Keyboard.KEY_C: search('c'); break;
+                    case Keyboard.KEY_D: search('d'); break;
+                    case Keyboard.KEY_E: search('e'); break;
+                    case Keyboard.KEY_F: search('f'); break;
+                    case Keyboard.KEY_G: search('g'); break;
+                    case Keyboard.KEY_H: search('h'); break;
+                    case Keyboard.KEY_I: search('i'); break;
+                    case Keyboard.KEY_J: search('j'); break;
+                    case Keyboard.KEY_K: search('k'); break;
+                    case Keyboard.KEY_L: search('l'); break;
+                    case Keyboard.KEY_M: search('m'); break;
+                    case Keyboard.KEY_N: search('n'); break;
+                    case Keyboard.KEY_O: search('o'); break;
+                    case Keyboard.KEY_P: search('p'); break;
+                    case Keyboard.KEY_Q: search('q'); break;
+                    case Keyboard.KEY_R: search('r'); break;
+                    case Keyboard.KEY_S: search('s'); break;
+                    case Keyboard.KEY_T: search('t'); break;
+                    case Keyboard.KEY_U: search('u'); break;
+                    case Keyboard.KEY_V: search('v'); break;
+                    case Keyboard.KEY_W: search('w'); break;
+                    case Keyboard.KEY_X: search('x'); break;
+                    case Keyboard.KEY_Y: search('y'); break;
+                    case Keyboard.KEY_Z: search('z'); break;
+                    case Keyboard.KEY_BACK: search('\b'); break;
+                    default:
+                        StandardUrgencyFilter.SEARCH_FOR.set("");
+                        break;
+                }
+            }
+
+            private void search(char c) {
+                if (c == '\0') {
+                    StandardUrgencyFilter.SEARCH_FOR.set("");
+                    LibraryBanner.INSTANCE.clear();
+                } else if (c == '\b') {
+                    String newValue = StandardUrgencyFilter.SEARCH_FOR.get();
+                    if (newValue.length() > 1) {
+                        newValue = newValue.substring(0, newValue.length() - 1);
+                        LibraryBanner.INSTANCE.setText(newValue);
+                        StandardUrgencyFilter.SEARCH_FOR.set(newValue);
+                        applyUrgencyFilter(StandardUrgencyFilter.SEARCH_STRING);
+                    }
+                } else {
+                    String newValue = StandardUrgencyFilter.SEARCH_FOR.get() + c;
+                    LibraryBanner.INSTANCE.setText(newValue);
+                    StandardUrgencyFilter.SEARCH_FOR.set(newValue);
+                    applyUrgencyFilter(StandardUrgencyFilter.SEARCH_STRING);
                 }
             }
         };
@@ -106,7 +178,10 @@ public class VirtualLibrary {
                 }
                 JiveInstance jiveInstance = value.getJiveInstance();
                 if (jiveInstance != null) {
+                    LibraryBanner.INSTANCE.setText(jiveInstance.getCustomer().getDomain());
                     value.getSlotTransformation().setTarget(4, 8);
+                } else {
+                    LibraryBanner.INSTANCE.setText("");
                 }
                 hud.showJiveInstanceData(jiveInstance);
                 long instanceID = jiveInstance != null ? jiveInstance.getCustomerInstallationId() : -1;
@@ -128,6 +203,7 @@ public class VirtualLibrary {
             public void handleInit() {
                 super.handleInit();
                 library = new Library();
+                LibraryBanner.INSTANCE.setLibrary(library);
                 lights[0] = new FixedPointSourceLight(new Point(0,0,library.getCeilingHeight() + 1.5));
                 for (int i = 1, l = lights.length; i < l; i++) {
                     lights[i] = new FixedPointSourceLight(Point.ORIGIN.translate(library.rotatedVector(i, l)));
@@ -268,6 +344,7 @@ public class VirtualLibrary {
                     }
                     buffer.popBrush();
                 }
+                LibraryBanner.INSTANCE.project(nowMS, buffer);
             }
 
             public void renderOverlay(long nowMS, GeometryBuffer buffer) {
@@ -318,6 +395,9 @@ public class VirtualLibrary {
     }
 
     private <BASELINE> void applyUrgencyFilter(UrgencyFilter<BASELINE> filter) {
+        if (filter != StandardUrgencyFilter.SEARCH_STRING) {
+            StandardUrgencyFilter.SEARCH_FOR.set("");
+        }
         final List<ServerSlot> allServerSlots = new ArrayList<ServerSlot>(4096);
         for (ServerRack rack : serverRacks) {
             for (ServerSlot slot : rack.getSlots()) {
@@ -348,7 +428,11 @@ public class VirtualLibrary {
     public static void main(String[] args) throws Exception {
         LibraryProps.INSTANCE.getJCACredentials();
         VirtualLibrary virtualLibrary = new VirtualLibrary();
-        WorkScheduler.interval(new InstanceDataFetcher(), 60, TimeUnit.SECONDS);
+        WorkScheduler.once(new Runnable() {
+            public void run() {
+                WorkScheduler.interval(new InstanceDataFetcher(), 60, TimeUnit.SECONDS);
+            }
+        }, 3, TimeUnit.SECONDS);
         virtualLibrary.start();
 
 //        Thread.sleep(18000000);
