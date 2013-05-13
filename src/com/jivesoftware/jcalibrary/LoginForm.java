@@ -106,6 +106,7 @@ public class LoginForm {
 
             frame = new JFrame("JCA Login");
             frame.setSize(350, 140);
+            frame.setLocation(400, 200);
             frame.add(panel);
             frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
             frame.setVisible(true);

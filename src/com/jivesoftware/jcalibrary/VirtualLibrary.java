@@ -253,8 +253,9 @@ public class VirtualLibrary {
         };
         final List<MouseTargets> testedMouseTargets = new ArrayList<MouseTargets>(4);
         final AtomicReference<MouseTarget<?>> activeMouseTarget = new AtomicReference<MouseTarget<?>>();
-        view = new View3D(new Dimension(1600, 1024)) {
-//        view = new View3D(new Dimension(1024, 600)) {
+        Dimension windowSize = new Dimension(1600, 1024);
+//        Dimension windowSize = new Dimension(1024, 600);
+        view = new View3D(windowSize) {
             @Override
             protected void userRenderTargets(ProjectionBuffer buffer,
                                              GeometryBuffer targetBuffer,

@@ -44,6 +44,7 @@ public class LibraryHUD {
     private static final Pattern MATCH_REPORT_TOKEN = Pattern.compile("\\$\\{(\\w+\\.\\w+)*}");
 
     private int radius = 384;
+//    private int radius = 192;
     private JFrame frame;
     private JPanel libraryHotspots;
     private JTextArea activeInstanceDetail;
