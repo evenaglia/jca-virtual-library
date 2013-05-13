@@ -98,11 +98,8 @@ public class SlotTransformation implements Decorator, DetailComputer {
         return current + move * sign;
     }
 
-    public void setTargetScale(double targetScale) {
+    public void setTarget(double targetScale, double targetTelescope) {
         this.targetScale = targetScale;
-    }
-
-    public void setTargetTelescope(double targetTelescope) {
         this.targetTelescope = targetTelescope;
     }
 

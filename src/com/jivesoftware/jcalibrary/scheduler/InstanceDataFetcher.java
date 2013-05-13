@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class InstanceDataFetcher implements Runnable{
 
@@ -72,10 +73,12 @@ public class InstanceDataFetcher implements Runnable{
     public void run() {
         JiveInstancesRegistry registry = JiveInstancesRegistry.getInstance();
         Map<String,Pair<Long,String>> instanceMapping = getMapping();
+        FakeDataInjector fakeDataInjector = null;
         if (firstRun) {
             firstRun = false;
             doFirstRun(registry, instanceMapping);
             firstRunCompleted = true;
+            fakeDataInjector = new FakeDataInjector();
             System.out.println("First run completed");
         } else if (!firstRunCompleted) {
             return;
@@ -95,10 +98,10 @@ public class InstanceDataFetcher implements Runnable{
 //                    String id_type = (String)jcaInstanceJSONObject.get("id_type");
                     String status = (String)jcaInstanceJSONObject.get("status");
                     Pair<Long,String> pair = instanceMapping.get(stringId);
-                    Long id = pair.getA();
-                    String type = pair.getB();
+                    Long id = pair == null ? null : pair.getA();
 
                     if (id != null) {
+                        String type = pair.getB();
                         JiveInstance jiveInstance = registry.getJiveInstance(id);
                         if (jiveInstance != null) {
                             NodeDetails nodeDetails = jiveInstance.getNodeDetails(stringId);
@@ -107,12 +110,6 @@ public class InstanceDataFetcher implements Runnable{
                             nodeDetails.setType(type);
                             nodeDetails.setStatus(status);
                             nodeDetails.setUrl(stringId);
-
-                            // TODO Replace fake data with real data
-                            Random r = new Random();
-                            nodeDetails.setActiveConnections(Math.abs((int)Math.round(r.nextGaussian() * 25)));
-                            nodeDetails.setActiveSessions(Math.abs((int)Math.round(r.nextGaussian() * 25)));
-                            nodeDetails.setLoadAverage(Math.abs((float)(r.nextGaussian() * 2)));
                         }
                     }
 
@@ -122,8 +119,12 @@ public class InstanceDataFetcher implements Runnable{
                     // problem with getting attribute? - just skip it
                 }
             }
-        } catch (JSONException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (fakeDataInjector != null) {
+                WorkScheduler.interval(fakeDataInjector, 90, TimeUnit.SECONDS);
+            }
         }
     }
 

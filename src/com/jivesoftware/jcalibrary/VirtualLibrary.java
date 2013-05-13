@@ -7,6 +7,8 @@ import com.jivesoftware.jcalibrary.scheduler.WorkScheduler;
 import com.jivesoftware.jcalibrary.structures.JiveInstance;
 import com.jivesoftware.jcalibrary.structures.ServerRack;
 import com.jivesoftware.jcalibrary.structures.ServerSlot;
+import com.jivesoftware.jcalibrary.urgency.StandardUrgencyFilter;
+import com.jivesoftware.jcalibrary.urgency.UrgencyFilter;
 import net.venaglia.realms.common.navigation.Position;
 import net.venaglia.realms.common.navigation.UserNavigation;
 import net.venaglia.realms.common.physical.bounds.BoundingSphere;
@@ -25,10 +27,12 @@ import net.venaglia.realms.common.projection.Camera;
 import net.venaglia.realms.common.projection.GeometryBuffer;
 import net.venaglia.realms.common.projection.ProjectionBuffer;
 import net.venaglia.realms.common.view.*;
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.Dimension;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -55,7 +59,26 @@ public class VirtualLibrary {
     private LibraryHUD hud;
 
     public VirtualLibrary() {
-        final KeyboardManager keyboardManager = new KeyboardManager();
+        final KeyboardManager keyboardManager = new KeyboardManager() {
+            @Override
+            public void keyDown(int keyCode) {
+                super.keyDown(keyCode);
+                switch (keyCode) {
+                    case Keyboard.KEY_1:
+                        applyUrgencyFilter(StandardUrgencyFilter.LOAD_AVERAGE);
+                        break;
+                    case Keyboard.KEY_2:
+                        applyUrgencyFilter(StandardUrgencyFilter.ACTIVE_CONNECTIONS);
+                        break;
+                    case Keyboard.KEY_3:
+                        applyUrgencyFilter(StandardUrgencyFilter.ACTIVE_SESSIONS);
+                        break;
+                    case Keyboard.KEY_ESCAPE:
+                        applyUrgencyFilter(StandardUrgencyFilter.NONE);
+                        break;
+                }
+            }
+        };
         final Camera camera = new Camera();
         final MouseTargetEventListener<ServerSlot> eventListener = new MouseTargetEventListener<ServerSlot>() {
             public void mouseOver(MouseTarget<? extends ServerSlot> target) {
@@ -79,13 +102,11 @@ public class VirtualLibrary {
                 ServerSlot value = target.getValue();
                 ServerSlot previousSlot = selectedSlot.getAndSet(value);
                 if (previousSlot != null) {
-                    previousSlot.getSlotTransformation().setTargetTelescope(0);
-                    previousSlot.getSlotTransformation().setTargetScale(1);
+                    previousSlot.getSlotTransformation().setTarget(1, 0);
                 }
                 JiveInstance jiveInstance = value.getJiveInstance();
                 if (jiveInstance != null) {
-                    value.getSlotTransformation().setTargetTelescope(8);
-                    value.getSlotTransformation().setTargetScale(4);
+                    value.getSlotTransformation().setTarget(4, 8);
                 }
                 hud.showJiveInstanceData(jiveInstance);
                 long instanceID = jiveInstance != null ? jiveInstance.getCustomerInstallationId() : -1;
@@ -294,6 +315,34 @@ public class VirtualLibrary {
             mouseTargets.add(serverRack.getMouseTarget());
         }
         return mouseTargets;
+    }
+
+    private <BASELINE> void applyUrgencyFilter(UrgencyFilter<BASELINE> filter) {
+        final List<ServerSlot> allServerSlots = new ArrayList<ServerSlot>(4096);
+        for (ServerRack rack : serverRacks) {
+            for (ServerSlot slot : rack.getSlots()) {
+                JiveInstance instance = slot.getJiveInstance();
+                if (instance == null) {
+                    slot.getSlotTransformation().setTarget(1,0);
+                } else {
+                    allServerSlots.add(slot);
+                }
+            }
+        }
+        BASELINE baseLine = filter.buildBaseLine(new AbstractList<JiveInstance>() {
+            @Override
+            public JiveInstance get(int index) {
+                return allServerSlots.get(index).getJiveInstance();
+            }
+
+            @Override
+            public int size() {
+                return allServerSlots.size();
+            }
+        });
+        for (ServerSlot slot : allServerSlots) {
+            filter.apply(slot.getJiveInstance(), slot.getSlotTransformation(), baseLine);
+        }
     }
 
     public static void main(String[] args) throws Exception {

@@ -3,13 +3,13 @@ package com.jivesoftware.jcalibrary;
 import com.jivesoftware.jcalibrary.structures.JiveInstance;
 import com.jivesoftware.jcalibrary.structures.ServerRack;
 import com.jivesoftware.jcalibrary.structures.ServerSlot;
-import com.jivesoftware.jcalibrary.structures.SlotTransformation;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
  * The registry keeps track of all JiveInstances that exists in the system and helps with keeping track of
@@ -20,7 +20,7 @@ public class JiveInstancesRegistry {
     private static JiveInstancesRegistry instance = new JiveInstancesRegistry();
 
     protected VirtualLibrary virtualLibrary;
-    protected Map<Long, JiveInstance> instances = new ConcurrentHashMap<Long, JiveInstance>();
+    protected Map<Long,JiveInstance> instances = new ConcurrentSkipListMap<Long,JiveInstance>();
     protected Set<JiveInstance> availableInstances = new HashSet<JiveInstance>();
 
     private JiveInstancesRegistry() {
@@ -85,6 +85,10 @@ public class JiveInstancesRegistry {
      */
     public Set<JiveInstance> getUnslottedJiveInstances() {
         return Collections.unmodifiableSet(availableInstances);
+    }
+
+    public Collection<JiveInstance> getAllJiveInstances() {
+        return Collections.unmodifiableCollection(instances.values());
     }
 
     /**

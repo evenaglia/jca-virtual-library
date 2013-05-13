@@ -15,7 +15,6 @@ import net.venaglia.realms.common.physical.geom.primitives.Star;
 import net.venaglia.realms.common.physical.geom.primitives.TriangleSequence;
 import net.venaglia.realms.common.projection.GeometryBuffer;
 import net.venaglia.realms.common.projection.Projectable;
-import net.venaglia.realms.common.util.Pair;
 
 import java.util.Arrays;
 import java.util.Collections;
