@@ -73,6 +73,13 @@ public enum StandardUrgencyFilter implements UrgencyFilter<Pair<Float,Float>> {
         }
     },
 
+    PAGE_VIEWS {
+        @Override
+        protected float getValue(JiveInstance jiveInstance) {
+            return jiveInstance.getPageViews();
+        }
+    },
+
     SEARCH_STRING {
         @Override
         protected float getValue(JiveInstance jiveInstance) {

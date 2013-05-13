@@ -76,6 +76,9 @@ public class VirtualLibrary {
                     case Keyboard.KEY_F3:
                         applyUrgencyFilter(StandardUrgencyFilter.ACTIVE_SESSIONS);
                         break;
+                    case Keyboard.KEY_F4:
+                        applyUrgencyFilter(StandardUrgencyFilter.PAGE_VIEWS);
+                        break;
                     case Keyboard.KEY_F10:
                         ServerSlot slot = selectedSlot.get();
                         JiveInstance inst = slot == null ? null : slot.getJiveInstance();
