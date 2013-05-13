@@ -50,8 +50,8 @@ public class Cylinder extends AbstractShape<Cylinder> {
             points.add(new Point(x, y, h));
             normals.add(new Vector(x, y, 0));
         }
-        normals.add(Vector.Z.reverse()); // bottom normal
         normals.add(Vector.Z);           // top normal
+        normals.add(Vector.Z.reverse()); // bottom normal
         return new Pair<Point[], Vector[]>(
                 points.toArray(new Point[points.size()]),
                 normals.toArray(new Vector[normals.size()])

@@ -241,4 +241,12 @@ public class JiveInstance implements Projectable {
         Objects.JIVE_INSTANCE.project(nowMS, buffer);
     }
 
+    @Override
+    public String toString() {
+        if (customer == null) {
+            return "JiveInstance[" + customerInstallationId + "]=???";
+        } else {
+            return "JiveInstance[" + customerInstallationId + "]='" + customer.getName() + "'";
+        }
+    }
 }

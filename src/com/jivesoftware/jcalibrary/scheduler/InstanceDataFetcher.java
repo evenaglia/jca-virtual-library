@@ -17,6 +17,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -69,15 +71,15 @@ public class InstanceDataFetcher implements Runnable{
     @Override
     public void run() {
         JiveInstancesRegistry registry = JiveInstancesRegistry.getInstance();
+        Map<String,Pair<Long,String>> instanceMapping = getMapping();
         if (firstRun) {
             firstRun = false;
-            doFirstRun(registry);
+            doFirstRun(registry, instanceMapping);
             firstRunCompleted = true;
             System.out.println("First run completed");
         } else if (!firstRunCompleted) {
             return;
         }
-        Map<String,Pair<Long,String>> instanceMapping = getMapping();
         String nodeJSUrl = LibraryProps.INSTANCE.getProperty(LibraryProps.NODEJS_PROXY_URL);
         String nodeJSAuth = LibraryProps.INSTANCE.getProperty(LibraryProps.NODEJS_PROXY_AUTHENTICATION);
         String fetchedData = fetchData(nodeJSUrl, nodeJSAuth);
@@ -125,7 +127,7 @@ public class InstanceDataFetcher implements Runnable{
         }
     }
 
-    private void doFirstRun(JiveInstancesRegistry registry) {
+    private void doFirstRun(JiveInstancesRegistry registry, Map<String,Pair<Long,String>> instanceMapping) {
         try {
             for (JiveInstance jiveInstance : JCAManager.INSTANCE.fetchInstallations()) {
                 long installationId = jiveInstance.getCustomerInstallationId();
@@ -143,6 +145,15 @@ public class InstanceDataFetcher implements Runnable{
                     }
                 }
                 registeredInstance.setPageViews(sum);
+            }
+            for (Map.Entry<String,Pair<Long,String>> entry : instanceMapping.entrySet()) {
+                String node = entry.getKey();
+                Long id = entry.getValue().getA();
+                String type = entry.getValue().getB();
+                JiveInstance jiveInstance = registry.getJiveInstance(id);
+                if (jiveInstance != null) {
+                    jiveInstance.getNodeDetails(node).setType(type);
+                }
             }
         } catch (Exception e) {
             throw new RuntimeException(e);

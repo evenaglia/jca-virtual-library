@@ -105,20 +105,22 @@ public class JiveInstancePresentation implements Projectable, Bounded {
     }
 
     private static final Transformation[][] TRANSFORMATIONS = {
-            { },
-            buildXForms(0,0,1,0,0),
-            buildXForms(0.25,0,2,0,0),
-            buildXForms(0.25,0,3,0,0),
-            buildXForms(0.25,0.25,3,0,0),
-            buildXForms(0.3,0.25,0,2,2),
-            buildXForms(0.3,0.25,0,2,3),
-            buildXForms(0.3,0.25,0,3,3),
-            buildXForms(0.3,0.35,3,2,2),
-            buildXForms(0.3,0.35,2,3,3),
-            buildXForms(0.3,0.35,3,3,3),
-            buildXForms(0.3,0.35,3,4,3),
-            buildXForms(0.3,0.35,4,3,4),
-            buildXForms(0.3,0.35,4,2,4),
+            { },                          //  0
+            buildXForms(0,0,1,0,0),       //  1
+            buildXForms(0.25,0,2,0,0),    //  2
+            buildXForms(0.25,0,3,0,0),    //  3
+            buildXForms(0.25,0.25,0,2,2), //  4
+            buildXForms(0.3,0.35,1,2,2),  //  5
+            buildXForms(0.3,0.35,0,3,3),  //  6
+            buildXForms(0.3,0.35,1,3,3),  //  7
+            buildXForms(0.3,0.35,2,3,3),  //  8
+            buildXForms(0.3,0.35,3,3,3),  //  9
+            buildXForms(0.3,0.35,3,4,3),  // 10
+            buildXForms(0.3,0.35,4,3,4),  // 11
+            buildXForms(0.3,0.35,4,4,4),  // 12
+            buildXForms(0.32,0.35,5,4,4), // 13
+            buildXForms(0.32,0.35,4,5,5), // 14
+            buildXForms(0.32,0.35,5,5,5), // 15
     };
 
     private static Transformation[] buildXForms(double radius, double z, int n, int m, int o) {

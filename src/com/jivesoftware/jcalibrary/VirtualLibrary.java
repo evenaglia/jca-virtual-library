@@ -87,6 +87,7 @@ public class VirtualLibrary {
                     value.getSlotTransformation().setTargetTelescope(8);
                     value.getSlotTransformation().setTargetScale(4);
                 }
+                hud.showJiveInstanceData(jiveInstance);
                 long instanceID = jiveInstance != null ? jiveInstance.getCustomerInstallationId() : -1;
                 System.out.printf("mouseDown on Rack[%d], Shelf[%d], Slot[%d], JiveInstance[%d]\n", value.getServerRack().getSeq(), value.getSeq() / 9 + 1, value.getSeq() % 9 + 1, instanceID);
             }
