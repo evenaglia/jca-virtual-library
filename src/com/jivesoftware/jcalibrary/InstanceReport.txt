@@ -1,4 +1,0 @@
-Name: ${customer.name}
-Account Key: ${customer.accountKey}
-Contact Email: ${customer.jiveContactEmail}
-Customer Type: ${customer.customerType.code}
