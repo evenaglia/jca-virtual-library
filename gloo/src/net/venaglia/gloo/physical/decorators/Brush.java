@@ -13,8 +13,8 @@ import static org.lwjgl.opengl.GL11.*;
 public class Brush {
 
     public static final Brush GL_DEFAULTS;
-    public static final Brush NO_LIGHTING;
-    public static final Brush NO_LIGHTING_ALPHA;
+    public static final Brush SELF_ILLUMINATED;
+    public static final Brush SELF_ILLUMINATED_ALPHA;
     public static final Brush WIRE_FRAME;
     public static final Brush POINTS;
     public static final Brush FRONT_SHADED;
@@ -31,8 +31,8 @@ public class Brush {
         Brush noLighting = new Brush();
         noLighting.setLighting(false);
         noLighting.setTexturing(false);
-        NO_LIGHTING = noLighting.immutable("NO_LIGHTING");
-        NO_LIGHTING_ALPHA = makeAlphaBlended(noLighting, THRESHOLD_TRANSPARENCY_50).immutable("NO_LIGHTING_ALPHA");
+        SELF_ILLUMINATED = noLighting.immutable("SELF_ILLUMINATED");
+        SELF_ILLUMINATED_ALPHA = makeAlphaBlended(noLighting, THRESHOLD_TRANSPARENCY_50).immutable("SELF_ILLUMINATED_ALPHA");
         Brush wireframe = new Brush();
         wireframe.setLighting(false);
         wireframe.setTexturing(false);
@@ -70,6 +70,20 @@ public class Brush {
         private DepthMode(int glCode) {
             this.glCode = glCode;
         }
+
+        String mnemonic() {
+            switch (this) {
+                case LESS:
+                    return "<";
+                case LESS_OR_EQUAL:
+                    return "<=";
+                case GREATER:
+                    return ">";
+                case GREATER_OR_EQUAL:
+                    return ">=";
+            }
+            return null;
+        }
     }
 
     public enum PolygonMode {
@@ -80,6 +94,18 @@ public class Brush {
         private PolygonMode(int glCode) {
             this.glCode = glCode;
         }
+
+        String mnemonic() {
+            switch (this) {
+                case FILL:
+                    return "f";
+                case LINE:
+                    return "l";
+                case POINT:
+                    return "p";
+            }
+            return null;
+        }
     }
 
     public enum PolygonSide {
@@ -89,6 +115,16 @@ public class Brush {
 
         private PolygonSide(int glCode) {
             this.glCode = glCode;
+        }
+
+        String mnemonic() {
+            switch (this) {
+                case FRONT:
+                    return "f";
+                case BACK:
+                    return "b";
+            }
+            return null;
         }
     }
 
@@ -203,6 +239,25 @@ public class Brush {
         return immutable;
     }
 
+    public boolean isImmutable() {
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return String.format(
+                alphaRule != null ? "Brush[%s%s%s|%s%s%s|%sd|%s]" : "Brush[%s%s%s|%s%s%s|%sd]",
+                lighting ? "L" : "-",
+                color ? "C" : "-",
+                texturing ? "T" : "-",
+                polygonFrontFace.mnemonic(),
+                polygonBackFace.mnemonic(),
+                culling == null ? "-" : culling.mnemonic(),
+                depth == null ? "?" : depth.mnemonic(),
+                alphaRule == null ? "" : alphaRule.toShortString()
+        );
+    }
+
     private static class Immutable extends Brush {
 
         private String name = null;
@@ -266,6 +321,11 @@ public class Brush {
         @Override
         public Brush immutable() {
             return this;
+        }
+
+        @Override
+        public boolean isImmutable() {
+            return true;
         }
 
         @Override

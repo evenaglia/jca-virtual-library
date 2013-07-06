@@ -160,7 +160,7 @@ public class BoxCursor extends AbstractShape<BoxCursor> {
         Color offWhite = new Color(1.0f, 0.9f, 0.8f);
         BoxCursor boxCursor = new BoxCursor(3,3,3,0.125,0.025,0.25, DetailLevel.MEDIUM).rotate(Axis.X, 0.85);
         SingleShapeDemo demo = new SingleShapeDemo(boxCursor, offWhite, SingleShapeDemo.Mode.SHADED);
-        Brush brush = new Brush(Brush.NO_LIGHTING);
+        Brush brush = new Brush(Brush.SELF_ILLUMINATED);
         brush.setCulling(Brush.PolygonSide.BACK);
         boxCursor.setMaterial(Material.paint(Color.CYAN, brush));
         demo.start();

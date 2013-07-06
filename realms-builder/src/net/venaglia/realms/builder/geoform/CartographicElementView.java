@@ -209,7 +209,7 @@ public class CartographicElementView {
                     break;
                 case Corner:
                 case Vertex:
-                    which = edge.toString().substring(0,1);
+                    which = edge.firstVertex();
                     reverse = false;
                     break;
             }

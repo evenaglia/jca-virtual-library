@@ -23,9 +23,9 @@ import java.nio.ByteBuffer;
  */
 public class CountingDirectGeometryBuffer extends DirectGeometryBuffer implements Bounded {
 
-    private int count = 0;
-    private double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE, minZ = Double.MAX_VALUE;
-    private double maxX = Double.MIN_VALUE, maxY = Double.MIN_VALUE, maxZ = Double.MIN_VALUE;
+    protected int count = 0;
+    protected double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE, minZ = Double.MAX_VALUE;
+    protected double maxX = Double.MIN_VALUE, maxY = Double.MIN_VALUE, maxZ = Double.MIN_VALUE;
 
     @Override
     public void applyBrush(Brush brush) {

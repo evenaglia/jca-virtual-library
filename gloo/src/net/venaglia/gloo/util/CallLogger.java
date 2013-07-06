@@ -1,5 +1,6 @@
 package net.venaglia.gloo.util;
 
+import net.venaglia.gloo.physical.decorators.Brush;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
@@ -26,22 +27,36 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * User: ed
  * Date: 3/21/13
  * Time: 3:48 PM
  */
-@SuppressWarnings({ "ConstantConditions", "PointlessBooleanExpression" })
 public class CallLogger {
 
     public static final boolean logCalls = false;
-    public static final boolean logStacks = true;
+    public static final boolean logStacks;
 
-    private static final boolean logCallHash = true;
-    private static final Set<Integer> deepStackHashes = new HashSet<Integer>(Arrays.asList(
-            0x6C9F, 0xA016
-    ));
+    private static final boolean logCallHash;
+    private static final Set<Integer> deepStackHashes;
+
+    static {
+        Pattern matchTrue = Pattern.compile("1|t(rue)?", Pattern.CASE_INSENSITIVE);
+        Pattern matchHash = Pattern.compile("^#?([0-9a-zA-Z]{4})$");
+        logCallHash = matchTrue.matcher(System.getProperty("gloo.log.call.hash", "1")).matches();
+        Set<Integer> hashesToLog = new HashSet<Integer>();
+        for (String h : System.getProperty("gloo.log.call.stack", "").split("\\s+")) {
+            Matcher matcher = matchHash.matcher(h);
+            if (matcher.find()) {
+                hashesToLog.add(Integer.parseInt(matcher.group(1), 16));
+            }
+        }
+        deepStackHashes = Collections.unmodifiableSet(hashesToLog);
+        logStacks = !deepStackHashes.isEmpty();
+    }
 
     private static final Map<Integer,String> GL_CONSTANTS;
     private static final Map<Integer,String> GL_BITS;
@@ -50,6 +65,8 @@ public class CallLogger {
     private static final Map<String,LogMatrix> MATRIX_BUFFER = new LinkedHashMap<String,LogMatrix>();
     private static final StringBuilder BUFFER = new StringBuilder(256);
 
+    private static boolean insideListRecorder = false;
+    private static boolean insideListRecorderAfter = false;
     private static boolean insideVertexSequence = false;
     private static boolean insideVertexSequenceAfter = false;
 
@@ -160,18 +177,28 @@ public class CallLogger {
             return 0; // we're already inside the geometry sequence, don't call glGetError()
         } else if ("glEnd".equals(method)) {
             insideVertexSequence = false;
+        } else if ("glNewList".equals(method)) {
+            insideListRecorderAfter = true;
+        } else if ("glEndList".equals(method)) {
+            insideListRecorder = false;
         }
         return insideVertexSequence ? 0 : GL11.glGetError();
     }
 
     public static void logMessage(String msg, int... tabs) {
-        if (insideVertexSequence) {
+        if (insideVertexSequence ^ insideListRecorder) {
             msg = "  " + msg;
+        } else if (insideListRecorder & insideVertexSequence) {
+            msg = "    " + msg;
         }
         System.out.println(tabs.length == 0 ? msg : formatTabs(msg, tabs));
         if (insideVertexSequenceAfter) {
             insideVertexSequence = true;
             insideVertexSequenceAfter = false;
+        }
+        if (insideListRecorderAfter) {
+            insideListRecorder = true;
+            insideListRecorderAfter = false;
         }
     }
 
@@ -256,7 +283,25 @@ public class CallLogger {
     }
 
     private static StackTrace whereAmI(int depth, boolean force) {
-            return logStacks ? new StackTrace(depth + 1) : null;
+            return force || logStacks ? new StackTrace(depth + 1) : null;
+    }
+
+    private static final Map<Brush,String> NAMED_BRUSHES;
+
+    static {
+        Map<Brush,String> brushes = new HashMap<Brush,String>();
+        for (Field field : Brush.class.getFields()) {
+            int mod = field.getModifiers();
+            if (Modifier.isStatic(mod) && Modifier.isFinal(mod) && Brush.class.isAssignableFrom(field.getType())) {
+                try {
+                    Brush brush = (Brush)field.get(null);
+                    brushes.put(brush, field.getDeclaringClass().getSimpleName() + "." + field.getName());
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        NAMED_BRUSHES = Collections.unmodifiableMap(brushes);
     }
 
     private static StringBuilder callSignature(Object[] args) {
@@ -284,6 +329,8 @@ public class CallLogger {
                 LogMatrix logMatrix = (LogMatrix)arg;
                 arg = "|" + logMatrix.name() + "|";
                 MATRIX_BUFFER.put((String)arg, logMatrix);
+            } else if (arg instanceof Brush && NAMED_BRUSHES.containsKey(arg)) {
+                arg = NAMED_BRUSHES.get(arg);
             }
             if (first) {
                 first = false;
@@ -373,22 +420,6 @@ public class CallLogger {
                 }
             }
             return buffer.toString();
-        }
-    }
-
-    private static class BufferFormat<B extends Buffer> {
-
-        private final BufferFormatter<B> formatter;
-        private final B buffer;
-
-        private BufferFormat(BufferFormatter<B> formatter, B buffer) {
-            this.formatter = formatter;
-            this.buffer = buffer;
-        }
-
-        @Override
-        public String toString() {
-            return formatter.toString(buffer);
         }
     }
 

@@ -78,7 +78,7 @@ public class OverlayDemo extends AbstractDemo {
     protected void project(long nowMS, ProjectionBuffer buffer) {
         buffer.pushTransform();
         transform.apply(nowMS, buffer);
-        buffer.applyBrush(Brush.NO_LIGHTING);
+        buffer.applyBrush(Brush.SELF_ILLUMINATED);
         buffer.start(GeometryBuffer.GeometrySequence.LINES);
         for (int index : order) {
             buffer.color(colors[index]);

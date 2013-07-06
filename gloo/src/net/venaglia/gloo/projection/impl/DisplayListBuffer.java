@@ -1,11 +1,13 @@
 package net.venaglia.gloo.projection.impl;
 
 import net.venaglia.gloo.physical.bounds.BoundingVolume;
+import net.venaglia.gloo.physical.decorators.Brush;
 import net.venaglia.gloo.physical.decorators.Material;
 import net.venaglia.gloo.physical.decorators.Transformation;
 import net.venaglia.gloo.projection.DisplayList;
 import net.venaglia.gloo.projection.GeometryRecorder;
 import net.venaglia.gloo.projection.GeometryBuffer;
+import net.venaglia.gloo.projection.RecordingBuffer;
 import net.venaglia.gloo.projection.TooManyDisplayListsException;
 import net.venaglia.gloo.projection.Transformable;
 
@@ -29,6 +31,8 @@ public class DisplayListBuffer implements DisplayList {
     private State state;
     private Material initialMaterial;
     private BoundingVolume<?> bounds;
+    private Brush brush = null;
+    private RecordingBuffer.BrushOperation brushOperation = null;
 
     public DisplayListBuffer(String name) throws TooManyDisplayListsException {
         if (name == null) throw new NullPointerException("name");
@@ -71,11 +75,17 @@ public class DisplayListBuffer implements DisplayList {
                 throw new IllegalArgumentException("No Projectable elements were specified");
             }
             bounds = recordingBuffer.getBounds();
+            brush = cloneBrush(recordingBuffer.getBrush());
+            brushOperation = recordingBuffer.getApplyBrushWhenRun();
         } else if (state == State.RECORDING) {
             throw new IllegalStateException("Cannot record to a DisplayListBuffer while it is already recording geometry elsewhere");
         } else if (state == State.LOADED) {
             throw new IllegalStateException("Cannot record to a DisplayListBuffer that has already been loaded");
         }
+    }
+
+    private Brush cloneBrush(Brush brush) {
+        return brush == null ? null : (brush.isImmutable() ? brush : new Brush(brush));
     }
 
     public void deallocate() {
@@ -128,11 +138,24 @@ public class DisplayListBuffer implements DisplayList {
 
     public void project(long nowMS, GeometryBuffer buffer) {
         if (state == State.LOADED) {
-            try {
-                buffer.pushBrush();
-                buffer.callDisplayList(glDisplayListId);
-            } finally {
-                buffer.popBrush();
+            RecordingBuffer.BrushOperation op = brush != null ? brushOperation : RecordingBuffer.BrushOperation.INHERIT;
+            switch (op) {
+                case INHERIT:
+                    buffer.callDisplayList(glDisplayListId);
+                    break;
+                case APPLY_BRUSH:
+                    buffer.applyBrush(brush);
+                    buffer.callDisplayList(glDisplayListId);
+                    break;
+                case PUSH_APPLY_POP_BRUSH:
+                    try {
+                        buffer.pushBrush();
+                        buffer.applyBrush(brush);
+                        buffer.callDisplayList(glDisplayListId);
+                    } finally {
+                        buffer.popBrush();
+                    }
+                    break;
             }
         } else if (state == State.NEW) {
             throw new IllegalStateException("Cannot project a DisplayListBuffer before recording geometry");

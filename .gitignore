@@ -3,6 +3,7 @@ out
 jca.credentials.properties
 *.cache
 *.iws
+call-log.*
 
 # Package Files #
 *.war

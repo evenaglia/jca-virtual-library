@@ -74,10 +74,7 @@ public class View3D extends Thread implements Closeable {
         keyboardEventHandlers.add(keyboardKeyHandlers);
         this.dimension = new Dimension(width, height);
         this.options = options;
-        this.brush = new Brush();
-        this.brush.setLighting(true);
-        this.brush.setColor(true);
-        this.brush.setTexturing(true);
+        this.brush = Brush.TEXTURED;
         this.shader = ShaderProgram.DEFAULT_SHADER;
         this.buttonsDown = new EnumMap<MouseButton,MouseTarget<?>>(MouseButton.class);
     }
@@ -87,10 +84,10 @@ public class View3D extends Thread implements Closeable {
         prepareWindow();
         setupGL();
         ProjectionBuffer buffer = new DirectProjectionBuffer();
-//        buffer.useCamera(camera);
-//        buffer.applyBrush(brush);
-//        buffer.useShader(shader);
-//        buffer.resetAllStacks();
+        buffer.useCamera(camera);
+        buffer.applyBrush(brush);
+        buffer.useShader(shader);
+        buffer.resetAllStacks();
         userEventInit();
         Display.update();
         int frameCount = 0;

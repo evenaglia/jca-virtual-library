@@ -9,6 +9,18 @@ import net.venaglia.gloo.physical.decorators.Brush;
  */
 public interface RecordingBuffer extends GeometryBuffer {
 
+    enum BrushOperation {
+        INHERIT,
+        APPLY_BRUSH,
+        PUSH_APPLY_POP_BRUSH
+    }
+
+    enum BrushAction {
+        APPLY,
+        IGNORE,
+        FAIL
+    }
+
     /**
      * Sets properties of the active brush, without updating GL state
      * @param brush The brush to load
@@ -16,4 +28,8 @@ public interface RecordingBuffer extends GeometryBuffer {
     void setBrush(Brush brush);
 
     void setRecordTextureBindings(boolean recordTextureBindings);
+
+    void setApplyBrushWhenRun(BrushOperation brushOperation);
+
+    void setActionOnApplyBrush(BrushAction failOnApplyBrush);
 }

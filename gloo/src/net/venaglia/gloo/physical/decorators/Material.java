@@ -47,7 +47,7 @@ public abstract class Material implements Decorator {
     };
 
     public static Material makeSelfIlluminating(final Color color) {
-        return paint(color, color.isOpaque() ? Brush.NO_LIGHTING : Brush.NO_LIGHTING_ALPHA);
+        return paint(color, color.isOpaque() ? Brush.SELF_ILLUMINATED : Brush.SELF_ILLUMINATED_ALPHA);
     }
 
     public static Material makeWireFrame(final Color color) {

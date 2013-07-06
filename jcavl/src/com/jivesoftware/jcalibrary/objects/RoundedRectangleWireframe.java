@@ -73,7 +73,7 @@ public class RoundedRectangleWireframe extends AbstractShape<RoundedRectangleWir
         Color offWhite = new Color(1.0f, 0.9f, 0.8f);
         RoundedRectangleWireframe rect = new RoundedRectangleWireframe(3,3,0.125,0.25, DetailLevel.MEDIUM).rotate(Axis.X, 0.85);
         SingleShapeDemo demo = new SingleShapeDemo(rect, offWhite, SingleShapeDemo.Mode.WIREFRAME);
-        Brush brush = new Brush(Brush.NO_LIGHTING);
+        Brush brush = new Brush(Brush.SELF_ILLUMINATED);
         brush.setCulling(Brush.PolygonSide.BACK);
         rect.setMaterial(Material.paint(Color.CYAN, brush));
         demo.start();

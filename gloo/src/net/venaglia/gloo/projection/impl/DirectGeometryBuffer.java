@@ -44,6 +44,7 @@ public class DirectGeometryBuffer implements GeometryBuffer {
     protected boolean textureSet;
 
     public void applyBrush(Brush brush) {
+        if (logCalls) logCall("applyBrush", brush);
         activeBrush.copyFrom(brush);
     }
 

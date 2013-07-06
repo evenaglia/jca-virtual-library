@@ -93,6 +93,16 @@ public class AlphaRule {
         return transparencyMode;
     }
 
+    public String toShortString() {
+        switch (transparencyMode) {
+            case THRESHOLD_TRANSPARENCY:
+                return String.format("%s%4.2f", compare, thresholdValue);
+            case ALPHA_TRANSPARENCY:
+                return "alpha";
+        }
+        return null;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -115,12 +125,6 @@ public class AlphaRule {
 
     @Override
     public String toString() {
-        switch (transparencyMode) {
-            case THRESHOLD_TRANSPARENCY:
-                return String.format("AlphaBlending[%s%4.2f]", compare, thresholdValue);
-            case ALPHA_TRANSPARENCY:
-                return "AlphaBlending[alpha]";
-        }
-        return null;
+        return "AlphaBlending[" + toShortString() + "]";
     }
 }

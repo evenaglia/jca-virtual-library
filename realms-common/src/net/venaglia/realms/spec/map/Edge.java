@@ -19,4 +19,16 @@ public enum Edge {
         }
         return null;
     }
+
+    public String firstVertex() {
+        switch (this) {
+            case AB:
+                return "A";
+            case BC:
+                return "B";
+            case CA:
+                return "C";
+        }
+        return null;
+    }
 }

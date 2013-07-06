@@ -374,7 +374,8 @@ public class IsometricMazeDemo {
                                           .getContextClassLoader()
                                           .getResourceAsStream(resource);
                 SequenceMapping.Recorder recorder = SequenceMapping.record();
-                BlenderObject obj = new BlenderObject(new InputStreamReader(objIn), BlenderObject.NormalSource.FROM_FILE, recorder);
+//                BlenderObject obj = new BlenderObject(new InputStreamReader(objIn), BlenderObject.NormalSource.FROM_FILE, recorder);
+                BlenderObject obj = new BlenderObject(new InputStreamReader(objIn), BlenderObject.NormalSource.PER_TRIANGLE, recorder);
                 if (mazeElementType == MazeElementType.WALL || mazeElementType == MazeElementType.WALL_CAP) {
                     obj = obj.scale(new Vector(1, 2, 2));
                 } else {
@@ -493,9 +494,7 @@ public class IsometricMazeDemo {
             view.addKeyboardEventHandler(keyboardManager);
 //            final Origin origin = new Origin(3);
             final Light[] lights = {
-                    new FixedPointSourceLight(new Point(1.1f, 5.0f, 3.5f).scale(50)),
-                    new FixedPointSourceLight(new Point(-2.1f, 0.0f, 1.5f).scale(50)),
-                    new FixedPointSourceLight(new Point(-0.1f, -4.0f, -2.5f).scale(50))
+                    new FixedPointSourceLight(new Point(-2.0f, -12.0f, 2.0f).scale(50))
             };
             final Map<String,Collection<Coord>> projectables = new HashMap<String,Collection<Coord>>();
             final Map<MazeElementType,TextureMapping> textureMappings = new EnumMap<MazeElementType,TextureMapping>(MazeElementType.class);

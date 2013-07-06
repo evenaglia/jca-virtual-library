@@ -1,6 +1,7 @@
 package com.jivesoftware.jcalibrary.objects;
 
 import net.venaglia.gloo.physical.bounds.BoundingBox;
+import net.venaglia.gloo.physical.decorators.Brush;
 import net.venaglia.gloo.physical.decorators.Material;
 import net.venaglia.gloo.physical.geom.CompositeShape;
 import net.venaglia.gloo.physical.geom.detail.DetailLevel;
@@ -10,7 +11,6 @@ import net.venaglia.gloo.physical.geom.Vector;
 import net.venaglia.gloo.physical.geom.detail.DynamicDetailSource;
 import net.venaglia.gloo.physical.geom.primitives.Box;
 import net.venaglia.gloo.projection.DisplayList;
-import net.venaglia.gloo.projection.GeometryBuffer;
 import net.venaglia.gloo.projection.GeometryRecorder;
 import net.venaglia.gloo.projection.RecordingBuffer;
 import net.venaglia.gloo.projection.impl.DisplayListBuffer;
@@ -60,6 +60,7 @@ public class ServerRackSource implements DynamicDetailSource<DisplayList> {
         DisplayList displayList = new DisplayListBuffer("Shelf - " + detailLevel);
         displayList.record(new GeometryRecorder() {
             public void record(RecordingBuffer buffer) {
+                buffer.setBrush(Brush.SELF_ILLUMINATED);
                 delegate.project(0, buffer);
             }
         });
