@@ -1,9 +1,9 @@
-package net.venaglia.realms.common.map.db.impl;
+package net.venaglia.realms.common.map.db_x.impl;
 
-import net.venaglia.realms.common.map.db.DBException;
-import net.venaglia.realms.common.map.db.DuplicateKeyException;
-import net.venaglia.realms.common.map.db.IndexEntry;
-import net.venaglia.realms.common.map.db.KeyNotFoundException;
+import net.venaglia.realms.common.map.db_x.DBException;
+import net.venaglia.realms.common.map.db_x.DuplicateKeyException;
+import net.venaglia.realms.common.map.db_x.IndexEntry;
+import net.venaglia.realms.common.map.db_x.KeyNotFoundException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

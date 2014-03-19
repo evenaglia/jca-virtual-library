@@ -1,11 +1,11 @@
-package net.venaglia.realms.common.map.db.impl;
+package net.venaglia.realms.common.map.db_x.impl;
 
 import net.venaglia.realms.common.Configuration;
-import net.venaglia.realms.common.map.db.DB;
-import net.venaglia.realms.common.map.db.DBException;
-import net.venaglia.realms.common.map.db.DatabaseOptions;
-import net.venaglia.realms.common.map.db.IdProvider;
-import net.venaglia.realms.common.map.db.SpatialIndex;
+import net.venaglia.realms.common.map.db_x.DB;
+import net.venaglia.realms.common.map.db_x.DBException;
+import net.venaglia.realms.common.map.db_x.DatabaseOptions;
+import net.venaglia.realms.common.map.db_x.IdProvider;
+import net.venaglia.realms.common.map.db_x.SpatialIndex;
 import net.venaglia.gloo.physical.bounds.BoundingBox;
 import net.venaglia.gloo.physical.bounds.BoundingVolume;
 import net.venaglia.gloo.physical.geom.Axis;
@@ -16,6 +16,7 @@ import net.venaglia.common.util.Series;
 import net.venaglia.common.util.impl.AbstractCachingRef;
 import net.venaglia.gloo.util.impl.AbstractSpatialMap;
 import net.venaglia.gloo.util.impl.OctreeMap;
+import net.venaglia.realms.spec.GeoSpec;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -225,6 +226,7 @@ public class ReadOnlyDiskSpatialIndex<V> extends AbstractSpatialMap<V> implement
     }
 
     protected static File buildFile(String name) {
+        GeoSpec.getGeoIdentity(); // force GeoSpec to initialize
         File dir = new File("db", Configuration.DATABASE_DIRECTORY.getString());
         return new File(dir, name + ".3dex");
     }

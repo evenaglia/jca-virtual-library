@@ -1,8 +1,8 @@
-package net.venaglia.realms.common.map.db.impl;
+package net.venaglia.realms.common.map.db_x.impl;
 
 import net.venaglia.realms.common.Configuration;
-import net.venaglia.realms.common.map.db.Index;
-import net.venaglia.realms.common.map.db.IndexEntry;
+import net.venaglia.realms.common.map.db_x.Index;
+import net.venaglia.realms.common.map.db_x.IndexEntry;
 
 import java.io.File;
 import java.io.FileOutputStream;

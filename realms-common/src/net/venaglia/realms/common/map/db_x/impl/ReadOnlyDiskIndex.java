@@ -1,7 +1,7 @@
-package net.venaglia.realms.common.map.db.impl;
+package net.venaglia.realms.common.map.db_x.impl;
 
-import net.venaglia.realms.common.map.db.IndexEntry;
-import net.venaglia.realms.common.map.db.NotWritableException;
+import net.venaglia.realms.common.map.db_x.IndexEntry;
+import net.venaglia.realms.common.map.db_x.NotWritableException;
 
 import java.io.IOException;
 import java.nio.ByteOrder;

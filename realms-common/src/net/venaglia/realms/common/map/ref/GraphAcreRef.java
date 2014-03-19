@@ -1,7 +1,7 @@
 package net.venaglia.realms.common.map.ref;
 
 import net.venaglia.realms.common.map.WorldMap;
-import net.venaglia.realms.common.map.db.DB;
+import net.venaglia.realms.common.map.db_x.DB;
 import net.venaglia.realms.common.map.elements.GraphAcre;
 
 /**

@@ -1,10 +1,10 @@
-package net.venaglia.realms.common.map.db.impl;
+package net.venaglia.realms.common.map.db_x.impl;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.ByteBufferInputStream;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import net.venaglia.realms.common.map.db.Serializer;
+import net.venaglia.realms.common.map.db_x.Serializer;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

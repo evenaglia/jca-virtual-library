@@ -1,14 +1,13 @@
-package net.venaglia.realms.common.map.db.impl;
+package net.venaglia.realms.common.map.db_x.impl;
 
 import net.venaglia.realms.common.Configuration;
-import net.venaglia.realms.common.map.db.DB;
-import net.venaglia.realms.common.map.db.DBException;
-import net.venaglia.realms.common.map.db.DatabaseOptions;
-import net.venaglia.realms.common.map.db.DuplicateKeyException;
-import net.venaglia.realms.common.map.db.Index;
-import net.venaglia.realms.common.map.db.IndexEntry;
-import net.venaglia.realms.common.map.db.NotWritableException;
-import net.venaglia.realms.common.map.db.Serializer;
+import net.venaglia.realms.common.map.db_x.DB;
+import net.venaglia.realms.common.map.db_x.DBException;
+import net.venaglia.realms.common.map.db_x.DatabaseOptions;
+import net.venaglia.realms.common.map.db_x.DuplicateKeyException;
+import net.venaglia.realms.common.map.db_x.IndexEntry;
+import net.venaglia.realms.common.map.db_x.NotWritableException;
+import net.venaglia.realms.common.map.db_x.Serializer;
 import net.venaglia.common.util.Pair;
 import net.venaglia.common.util.Tuple2;
 

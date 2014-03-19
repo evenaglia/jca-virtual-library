@@ -1,4 +1,4 @@
-package net.venaglia.realms.common.map.db;
+package net.venaglia.realms.common.map.db_x;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
