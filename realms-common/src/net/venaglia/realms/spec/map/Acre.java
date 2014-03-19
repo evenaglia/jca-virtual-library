@@ -1,8 +1,8 @@
 package net.venaglia.realms.spec.map;
 
-import net.venaglia.realms.common.map.WorldMap;
-import net.venaglia.realms.common.map.elements.GraphAcre;
-import net.venaglia.realms.common.map.ref.GraphAcreRef;
+import net.venaglia.realms.common.map_x.WorldMap;
+import net.venaglia.realms.common.map_x.elements.GraphAcre;
+import net.venaglia.realms.common.map_x.ref.GraphAcreRef;
 import net.venaglia.gloo.physical.decorators.Color;
 import net.venaglia.gloo.physical.decorators.Material;
 import net.venaglia.gloo.physical.geom.Point;

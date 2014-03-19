@@ -2,8 +2,8 @@ package net.venaglia.realms.builder.geoform;
 
 import static net.venaglia.realms.spec.GeoSpec.*;
 
-import net.venaglia.realms.common.map.WorldMap;
-import net.venaglia.realms.common.map.elements.GraphAcre;
+import net.venaglia.realms.common.map_x.WorldMap;
+import net.venaglia.realms.common.map_x.elements.GraphAcre;
 import net.venaglia.gloo.physical.bounds.BoundingSphere;
 import net.venaglia.gloo.physical.geom.*;
 import net.venaglia.gloo.physical.geom.primitives.Icosahedron;

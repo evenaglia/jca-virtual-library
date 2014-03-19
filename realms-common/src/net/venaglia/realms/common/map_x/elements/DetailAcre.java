@@ -1,6 +1,6 @@
-package net.venaglia.realms.common.map.elements;
+package net.venaglia.realms.common.map_x.elements;
 
-import net.venaglia.realms.common.map.db_x.DatabaseOptions;
+import net.venaglia.realms.common.map_x.db.DatabaseOptions;
 import net.venaglia.gloo.physical.geom.detail.DetailLevel;
 import net.venaglia.gloo.physical.geom.Shape;
 

@@ -1,8 +1,8 @@
-package net.venaglia.realms.common.map.ref;
+package net.venaglia.realms.common.map_x.ref;
 
-import net.venaglia.realms.common.map.WorldMap;
-import net.venaglia.realms.common.map.db_x.DB;
-import net.venaglia.realms.common.map.elements.WorldElement;
+import net.venaglia.realms.common.map_x.WorldMap;
+import net.venaglia.realms.common.map_x.db.DB;
+import net.venaglia.realms.common.map_x.elements.WorldElement;
 import net.venaglia.common.util.impl.AbstractCachingRef;
 
 /**

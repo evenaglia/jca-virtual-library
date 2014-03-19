@@ -1,7 +1,7 @@
-package net.venaglia.realms.common.map.elements;
+package net.venaglia.realms.common.map_x.elements;
 
-import net.venaglia.realms.common.map.WorldMap;
-import net.venaglia.realms.common.map.db_x.IdProvider;
+import net.venaglia.realms.common.map_x.WorldMap;
+import net.venaglia.realms.common.map_x.db.IdProvider;
 
 import java.io.Serializable;
 

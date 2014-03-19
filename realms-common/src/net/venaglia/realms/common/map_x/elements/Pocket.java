@@ -1,4 +1,4 @@
-package net.venaglia.realms.common.map.elements;
+package net.venaglia.realms.common.map_x.elements;
 
 /**
  * User: ed

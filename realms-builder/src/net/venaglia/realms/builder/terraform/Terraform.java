@@ -2,9 +2,9 @@ package net.venaglia.realms.builder.terraform;
 
 import net.venaglia.realms.spec.GeoSpec;
 import net.venaglia.realms.spec.map.GeoPoint;
-import net.venaglia.realms.common.map.WorldMap;
-import net.venaglia.realms.common.map.elements.DetailAcre;
-import net.venaglia.realms.common.map.elements.GraphAcre;
+import net.venaglia.realms.common.map_x.WorldMap;
+import net.venaglia.realms.common.map_x.elements.DetailAcre;
+import net.venaglia.realms.common.map_x.elements.GraphAcre;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
 import net.venaglia.common.util.Ref;
