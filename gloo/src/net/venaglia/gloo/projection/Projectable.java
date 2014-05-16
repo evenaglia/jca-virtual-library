@@ -9,6 +9,16 @@ package net.venaglia.gloo.projection;
  */
 public interface Projectable {
 
+    Projectable NULL = new Projectable() {
+        public boolean isStatic() {
+            return true;
+        }
+
+        public void project(long nowMS, GeometryBuffer buffer) {
+            // no-op
+        }
+    };
+
     boolean isStatic();
 
     void project(long nowMS, GeometryBuffer buffer);

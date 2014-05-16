@@ -111,9 +111,8 @@ public enum GeoSpec {
     private static final AtomicReference<Preset> usingPreset = new AtomicReference<Preset>();
 
     static {
-        Preset.SMALL.use();
-//        Preset.MEDIUM.use();
-//        Preset.LARGE.use();
+        String geospec = Configuration.GEOSPEC.getString("LARGE");
+        Preset.valueOf(geospec).use();
     }
 
     private static void setDivisions(int globalSectorDivisions, int sectorDivisions) {

@@ -1,17 +1,14 @@
 package net.venaglia.realms.spec.map;
 
-import net.venaglia.realms.common.map_x.WorldMap;
-import net.venaglia.realms.common.map_x.elements.GraphAcre;
-import net.venaglia.realms.common.map_x.ref.GraphAcreRef;
 import net.venaglia.gloo.physical.decorators.Color;
 import net.venaglia.gloo.physical.decorators.Material;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Shape;
 import net.venaglia.gloo.physical.geom.primitives.TriangleSequence;
-import net.venaglia.common.util.Ref;
+import net.venaglia.realms.common.map.BinaryStore;
+import net.venaglia.realms.common.map.world.AcreDetail;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -131,21 +128,11 @@ public class Acre extends AbstractCartographicElement {
         return shape;
     }
 
-    public void applyPackDataToGraphAcre(GraphAcre ga, double radius, WorldMap worldMap) {
+    public void applyPackDataToGraphAcre(AcreDetail ga) {
         ga.setId(packId);
         ga.setCenter(center);
-
-        Collection<Ref<GraphAcre>> neighbors = ga.getNeighbors();
-        neighbors.clear();
-        for (int neighborID : packNeighbors) {
-            neighbors.add(new GraphAcreRef(neighborID, worldMap));
-        }
-
-        GeoPoint[] verteces = ga.getVertices();
-        int length = points.length;
-        if (verteces.length != length) {
-            verteces = new GeoPoint[length];
-        }
-        System.arraycopy(points, 0, verteces, 0, length);
+        ga.setVertices(points.clone());
+        ga.setNeighborIds(packNeighbors.clone());
+        ga.setAltitude(new float[points.length]);
     }
 }

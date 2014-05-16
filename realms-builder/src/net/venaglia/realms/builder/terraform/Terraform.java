@@ -1,15 +1,17 @@
 package net.venaglia.realms.builder.terraform;
 
+import net.venaglia.common.util.serializer.SerializerStrategy;
+import net.venaglia.realms.common.map.data.binaries.BinaryResource;
+import net.venaglia.realms.common.map.world.AcreDetail;
+import net.venaglia.realms.common.map.world.WorldMapImpl;
+import net.venaglia.realms.common.map.world.ref.AcreDetailRef;
 import net.venaglia.realms.spec.GeoSpec;
 import net.venaglia.realms.spec.map.GeoPoint;
-import net.venaglia.realms.common.map_x.WorldMap;
-import net.venaglia.realms.common.map_x.elements.DetailAcre;
-import net.venaglia.realms.common.map_x.elements.GraphAcre;
+import net.venaglia.realms.common.map.WorldMap;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
-import net.venaglia.common.util.Ref;
-import net.venaglia.common.util.Tuple2;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -33,9 +35,12 @@ public class Terraform implements FlowObserver {
     private Iterable<Query> buildQueries(WorldMap worldMap) {
         int count = (int)GeoSpec.ACRES.get();
         List<Query> queries = new ArrayList<Query>(count);
-        WorldMap.Database<GraphAcre> database = worldMap.graph;
-        for (Tuple2<Integer,GraphAcre> tuple : database) {
-            queries.add(new Query(tuple.getB()));
+        SerializerStrategy<AcreDetail> serializer = AcreDetail.DEFINITION.getSerializer();
+
+        for (int i = 0; i < count; i++) {
+            BinaryResource resource = worldMap.getBinaryStore().getBinaryResource(AcreDetail.MIMETYPE, i);
+            AcreDetail acreDetail = serializer.deserialize(ByteBuffer.wrap(resource.getData()));
+            queries.add(new Query(acreDetail));
         }
         return queries;
     }
@@ -50,20 +55,20 @@ public class Terraform implements FlowObserver {
 
     private static class Query implements FlowQuery {
 
-        private final GraphAcre graphAcre;
+        private final AcreDetail acreDetail;
         private final Point center;
-        private final GraphAcre[] neighbors;
+        private final AcreDetail[] neighbors;
         private final Point[] vertices;
         private final double[] vertexDistances;
         private final double[] sectorArea;
         private final double totalArea;
 
-        private Query(GraphAcre graphAcre) {
-            this.graphAcre = graphAcre;
-            Collection<Ref<GraphAcre>> neighborRefs = graphAcre.getNeighbors();
-            GeoPoint[] myVertices = graphAcre.getVertices();
+        private Query(AcreDetail acreDetail) {
+            this.acreDetail = acreDetail;
+            Collection<AcreDetailRef> neighborRefs = acreDetail.getNeighbors();
+            GeoPoint[] myVertices = acreDetail.getVertices();
             int vertexCount = myVertices.length;
-            this.neighbors = new GraphAcre[vertexCount];
+            this.neighbors = new AcreDetail[vertexCount];
             this.vertices = new Point[vertexCount];
             this.sectorArea = new double[vertexCount];
             double totalArea = 0;
@@ -71,9 +76,9 @@ public class Terraform implements FlowObserver {
             double radii[] = new double[vertexCount];
             int idx = 0;
             double radius = GeoSpec.APPROX_RADIUS_METERS.get();
-            center = graphAcre.getCenter().toPoint(radius);
-            for (Ref<GraphAcre> neighborRef : neighborRefs) {
-                GraphAcre neighbor = neighborRef.get();
+            center = acreDetail.getCenter().toPoint(radius);
+            for (AcreDetailRef neighborRef : neighborRefs) {
+                AcreDetail neighbor = neighborRef.get();
                 this.neighbors[idx] = neighbor;
                 Point v = myVertices[idx].toPoint(radius);
                 this.vertices[idx] = v;
@@ -92,7 +97,7 @@ public class Terraform implements FlowObserver {
         }
 
         public GeoPoint getPoint() {
-            return graphAcre.getCenter();
+            return acreDetail.getCenter();
         }
 
         public void processDataForPoint(FlowPointData data) {
@@ -107,7 +112,7 @@ public class Terraform implements FlowObserver {
                 int j = (i + 1) % l;
                 double area = triangleArea(spokes[i], spokes[j], vertexDistances[i]);
                 double drawAmount = (area - sectorArea[i]) / (totalArea - sectorArea[i]);
-                draw(neighbors[i].getDetailAcre().get(), graphAcre.getDetailAcre().get(), drawAmount);
+                draw(neighbors[i], acreDetail, drawAmount);
             }
             computeRoughness(data.getPressure());
         }
@@ -117,7 +122,7 @@ public class Terraform implements FlowObserver {
             return (float)roughness;
         }
 
-        private void draw(DetailAcre from, DetailAcre to, double amount) {
+        private void draw(AcreDetail from, AcreDetail to, double amount) {
             // todo
         }
 
@@ -128,6 +133,6 @@ public class Terraform implements FlowObserver {
     }
 
     public static void main(String[] args) {
-        new Terraform(new WorldMap()).run();
+        new Terraform(new WorldMapImpl()).run();
     }
 }

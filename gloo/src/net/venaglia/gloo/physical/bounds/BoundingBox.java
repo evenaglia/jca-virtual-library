@@ -112,6 +112,30 @@ public class BoundingBox extends AbstractBoundingVolume<BoundingBox> {
         return center;
     }
 
+    public Point closestTo(Point p) {
+        if (getBestFit() == Type.BOX) {
+            return new Point(
+                    Math.max(corner1.x, Math.min(corner2.x, p.x)),
+                    Math.max(corner1.y, Math.min(corner2.y, p.y)),
+                    Math.max(corner1.z, Math.min(corner2.z, p.z))
+            );
+        } else {
+            return asSphere().closestTo(p);
+        }
+    }
+
+    public Point closestTo(double x, double y, double z) {
+        if (getBestFit() == Type.BOX) {
+            return new Point(
+                    Math.max(corner1.x, Math.min(corner2.x, x)),
+                    Math.max(corner1.y, Math.min(corner2.y, y)),
+                    Math.max(corner1.z, Math.min(corner2.z, z))
+            );
+        } else {
+            return asSphere().closestTo(x, y, z);
+        }
+    }
+
     public BoundingSphere asSphere() {
         if (sphere == null) {
             sphere = new BoundingSphere(this);
@@ -142,9 +166,12 @@ public class BoundingBox extends AbstractBoundingVolume<BoundingBox> {
     }
 
     public boolean includes(double x, double y, double z) {
-        return corner1.x <= x && corner2.x >= x &&
-               corner1.y <= y && corner2.y >= y &&
-               corner1.z <= z && corner2.z >= z;
+        if (getBestFit() == Type.BOX) {
+            return corner1.x <= x && corner2.x >= x &&
+                   corner1.y <= y && corner2.y >= y &&
+                   corner1.z <= z && corner2.z >= z;
+        }
+        return asSphere().includes(x, y, z);
     }
 
     public boolean intersects(double v, Axis axis) {
@@ -271,6 +298,13 @@ public class BoundingBox extends AbstractBoundingVolume<BoundingBox> {
         return this;
     }
 
+    @Override
+    public String toString() {
+        return String.format("box[%.4f,%.4f,%.4f]-[%.4f,%.4f,%.4f]",
+                             corner1.x, corner1.y, corner1.z,
+                             corner2.x, corner2.y, corner2.z);
+    }
+
     private static class SpecialBoundingBox extends BoundingBox {
 
         private final boolean isNull;
@@ -321,6 +355,16 @@ public class BoundingBox extends AbstractBoundingVolume<BoundingBox> {
         }
 
         @Override
+        public Point closestTo(Point p) {
+            return isNull ? null : p;
+        }
+
+        @Override
+        public Point closestTo(double x, double y, double z) {
+            return isNull ? null : new Point(x, y, z);
+        }
+
+        @Override
         public BoundingBox scale(double magnitude) {
             return this;
         }
@@ -343,6 +387,11 @@ public class BoundingBox extends AbstractBoundingVolume<BoundingBox> {
         @Override
         public BoundingBox rotate(Axis axis, double angle) {
             return this;
+        }
+
+        @Override
+        public String toString() {
+            return isNull ? "box[nil]" : "box[infinite]";
         }
     }
 }

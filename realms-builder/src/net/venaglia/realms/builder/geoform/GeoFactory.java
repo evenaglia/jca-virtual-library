@@ -2,14 +2,16 @@ package net.venaglia.realms.builder.geoform;
 
 import static net.venaglia.realms.spec.GeoSpec.*;
 
-import net.venaglia.realms.common.map_x.WorldMap;
-import net.venaglia.realms.common.map_x.elements.GraphAcre;
+import net.venaglia.common.util.serializer.SerializerStrategy;
 import net.venaglia.gloo.physical.bounds.BoundingSphere;
 import net.venaglia.gloo.physical.geom.*;
 import net.venaglia.gloo.physical.geom.primitives.Icosahedron;
+import net.venaglia.realms.common.Configuration;
+import net.venaglia.realms.common.map.BinaryStore;
+import net.venaglia.realms.common.map.WorldMap;
+import net.venaglia.realms.common.map.world.AcreDetail;
 import net.venaglia.realms.spec.map.*;
 import net.venaglia.common.util.ProgressMonitor;
-import net.venaglia.common.util.Ref;
 import net.venaglia.gloo.util.SpatialMap;
 import net.venaglia.gloo.util.impl.OctreeMap;
 import net.venaglia.realms.common.util.work.Results;
@@ -17,10 +19,9 @@ import net.venaglia.realms.common.util.work.WorkManager;
 import net.venaglia.realms.common.util.work.WorkQueue;
 import net.venaglia.realms.common.util.work.WorkSourceAdapter;
 import net.venaglia.realms.common.util.work.WorkSourceKey;
-import net.venaglia.realms.spec.GeoSpec;
 
 import java.awt.Dimension;
-import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,8 +32,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Time: 7:42 PM
  */
 public class GeoFactory {
-
-    private static final double radius = 1000.0;
 
     public final ProgressMonitor progressMonitor;
 
@@ -318,21 +317,6 @@ public class GeoFactory {
         return newIds.values();
     }
 
-    public void writeToDisk(Collection<Acre> acres) throws IOException {
-        double radius = GeoSpec.APPROX_RADIUS_METERS.get();
-        WorldMap worldMap = new WorldMap();
-        worldMap.graph.clear();
-        GraphAcre ga = new GraphAcre();
-        ga.setNeighbors(new ArrayList<Ref<GraphAcre>>());
-        ga.setVertices(new GeoPoint[6]);
-        for (Acre acre : acres) {
-            acre.applyPackDataToGraphAcre(ga, radius, worldMap);
-            worldMap.graph.put(ga.getId(), ga);
-        }
-        worldMap.graph.commitChanges();
-        System.out.println("Wrote " + worldMap.graph + " to " + worldMap.graph.getFile());
-    }
-
     private static class PointRewriter implements SpatialMap.Consumer<GeoPoint> {
         private GeoPointBasedElement element;
         private int index;
@@ -358,6 +342,7 @@ public class GeoFactory {
     }
 
     public static void main(String[] args) {
+        final double radius = 1000.0;
         System.out.println(SUMMARY);
         final GeoFactory geoFactory = new GeoFactory();
         final AtomicBoolean buildCompleted = new AtomicBoolean(false);
@@ -412,6 +397,7 @@ public class GeoFactory {
 
         final AtomicInteger errorCount = new AtomicInteger();
         final AtomicInteger totalCount = new AtomicInteger();
+        final AtomicInteger writtenCount = new AtomicInteger();
         WorkSourceKey<Void> validateKey = WorkSourceKey.create("validate graph", Void.class);
         WorkSourceKey<Void> summaryKey = WorkSourceKey.create("summary", Void.class);
         geoFactory.workManager.addWorkSource(new WorkSourceAdapter<Void>(validateKey, geoFactory.globe) {
@@ -431,17 +417,20 @@ public class GeoFactory {
         geoFactory.workManager.addWorkSource(new WorkSourceAdapter<Void>(summaryKey, validateKey) {
             public void addWork(WorkQueue workQueue, Results dependencies) {
                 int good = totalCount.get() - errorCount.get();
-                System.out.println("Done!!! (" + good + "/" + totalCount.get() + " good)");
+                System.out.println("Validated (" + good + "/" + totalCount.get() + " good)");
                 if (errorCount.get() == 0) {
-                    try {
-                        geoFactory.writeToDisk(geoFactory.packAcres(globe));
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                    System.out.println("Saving to disk...");
+                    BinaryStore binaryStore = WorldMap.INSTANCE.get().getBinaryStore();
+                    List<Acre> acres = new ArrayList<Acre>(geoFactory.packAcres(globe));
+                    for (int i = 0, l = acres.size(); i < l; i += 100) {
+                        int j = Math.min(i + 100, l);
+                        workQueue.addWorkUnit(new AcreWriter(acres.subList(i, j), binaryStore, writtenCount));
                     }
                 }
             }
         });
         geoFactory.workManager.getResults().getResult(summaryKey);
+        System.out.println("\nWrote " + writtenCount + " acres");
     }
 
     private static class Validator implements Runnable {
@@ -462,9 +451,9 @@ public class GeoFactory {
                 if (neighborID != 0) {
                     AbstractCartographicElement obj = globe.findByID(neighborID);
                     if (obj == null) {
-                        System.err
-                                .println("Could not find neighbor acre by id: " + acre.getIDString() + " --> " + AbstractCartographicElement
-                                        .toIdString(neighborID));
+                        System.err.printf("Could not find neighbor acre by id: %s --> %s\n",
+                                          acre.getIDString(),
+                                          AbstractCartographicElement.toIdString(neighborID));
                     } else {
                         assert obj instanceof Acre;
                         for (long l : obj.neighbors) {
@@ -472,8 +461,8 @@ public class GeoFactory {
                                 continue outer;
                             }
                         }
-                        System.err
-                                .println("Returned Acre does not reciprocate neighbor ids: " + obj + " !--> " + acre);
+                        System.err.printf("Returned Acre does not reciprocate neighbor ids: %s !--> %s\n",
+                                          obj, acre);
                     }
                 }
                 errorCount.incrementAndGet();
@@ -481,4 +470,48 @@ public class GeoFactory {
         }
     }
 
+    private static class AcreWriter implements Runnable {
+
+        private final List<Acre> acres;
+        private final BinaryStore binaryStore;
+        private final AtomicInteger writtenCount;
+        private final boolean dataWriteEnabled;
+        private SerializerStrategy<AcreDetail> serializer;
+        private ByteBuffer buffer;
+
+        public AcreWriter(List<Acre> acres, BinaryStore binaryStore, AtomicInteger writtenCount) {
+            this.acres = acres;
+            this.binaryStore = binaryStore;
+            this.writtenCount = writtenCount;
+            this.dataWriteEnabled = !Configuration.DATABASE_HARMLESS.getBoolean(false);
+        }
+
+        public void run() {
+            serializer = AcreDetail.DEFINITION.getSerializer();
+            buffer = ByteBuffer.allocate(1024 * 1024);
+            try {
+                for (Acre acre : acres) {
+                    buffer.clear();
+                    save(acre);
+                }
+            } finally {
+                serializer = null;
+                buffer = null;
+            }
+        }
+
+        private void save(Acre acre) {
+            AcreDetail detail = new AcreDetail();
+            acre.applyPackDataToGraphAcre(detail);
+            serializer.serialize(detail, buffer);
+            buffer.flip();
+            byte[] data = new byte[buffer.limit()];
+            buffer.get(data);
+            System.out.print('.');
+            if (dataWriteEnabled) {
+                binaryStore.createBinaryResource(AcreDetail.DEFINITION, detail.getId(), data);
+            }
+            writtenCount.incrementAndGet();
+        }
+    }
 }

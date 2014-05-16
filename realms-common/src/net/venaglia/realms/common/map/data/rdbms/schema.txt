@@ -1,0 +1,36 @@
+thing:
+  thing_id: bigint
+  cube_id: bigint
+  container_id: bigint
+  type: varchar(48)
+  x: numeric(18,10)
+  y: numeric(18,10)
+  z: numeric(18,10)
+  properties_length: numeric(8)
+  properties: blob
+
+thing_binary:
+  thing_binary_id: bigint
+  reference_count: int
+  mimetype: varchar(48)
+  locator_id: bigint
+  metadata: varchar(256)
+  sha1: varchar(48)
+  length: numeric(8)
+  data: blob
+
+thing_binary_locator:
+  locator_id: bigint
+  mimetype: varchar(48)
+  thing_binary_id: bigint
+
+thing_version:
+  version: int
+
+thing_seq:
+  name: varchar(48)
+  next: bigint
+
+thing_props:
+  name: varchar(256)
+  value: varchar(256)

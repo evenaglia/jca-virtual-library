@@ -59,6 +59,10 @@ public interface BoundingVolume<T extends BoundingVolume<T>> extends Element<T>,
 
     Point center();
 
+    Point closestTo(Point p);
+
+    Point closestTo(double x, double y, double z);
+
     double getLongestDimension();
 
     double volume();

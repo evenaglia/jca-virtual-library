@@ -1,10 +1,5 @@
 package net.venaglia.common.util.impl;
 
-import com.esotericsoftware.kryo.DefaultSerializer;
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.Serializer;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
 import net.venaglia.common.util.Ref;
 
 import java.util.concurrent.locks.Lock;
@@ -33,7 +28,6 @@ public abstract class AbstractCachingRef<T> implements Ref<T> {
         }
     }
 
-    @DefaultSerializer(LazyRefSerializer.class)
     static class RefBeforeLoad<T> extends LazyRef<T> {
 
         private final Lock lock = new ReentrantLock();
@@ -61,7 +55,6 @@ public abstract class AbstractCachingRef<T> implements Ref<T> {
 
     }
 
-    @DefaultSerializer(LazyRefSerializer.class)
     static class RefAfterLoad<T> extends LazyRef<T> {
 
         private final T value;
@@ -73,21 +66,6 @@ public abstract class AbstractCachingRef<T> implements Ref<T> {
 
         public T get() {
             return value;
-        }
-    }
-
-    public static class LazyRefSerializer extends Serializer<LazyRef<?>> {
-
-        @Override
-        public void write(Kryo kryo, Output output, LazyRef<?> o) {
-            kryo.writeClassAndObject(output, o.cachingRef);
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public LazyRef<?> read(Kryo kryo, Input input, Class<LazyRef<?>> type) {
-            AbstractCachingRef<?> cachingRef = AbstractCachingRef.class.cast(kryo.readClassAndObject(input));
-            return new RefBeforeLoad(cachingRef);
         }
     }
 }

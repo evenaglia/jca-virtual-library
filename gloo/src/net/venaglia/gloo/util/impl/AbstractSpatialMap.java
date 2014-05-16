@@ -137,9 +137,9 @@ public abstract class AbstractSpatialMap<E> implements SpatialMap<E> {
          return entry.parent == expectedParent;
     }
 
-    protected static <E> void consume(Entry<E> entry, BasicConsumer<E> consumer) {
-        if (entry instanceof AbstractEntry) {
-            AbstractEntry<E> entryImpl = (AbstractEntry<E>)entry;
+    protected static <E> void consume(BasicEntry<E> entry, BasicConsumer<E> consumer) {
+        if (entry instanceof AbstractBasicEntry) {
+            AbstractBasicEntry<E> entryImpl = (AbstractBasicEntry<E>)entry;
             consume(entryImpl, consumer);
         } else {
             consumer.found(entry, entry.getAxis(Axis.X), entry.getAxis(Axis.Y), entry.getAxis(Axis.Z));
@@ -147,19 +147,19 @@ public abstract class AbstractSpatialMap<E> implements SpatialMap<E> {
     }
 
     protected static <E> void consume(Entry<E> entry, Consumer<E> consumer) {
-        if (entry instanceof AbstractEntry) {
-            AbstractEntry<E> entryImpl = (AbstractEntry<E>)entry;
+        if (entry instanceof AbstractMutableEntry) {
+            AbstractMutableEntry<E> entryImpl = (AbstractMutableEntry<E>)entry;
             consume(entryImpl, consumer);
         } else {
             consumer.found(entry, entry.getAxis(Axis.X), entry.getAxis(Axis.Y), entry.getAxis(Axis.Z));
         }
     }
 
-    protected static <E> void consume(AbstractEntry<E> entry, BasicConsumer<E> consumer) {
+    protected static <E> void consume(AbstractBasicEntry<E> entry, BasicConsumer<E> consumer) {
         consumer.found(entry, entry.x, entry.y, entry.z);
     }
 
-    protected static <E> void consume(AbstractEntry<E> entry, Consumer<E> consumer) {
+    protected static <E> void consume(AbstractMutableEntry<E> entry, Consumer<E> consumer) {
         consumer.found(entry, entry.x, entry.y, entry.z);
     }
 
@@ -197,20 +197,13 @@ public abstract class AbstractSpatialMap<E> implements SpatialMap<E> {
         return consumer != null ? consumer : (Consumer<T>)DUMMY_CONSUMER;
     }
 
-    protected static abstract class AbstractEntry<S> implements Entry<S> {
+    protected static abstract class AbstractEntry<S> extends AbstractMutableEntry<S> {
 
-        protected double x;
-        protected double y;
-        protected double z;
         protected AbstractSpatialMap<S> parent;
 
         protected AbstractEntry(double x, double y, double z) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
+            super(x, y, z);
         }
-
-        public abstract S get();
 
         public boolean move(Point p) throws IndexOutOfBoundsException {
             return move(p.x, p.y, p.z);
@@ -234,17 +227,8 @@ public abstract class AbstractSpatialMap<E> implements SpatialMap<E> {
             return parent.removeImpl(this);
         }
 
-        public double getAxis(Axis axis) {
-            return axis.of(x,y,z);
-        }
-
         public boolean isOrphan() {
             return parent == null;
-        }
-
-        @Override
-        public String toString() {
-            return String.format("Entry[%.4f,%.4f,%.4f] -> (%s)", x, y, z, get());
         }
     }
 
@@ -257,7 +241,6 @@ public abstract class AbstractSpatialMap<E> implements SpatialMap<E> {
             this.object = object;
         }
 
-        @Override
         public S get() {
             return object;
         }

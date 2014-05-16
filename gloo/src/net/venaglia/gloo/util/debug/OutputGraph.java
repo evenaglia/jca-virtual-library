@@ -103,6 +103,15 @@ public class OutputGraph {
         window.repaint();
     }
 
+    public void addPixels(Color color, double... points) {
+        if (points.length < 2 || points.length % 2 != 0) {
+            throw new IllegalArgumentException();
+        }
+        elements.add(new RenderedPixels(points,
+                                        color == null ? Color.white : color));
+        window.repaint();
+    }
+
     public void addLine(Color color, double... points) {
         if (points.length < 4 || points.length % 2 != 0) {
             throw new IllegalArgumentException();
@@ -241,6 +250,24 @@ public class OutputGraph {
             int x = xf.processX(this.x);
             int y = xf.processY(this.y);
             g2d.fillOval(x - 2, y - 2, 4, 4);
+        }
+    }
+
+    private static class RenderedPixels extends RenderedElement {
+
+        private final double[] points;
+
+        private RenderedPixels(double[] points, Color color) {
+            super(color);
+            this.points = points;
+        }
+
+        protected void renderElement(Graphics2D g2d, PointXForm xf) {
+            for (int i = 0; i < points.length; i += 2) {
+                int x = xf.processX(points[i]);
+                int y = xf.processY(points[i + 1]);
+                g2d.fillOval(x, y, 1, 1);
+            }
         }
     }
 

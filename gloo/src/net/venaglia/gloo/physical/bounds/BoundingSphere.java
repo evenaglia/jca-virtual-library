@@ -176,6 +176,23 @@ public class BoundingSphere extends AbstractBoundingVolume<BoundingSphere> {
         return center;
     }
 
+    public Point closestTo(Point p) {
+        if (getBestFit() == Type.SPHERE) {
+            Vector v = Vector.betweenPoints(center, p);
+            return v.l <= radius ? p : center.translate(v.normalize(radius));
+        } else {
+            return asBox().closestTo(p);
+        }
+    }
+
+    public Point closestTo(double x, double y, double z) {
+        if (getBestFit() == Type.SPHERE) {
+            return closestTo(new Point(x, y, z));
+        } else {
+            return asBox().closestTo(x, y, z);
+        }
+    }
+
     public double getLongestDimension() {
         return radius * 2.0;
     }
@@ -284,7 +301,7 @@ public class BoundingSphere extends AbstractBoundingVolume<BoundingSphere> {
 
     @Override
     public String toString() {
-        return String.format("boundingSphere[%.2f,%.2f,%.2f,r=%.2f]", center.x, center.y, center.z, radius);
+        return String.format("sphere[%.4f,%.4f,%.4f]-[r=%.4f]", center.x, center.y, center.z, radius);
     }
 
     private static class SpecialBoundingSphere extends BoundingSphere {
@@ -347,6 +364,16 @@ public class BoundingSphere extends AbstractBoundingVolume<BoundingSphere> {
         }
 
         @Override
+        public Point closestTo(Point p) {
+            return isNull ? null : p;
+        }
+
+        @Override
+        public Point closestTo(double x, double y, double z) {
+            return isNull ? null : new Point(x, y, z);
+        }
+
+        @Override
         public BoundingSphere scale(double magnitude) {
             return this;
         }
@@ -359,6 +386,11 @@ public class BoundingSphere extends AbstractBoundingVolume<BoundingSphere> {
         @Override
         public BoundingSphere translate(Vector magnitude) {
             return this;
+        }
+
+        @Override
+        public String toString() {
+            return isNull ? "sphere[nil]" : "sphere[infinite]";
         }
     }
 
