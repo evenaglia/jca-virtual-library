@@ -14,6 +14,7 @@ public final class GeoPoint {
     private static final double PI_NEGATIVE = 0.0 - PI;
     private static final double HALF_PI = PI * 0.5;
     private static final double HALF_PI_NEGATIVE = 0.0 - HALF_PI;
+    private static final double TWO_PI = PI * 2.0;
 
     public static final GeoPoint NORTH_POLE = new GeoPoint(0, HALF_PI_NEGATIVE);
     public static final GeoPoint SOUTH_POLE = new GeoPoint(0, HALF_PI);
@@ -22,8 +23,10 @@ public final class GeoPoint {
     public final double latitude;
 
     public GeoPoint(double longitude, double latitude) {
-        assert longitude >= PI_NEGATIVE && longitude <= PI;
-        assert latitude >= HALF_PI_NEGATIVE && latitude <= HALF_PI;
+        assert longitude >= PI_NEGATIVE;
+        assert longitude <= PI;
+        assert latitude >= HALF_PI_NEGATIVE;
+        assert latitude <= HALF_PI;
         this.longitude = longitude == PI_NEGATIVE ? PI : longitude;
         this.latitude = latitude;
     }
@@ -34,6 +37,15 @@ public final class GeoPoint {
         double y = Math.cos(longitude) * c;
         double z = Math.sin(latitude);
         return new Point(x * radius, y * radius, z * radius);
+    }
+
+    public boolean nearLatitude(double latitude, double threshold) {
+        return threshold >= Math.abs(latitude - this.latitude);
+    }
+
+    public boolean nearLongitude(double longitude, double threshold) {
+        double diff = Math.abs(longitude - this.longitude);
+        return threshold >= diff || threshold >= Math.abs(TWO_PI - diff);
     }
 
     @Override
@@ -118,7 +130,7 @@ public final class GeoPoint {
         for (double i : values) {
             for (double j : values) {
                 for (double k : values) {
-                    Point p = Point.ORIGIN.translate(new Vector(j, j, k).normalize());
+                    Point p = Point.ORIGIN.translate(new Vector(i, j, k).normalize());
                     assert Vector.betweenPoints(p, fromPoint(p).toPoint(1.0)).l < 0.000001;
                 }
             }

@@ -48,174 +48,315 @@ public abstract class AbstractSerializerStrategy<T> implements SerializerStrateg
     }
 
     protected final void serializeTypeMarker(SerializerStrategy<?> serializer, ByteBuffer out) {
-        out.put((byte)serializer.getTypeMarker());
+        SerializerDebugger.Marker marker = SerializerDebugger.start("<strategy>");
+        try {
+            out.put((byte)serializer.getTypeMarker());
+        } finally {
+            marker.close();
+        }
     }
 
-    protected final void serializeBoolean(boolean v, ByteBuffer out) {
-        out.put((byte)(v ? 1 : 0));
+    protected final void serializeBoolean(String field, boolean v, ByteBuffer out) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            out.put((byte)(v ? 1 : 0));
+        } finally {
+            marker.close();
+        }
     }
 
-    protected final void serializeByte(byte v, ByteBuffer out) {
-        out.put(v);
+    protected final void serializeByte(String field, byte v, ByteBuffer out) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            out.put(v);
+        } finally {
+            marker.close();
+        }
     }
 
-    protected final void serializeShort(short v, ByteBuffer out) {
-        out.putShort(v);
+    protected final void serializeShort(String field, short v, ByteBuffer out) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            out.putShort(v);
+        } finally {
+            marker.close();
+        }
     }
 
-    protected final void serializeInt(int v, ByteBuffer out) {
-        out.putInt(v);
+    protected final void serializeInt(String field, int v, ByteBuffer out) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            out.putInt(v);
+        } finally {
+            marker.close();
+        }
     }
 
-    protected final void serializeLong(long v, ByteBuffer out) {
-        out.putLong(v);
+    protected final void serializeLong(String field, long v, ByteBuffer out) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            out.putLong(v);
+        } finally {
+            marker.close();
+        }
     }
 
-    protected final void serializeFloat(float v, ByteBuffer out) {
-        out.putFloat(v);
+    protected final void serializeFloat(String field, float v, ByteBuffer out) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            out.putFloat(v);
+        } finally {
+            marker.close();
+        }
     }
 
-    protected final void serializeDouble(double v, ByteBuffer out) {
-        out.putDouble(v);
+    protected final void serializeDouble(String field, double v, ByteBuffer out) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            out.putDouble(v);
+        } finally {
+            marker.close();
+        }
     }
 
-    protected final void serializeChar(char c, ByteBuffer out) {
-        out.putChar(c);
+    protected final void serializeChar(String field, char c, ByteBuffer out) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            out.putChar(c);
+        } finally {
+            marker.close();
+        }
     }
 
     protected final SizeMarker serializeSize(final ByteBuffer out) {
-        out.putInt(0);
-        final int start = out.position();
-        return new SizeMarker() {
-            public void close() {
-                int size = out.position() - start;
-                out.putInt(start, size);
-            }
-        };
-    }
-
-    protected final void serializeSmallNonNegativeInteger(long v, ByteBuffer out) {
-        if (v < 0 || v > Integer.MAX_VALUE) {
-            serializeByte((byte)-3, out);
-            serializeInt((int)v, out);
-        } else if (v > Short.MAX_VALUE) {
-            serializeByte((byte)-2, out);
-            serializeInt((int)v, out);
-        } else if (v > Byte.MAX_VALUE) {
-            serializeByte((byte)-1, out);
-            serializeShort((short)v, out);
-        } else {
-            serializeByte((byte)v, out);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("<size>");
+        try {
+            final int sizePosition = out.position();
+            out.putInt(Integer.MIN_VALUE + 123);
+            final int start = out.position();
+            return new SizeMarker() {
+                public void close() {
+                    int size = out.position() - start;
+                    assert out.getInt(sizePosition) == Integer.MIN_VALUE + 123;
+                    out.putInt(sizePosition, size);
+                }
+            };
+        } finally {
+            marker.close();
         }
-
     }
 
-    protected void serializeString(String value, ByteBuffer out) {
-        byte[] bytes = value.getBytes(Charset.forName("UTF-8"));
-        serializeSmallNonNegativeInteger(bytes.length, out);
-        out.put(bytes);
+    protected final void serializeSmallNonNegativeInteger(String field, long v, ByteBuffer out) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start("(snni)" + field);
+        try {
+            if (v < 0 || v > Integer.MAX_VALUE) {
+                serializeByte(field, (byte)-3, out);
+                serializeLong("(long)" + field, (int)v, out);
+            } else if (v > Short.MAX_VALUE) {
+                serializeByte(field, (byte)-2, out);
+                serializeInt("(int)" + field, (int)v, out);
+            } else if (v > Byte.MAX_VALUE) {
+                serializeByte(field, (byte)-1, out);
+                serializeShort("(short)" + field, (short)v, out);
+            } else {
+                serializeByte(field, (byte)v, out);
+            }
+        } finally {
+            marker.close();
+        }
+    }
+
+    protected void serializeString(String field, String value, ByteBuffer out) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start("(String)" + field);
+        try {
+            byte[] bytes = value.getBytes(Charset.forName("UTF-8"));
+            serializeSmallNonNegativeInteger(field + ".length", bytes.length, out);
+            out.put(bytes);
+        } finally {
+            marker.close();
+        }
     }
 
     protected void serializeType(Class<?> value, ByteBuffer out) {
-        serializeString(value.getName(), out);
+        serializeString("<type>", value.getName(), out);
     }
 
-    protected <T> void serializeObject(T obj, ByteBuffer out) {
-        if (obj != null) {
-            serializeBoolean(false, out);
-            SerializerStrategy<? super T> strategy = SerializerRegistry.forObject(obj);
-            serializeTypeMarker(strategy, out);
-            strategy.serialize(obj, out);
-        } else {
-            serializeBoolean(true, out);
+    protected <T> void serializeObject(String field, T obj, ByteBuffer out) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start("(Object)" + field);
+        try {
+            if (obj != null) {
+                serializeBoolean(field + ".isNull", false, out);
+                SerializerStrategy<? super T> strategy = SerializerRegistry.forObject(obj);
+                serializeTypeMarker(strategy, out);
+                SerializerDebugger.Marker marker2 = SerializerDebugger.start(field);
+                try {
+                    strategy.serialize(obj, out);
+                } finally {
+                 marker2.close();
+                }
+            } else {
+                serializeBoolean(field + ".isNull", true, out);
+            }
+        } finally {
+            marker.close();
         }
     }
 
     protected final <T> SerializerStrategy<T> deserializeTypeMarker(ByteBuffer in) {
-        return SerializerRegistry.forTypeMarker((char)in.get());
-    }
-
-    protected final boolean deserializeBoolean(ByteBuffer in) {
-        return in.get() != 0;
-    }
-
-    protected final byte deserializeByte(ByteBuffer in) {
-        return in.get();
-    }
-
-    protected final short deserializeShort(ByteBuffer in) {
-        return in.getShort();
-    }
-
-    protected final int deserializeInt(ByteBuffer in) {
-        return in.getInt();
-    }
-
-    protected final long deserializeLong(ByteBuffer in) {
-        return in.getLong();
-    }
-
-    protected final float deserializeFloat(ByteBuffer in) {
-        return in.getFloat();
-    }
-
-    protected final double deserializeDouble(ByteBuffer in) {
-        return in.getDouble();
-    }
-
-    protected final char deserializeChar(ByteBuffer in) {
-        return in.getChar();
-    }
-
-    protected final int deserializeSize(ByteBuffer in) {
-        return in.getInt();
-    }
-
-    protected final int deserializeSizeAndSkip(ByteBuffer in) {
-        int size = in.getInt();
-        skip(size, in);
-        return size;
-    }
-
-    protected final long deserializeSmallNonNegativeInteger(ByteBuffer in) {
-        long v = deserializeByte(in);
-        if (v == -1) {
-            v = deserializeShort(in);
-        } else if (v == -2) {
-            v = deserializeInt(in);
-        } else if (v == -3) {
-            v = deserializeLong(in);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("<strategy>");
+        try {
+            return SerializerRegistry.forTypeMarker((char)in.get());
+        } finally {
+            marker.close();
         }
-        return v;
     }
 
-    protected final String deserializeString(ByteBuffer in) {
-        int l = deserializeByte(in);
-        if (l == -1) {
-            l = deserializeShort(in);
-        } else if (l == -2) {
-            l = deserializeInt(in);
+    protected final boolean deserializeBoolean(String field, ByteBuffer in) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            return in.get() != 0;
+        } finally {
+            marker.close();
         }
-        byte[] buffer = new byte[l];
-        in.get(buffer);
-        return new String(buffer, Charset.forName("UTF-8"));
+    }
+
+    protected final byte deserializeByte(String field, ByteBuffer in) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            return in.get();
+        } finally {
+            marker.close();
+        }
+    }
+
+    protected final short deserializeShort(String field, ByteBuffer in) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            return in.getShort();
+        } finally {
+            marker.close();
+        }
+    }
+
+    protected final int deserializeInt(String field, ByteBuffer in) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            return in.getInt();
+        } finally {
+            marker.close();
+        }
+    }
+
+    protected final long deserializeLong(String field, ByteBuffer in) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            return in.getLong();
+        } finally {
+            marker.close();
+        }
+    }
+
+    protected final float deserializeFloat(String field, ByteBuffer in) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            return in.getFloat();
+        } finally {
+            marker.close();
+        }
+    }
+
+    protected final double deserializeDouble(String field, ByteBuffer in) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            return in.getDouble();
+        } finally {
+            marker.close();
+        }
+    }
+
+    protected final char deserializeChar(String field, ByteBuffer in) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            return in.getChar();
+        } finally {
+            marker.close();
+        }
+    }
+
+    protected final int deserializeSize(String field, ByteBuffer in) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            return in.getInt();
+        } finally {
+            marker.close();
+        }
+    }
+
+    protected final int deserializeSizeAndSkip(String field, ByteBuffer in) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start(field);
+        try {
+            int size = in.getInt();
+            skip(size, in);
+            return size;
+        } finally {
+            marker.close();
+        }
+    }
+
+    protected final long deserializeSmallNonNegativeInteger(String field, ByteBuffer in) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start("(snni)" + field);
+        try {
+            long v = deserializeByte(field, in);
+            if (v == -1) {
+                v = deserializeShort("(short)" + field, in);
+            } else if (v == -2) {
+                v = deserializeInt("(int)" + field, in);
+            } else if (v == -3) {
+                v = deserializeLong("(long)", in);
+            }
+            return v;
+        } finally {
+            marker.close();
+
+        }
+    }
+
+    protected final String deserializeString(String field, ByteBuffer in) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start("(String)" + field);
+        try {
+            int l = (int)deserializeSmallNonNegativeInteger(field + ".length", in);
+            byte[] buffer = new byte[l];
+            in.get(buffer);
+            return new String(buffer, Charset.forName("UTF-8"));
+        } finally {
+            marker.close();
+        }
     }
 
     protected final Class<?> deserializeType(ByteBuffer in) {
         try {
-            return Class.forName(deserializeString(in));
+            String type = deserializeString("<type>", in);
+            if (PrimitiveSerializerStrategy.PRIMITIVE_TYPES_BY_NAME.containsKey(type)) {
+                return PrimitiveSerializerStrategy.PRIMITIVE_TYPES_BY_NAME.get(type);
+            }
+            return Class.forName(type);
         } catch (ClassNotFoundException e) {
             throw new SerializerException(e);
         }
     }
 
-    protected final <T> T deserializeObject(ByteBuffer in) {
-        boolean isNull = deserializeBoolean(in);
-        if (isNull) {
-            return null;
+    protected final <T> T deserializeObject(String field, ByteBuffer in) {
+        SerializerDebugger.Marker marker = SerializerDebugger.start("(Object)" + field);
+        try {
+            boolean isNull = deserializeBoolean(field + ".isNull", in);
+            if (isNull) {
+                return null;
+            }
+            SerializerStrategy<T> strategy = deserializeTypeMarker(in);
+            return strategy.deserialize(in);
+        } finally {
+            marker.close();
         }
-        SerializerStrategy<T> strategy = deserializeTypeMarker(in);
-        return strategy.deserialize(in);
     }
 
     protected final void skip(int size, ByteBuffer in) {
@@ -225,7 +366,12 @@ public abstract class AbstractSerializerStrategy<T> implements SerializerStrateg
         if (size > in.remaining()) {
             throw new IllegalArgumentException("Size is greater than what remains in the buffer: " + size + " > " + in.remaining());
         }
-        in.position(in.position() + size);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("<skip>");
+        try {
+            in.position(in.position() + size);
+        } finally {
+            marker.close();
+        }
     }
 
     protected interface SizeMarker {

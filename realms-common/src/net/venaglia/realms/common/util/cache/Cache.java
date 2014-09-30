@@ -24,5 +24,7 @@ public interface Cache<E extends Identifiable> extends Series<E> {
 
     void clear();
 
+    void evict(E value);
+
     void evictOldest();
 }

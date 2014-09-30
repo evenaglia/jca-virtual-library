@@ -5,7 +5,6 @@ import net.venaglia.common.util.Predicate;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -72,12 +71,12 @@ public abstract class AbstractWorkingCache<E extends Identifiable, N extends Abs
     }
 
     public E get(Long id) {
-        Map.Entry<Long,N> entry = all.ceilingEntry(id);
-        if (entry != null && entry.getKey().equals(id)) {
-            doHit(entry.getValue());
-            return entry.getValue().getValue();
+        N node = all.get(id);
+        if (node != null) {
+            doHit(node);
+            return node.getValue();
         }
-        N node = doLoad(id);
+        node = doLoad(id);
         return node == null ? null : node.getValue();
     }
 
@@ -88,10 +87,10 @@ public abstract class AbstractWorkingCache<E extends Identifiable, N extends Abs
         }
         lock.lock();
         try {
-            Map.Entry<Long,N> entry = all.ceilingEntry(id);
-            if (entry == null || !entry.getKey().equals(id)) {
+            N node = all.get(id);
+            if (node == null) {
                 modCount++;
-                N node = createEmptyNode();
+                node = createEmptyNode();
                 node.id = id;
                 node.setValue(value);
                 if (head != null) {
@@ -179,6 +178,19 @@ public abstract class AbstractWorkingCache<E extends Identifiable, N extends Abs
         }
     }
 
+    public void evict(E value) {
+        lock.lock();
+        try {
+            N node = all.get(value.getId());
+            if (node != null) {
+                modCount++;
+                doEvict(node);
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
     public void evictOldest() {
         lock.lock();
         try {
@@ -216,7 +228,7 @@ public abstract class AbstractWorkingCache<E extends Identifiable, N extends Abs
 
     private N doLoad(Long id) {
         E thing = miss(id);
-        if (thing == null) {
+        if (thing == null || thing instanceof Volatile) {
             return null;
         }
         N node = createEmptyNode();

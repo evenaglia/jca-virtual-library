@@ -103,30 +103,42 @@ public class ArraySerializerStrategy extends AbstractSerializerStrategy<Object> 
 
             public void serialize(A[] value, ByteBuffer out) {
                 if (value == null) {
-                    serializeInt(-1, out);
+                    serializeInt("[].length", -1, out);
                 } else {
-                    serializeInt(value.length, out);
+                    serializeInt("[].length", value.length, out);
                     for (A a : value) {
                         boolean isNull = mayContainNulls && a == null;
                         if (mayContainNulls) {
-                            serializeBoolean(isNull, out);
+                            serializeBoolean("[n].isNull", isNull, out);
                         }
                         if (!isNull) {
-                            serializer.serialize(a, out);
+                            SerializerDebugger.Marker marker = SerializerDebugger.start("(?)[n]");
+                            try {
+                                serializer.serialize(a, out);
+                            } finally {
+                                marker.close();
+                            }
                         }
                     }
                 }
             }
 
             public A[] deserialize(ByteBuffer in) {
-                int length = deserializeInt(in);
+                int length = deserializeInt("[].length", in);
                 A[] result = null;
                 if (length >= 0) {
                     result = createArray(length);
                     for (int i = 0; i < length; i++) {
-                        boolean isNull = mayContainNulls && deserializeBoolean(in);
+                        boolean isNull = mayContainNulls && deserializeBoolean("[n].isNull", in);
                         if (!isNull) {
-                            result[i] = componentType.cast(serializer.deserialize(in));
+                            Object obj;
+                            SerializerDebugger.Marker marker = SerializerDebugger.start("(?)[n]");
+                            try {
+                                obj = serializer.deserialize(in);
+                            } finally {
+                                marker.close();
+                            }
+                            result[i] = componentType.cast(obj);
                         }
                     }
                 }
@@ -141,15 +153,20 @@ public class ArraySerializerStrategy extends AbstractSerializerStrategy<Object> 
         SerializerStrategy<? super C> elementStrategy = SerializerRegistry.forObjectType(componentType);
         int length = value.length;
 
-        serializeTypeMarker(elementStrategy, out);
-        serializeSmallNonNegativeInteger(length, out);
         serializeType(componentType, out);
+        serializeSmallNonNegativeInteger("[].length", length, out);
+        serializeTypeMarker(elementStrategy, out);
         for (C c : value) {
             if (c != null) {
-                serializeBoolean(false, out);
-                elementStrategy.serialize(c, out);
+                serializeBoolean("[n].isNull", false, out);
+                SerializerDebugger.Marker marker = SerializerDebugger.start("(?)[n]");
+                try {
+                    elementStrategy.serialize(c, out);
+                } finally {
+                    marker.close();
+                }
             } else {
-                serializeBoolean(true, out);
+                serializeBoolean("[n].isNull", true, out);
             }
         }
     }
@@ -157,75 +174,124 @@ public class ArraySerializerStrategy extends AbstractSerializerStrategy<Object> 
     private void serializeBooleans(boolean[] value, ByteBuffer out) {
         int length = Array.getLength(value);
         serializeType(Boolean.TYPE, out);
-        serializeSmallNonNegativeInteger(length, out);
-        for (int i = 0; i < length; i++) {
-            serializeBoolean(value[i], out);
+        serializeSmallNonNegativeInteger("[].length", length, out);
+        serializeTypeMarker(PrimitiveSerializerStrategy.BOOLEAN, out);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("boolean[]");
+        try {
+            for (int i = 0; i < length; i++) {
+                serializeBoolean(null, value[i], out);
+            }
+        } finally {
+            marker.close();
         }
     }
 
     private void serializeBytes(byte[] value, ByteBuffer out) {
         int length = Array.getLength(value);
         serializeType(Byte.TYPE, out);
-        serializeSmallNonNegativeInteger(length, out);
-        out.put(value);
+        serializeSmallNonNegativeInteger("[].length", length, out);
+        serializeTypeMarker(PrimitiveSerializerStrategy.BYTE, out);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("byte[]");
+        try {
+            out.put(value);
+        } finally {
+            marker.close();
+        }
     }
 
     private void serializeShorts(short[] value, ByteBuffer out) {
         int length = Array.getLength(value);
         serializeType(Short.TYPE, out);
-        serializeSmallNonNegativeInteger(length, out);
-        for (int i = 0; i < length; i++) {
-            serializeShort(value[i], out);
+        serializeSmallNonNegativeInteger("[].length", length, out);
+        serializeTypeMarker(PrimitiveSerializerStrategy.SHORT, out);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("short[]");
+        try {
+            for (int i = 0; i < length; i++) {
+                serializeShort(null, value[i], out);
+            }
+        } finally {
+            marker.close();
         }
     }
 
     private void serializeInts(int[] value, ByteBuffer out) {
         int length = Array.getLength(value);
         serializeType(Integer.TYPE, out);
-        serializeSmallNonNegativeInteger(length, out);
-        for (int i = 0; i < length; i++) {
-            serializeInt(value[i], out);
+        serializeSmallNonNegativeInteger("[].length", length, out);
+        serializeTypeMarker(PrimitiveSerializerStrategy.INTEGER, out);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("int[]");
+        try {
+            for (int i = 0; i < length; i++) {
+                serializeInt(null, value[i], out);
+            }
+        } finally {
+            marker.close();
         }
     }
 
     private void serializeLongs(long[] value, ByteBuffer out) {
         int length = Array.getLength(value);
         serializeType(Long.TYPE, out);
-        for (int i = 0; i < length; i++) {
-            serializeLong(value[i], out);
+        serializeSmallNonNegativeInteger("[].length", length, out);
+        serializeTypeMarker(PrimitiveSerializerStrategy.LONG, out);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("long[]");
+        try {
+            for (int i = 0; i < length; i++) {
+                serializeLong(null, value[i], out);
+            }
+        } finally {
+            marker.close();
         }
     }
 
     private void serializeFloats(float[] value, ByteBuffer out) {
         int length = Array.getLength(value);
         serializeType(Float.TYPE, out);
-        serializeSmallNonNegativeInteger(length, out);
-        for (int i = 0; i < length; i++) {
-            serializeFloat(value[i], out);
+        serializeSmallNonNegativeInteger("[].length", length, out);
+        serializeTypeMarker(PrimitiveSerializerStrategy.FLOAT, out);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("float[]");
+        try {
+            for (int i = 0; i < length; i++) {
+                serializeFloat(null, value[i], out);
+            }
+        } finally {
+            marker.close();
         }
     }
 
     private void serializeDoubles(double[] value, ByteBuffer out) {
         int length = Array.getLength(value);
         serializeType(Double.TYPE, out);
-        serializeSmallNonNegativeInteger(length, out);
-        for (int i = 0; i < length; i++) {
-            serializeDouble(value[i], out);
+        serializeSmallNonNegativeInteger("[].length", length, out);
+        serializeTypeMarker(PrimitiveSerializerStrategy.DOUBLE, out);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("double[]");
+        try {
+            for (int i = 0; i < length; i++) {
+                serializeDouble(null, value[i], out);
+            }
+        } finally {
+            marker.close();
         }
     }
 
     private void serializeChars(char[] value, ByteBuffer out) {
         int length = Array.getLength(value);
         serializeType(Character.TYPE, out);
-        serializeSmallNonNegativeInteger(length, out);
-        for (int i = 0; i < length; i++) {
-            serializeChar(value[i], out);
+        serializeSmallNonNegativeInteger("[].length", length, out);
+        serializeTypeMarker(PrimitiveSerializerStrategy.CHAR, out);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("char[]");
+        try {
+            for (int i = 0; i < length; i++) {
+                serializeChar(null, value[i], out);
+            }
+        } finally {
+            marker.close();
         }
     }
 
     public Object deserialize(ByteBuffer in) {
         Class<?> componentType = deserializeType(in);
-        int length = (int)deserializeSmallNonNegativeInteger(in);
+        int length = (int)deserializeSmallNonNegativeInteger("[].length", in);
         SerializerStrategy<?> elementStrategy = deserializeTypeMarker(in);
         switch (elementStrategy.getTypeMarker()) {
             case '0':
@@ -245,7 +311,7 @@ public class ArraySerializerStrategy extends AbstractSerializerStrategy<Object> 
         }
         Object[] result = (Object[])Array.newInstance(componentType, length);
         for (int i = 0; i < length; i++) {
-            boolean isNull = deserializeBoolean(in);
+            boolean isNull = deserializeBoolean("[n].isNull", in);
             if (!isNull) {
                 result[i] = elementStrategy.deserialize(in);
             }
@@ -255,56 +321,91 @@ public class ArraySerializerStrategy extends AbstractSerializerStrategy<Object> 
 
     private boolean[] deserializeBooleans(ByteBuffer in, int length) {
         boolean[] value = new boolean[length];
-        for (int i = 0; i < length; i++) {
-            value[i] = deserializeBoolean(in);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("boolean[]");
+        try {
+            for (int i = 0; i < length; i++) {
+                value[i] = deserializeBoolean(null, in);
+            }
+        } finally {
+            marker.close();
         }
         return value;
     }
 
     private byte[] deserializeBytes(ByteBuffer in, int length) {
         byte[] value = new byte[length];
-        in.get(value);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("byte[]");
+        try {
+            in.get(value);
+        } finally {
+            marker.close();
+        }
         return value;
     }
 
     private short[] deserializeShorts(ByteBuffer in, int length) {
         short[] value = new short[length];
-        for (int i = 0; i < length; i++) {
-            value[i] = in.getShort();
+        SerializerDebugger.Marker marker = SerializerDebugger.start("short[]");
+        try {
+            for (int i = 0; i < length; i++) {
+                value[i] = in.getShort();
+            }
+            return value;
+        } finally {
+            marker.close();
         }
-        return value;
     }
 
     private int[] deserializeInts(ByteBuffer in, int length) {
         int[] value = new int[length];
-        for (int i = 0; i < length; i++) {
-            value[i] = in.getInt();
+        SerializerDebugger.Marker marker = SerializerDebugger.start("int[]");
+        try {
+            for (int i = 0; i < length; i++) {
+                value[i] = in.getInt();
+            }
+            return value;
+        } finally {
+            marker.close();
         }
-        return value;
     }
 
     private long[] deserializeLongs(ByteBuffer in, int length) {
         long[] value = new long[length];
-        for (int i = 0; i < length; i++) {
-            value[i] = in.getLong();
+        SerializerDebugger.Marker marker = SerializerDebugger.start("long[]");
+        try {
+            for (int i = 0; i < length; i++) {
+                value[i] = in.getLong();
+            }
+            return value;
+        } finally {
+            marker.close();
         }
-        return value;
     }
 
     private float[] deserializeFloats(ByteBuffer in, int length) {
         float[] value = new float[length];
-        for (int i = 0; i < length; i++) {
-            value[i] = in.getFloat();
+        SerializerDebugger.Marker marker = SerializerDebugger.start("float[]");
+        try {
+            for (int i = 0; i < length; i++) {
+                value[i] = in.getFloat();
+            }
+            return value;
+        } finally {
+            marker.close();
         }
-        return value;
     }
 
     private double[] deserializeDoubles(ByteBuffer in, int length) {
         double[] value = new double[length];
-        for (int i = 0; i < length; i++) {
-            value[i] = in.getDouble();
+        SerializerDebugger.Marker marker = SerializerDebugger.start("double[]");
+        try {
+            for (int i = 0; i < length; i++) {
+                value[i] = in.getDouble();
+            }
+            return value;
+        } finally {
+            marker.close();
         }
-        return value;
     }
 
     @SuppressWarnings("unchecked")

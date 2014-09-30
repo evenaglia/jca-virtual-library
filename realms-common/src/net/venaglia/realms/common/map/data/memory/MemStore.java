@@ -180,7 +180,7 @@ public class MemStore extends AbstractDataStore {
             if (type == null) {
                 throw new RuntimeException("Unable to find a BinaryType for " + row.mimetype);
             }
-            resource.init(id, type, row.locator_id, type.decodeMetadata(row.metadata), row.sha1, row.data);
+            resource.init(id, type, type.decodeMetadata(row.metadata), row.sha1, row.data);
         }
     }
 
@@ -190,13 +190,13 @@ public class MemStore extends AbstractDataStore {
     }
 
     @Override
-    protected BinaryResource insertBinaryResource(BinaryResource resource) {
+    protected BinaryResource insertBinaryResource(BinaryResource resource, long locatorId) {
         synchronized (binaries) {
-            return insertBinaryResourceImpl(resource);
+            return insertBinaryResourceImpl(resource, locatorId);
         }
     }
 
-    private BinaryResource insertBinaryResourceImpl(BinaryResource resource) {
+    private BinaryResource insertBinaryResourceImpl(BinaryResource resource, long locatorId) {
         String sha1Hash = resource.getSha1Hash();
         int length = resource.getLength();
         BinaryType type = resource.getType();
@@ -214,28 +214,27 @@ public class MemStore extends AbstractDataStore {
         row.thing_binary_id = id;
         row.reference_count = 1;
         row.mimetype = type.mimeType();
-        row.locator_id = resource.getLocatorId();
         row.metadata = type.encodeMetadata(metadata);
         row.sha1 = sha1Hash;
         row.length = length;
         row.data = data == null ? null : data.clone();
 
-        addToIndex(row);
+        addToIndex(row, locatorId);
         binaries.put(id, row);
 
         resource.recycle();
-        resource.init(id, type, row.locator_id, metadata, sha1Hash, data);
+        resource.init(id, type, metadata, sha1Hash, data);
         return resource;
     }
 
     @Override
-    protected BinaryResource updateBinaryResource(BinaryResource resource) {
+    protected BinaryResource updateBinaryResource(BinaryResource resource, long locatorId) {
         synchronized (binaries) {
-            return updateBinaryResourceImpl(resource);
+            return updateBinaryResourceImpl(resource, locatorId);
         }
     }
 
-    private BinaryResource updateBinaryResourceImpl(BinaryResource resource) {
+    private BinaryResource updateBinaryResourceImpl(BinaryResource resource, long locatorId) {
         String sha1Hash = resource.getSha1Hash();
         int length = resource.getLength();
         BinaryType type = resource.getType();
@@ -243,29 +242,29 @@ public class MemStore extends AbstractDataStore {
         Long existingId = index.get(key);
         if (existingId != null && !existingId.equals(resource.getId())) {
             binaries.get(existingId).reference_count++;
-            deleteBinaryResourceImpl(resource);
+            deleteBinaryResourceImpl(resource, locatorId);
             return commonDataSources.getBinaryCache().get(existingId);
         }
         BinaryRow row = binaries.get(resource.getId());
         if (row == null) {
-            return insertBinaryResourceImpl(resource);
+            return insertBinaryResourceImpl(resource, locatorId);
         }
-        removeFromIndex(row);
+        removeFromIndex(row, locatorId);
         if (row.reference_count == 1) {
             row.metadata = type.encodeMetadata(resource.getMetadata());
             row.sha1 = resource.getSha1Hash();
             row.length = resource.getLength();
             row.data = resource.getData().clone();
         }
-        addToIndex(row);
-        deleteBinaryResourceImpl(resource);
-        return insertBinaryResourceImpl(resource);
+        addToIndex(row, locatorId);
+        deleteBinaryResourceImpl(resource, locatorId);
+        return insertBinaryResourceImpl(resource, locatorId);
     }
 
     @Override
-    protected void deleteBinaryResource(BinaryResource resource) {
+    protected void deleteBinaryResource(BinaryResource resource, long locatorId) {
         synchronized (binaries) {
-            deleteBinaryResourceImpl(resource);
+            deleteBinaryResourceImpl(resource, locatorId);
         }
     }
 
@@ -284,12 +283,12 @@ public class MemStore extends AbstractDataStore {
         properties.remove(name);
     }
 
-    private void deleteBinaryResourceImpl(BinaryResource resource) {
+    private void deleteBinaryResourceImpl(BinaryResource resource, long locatorId) {
         BinaryRow row = binaries.get(resource.getId());
         if (row != null) {
+            removeFromIndex(resource, locatorId);
             row.reference_count--;
             if (row.reference_count <= 0) {
-                removeFromIndex(resource);
                 binaries.remove(resource.getId());
             }
         }
@@ -304,36 +303,36 @@ public class MemStore extends AbstractDataStore {
         return String.format("%s:%x:%s:hash:bin:ix", sha1Hash, length, mimetype);
     }
 
-    private void addToIndex(BinaryResource resource) {
+    private void addToIndex(BinaryResource resource, long locatorId) {
         addToIndexImpl(resource.getId(),
-                       getLocatorKey(resource),
+                       getLocatorKey(resource, locatorId),
                        getHashKey(resource));
     }
 
-    private void addToIndex(BinaryRow row) {
+    private void addToIndex(BinaryRow row, long locatorId) {
         addToIndexImpl(row.thing_binary_id,
-                       getLocatorKey(row.locator_id, row.mimetype),
+                       getLocatorKey(locatorId, row.mimetype),
                        getHashKey(row.sha1, row.length, row.mimetype));
     }
 
-    private void removeFromIndex(BinaryResource resource) {
-        removeFromInexImpl(resource.getId(),
-                           getLocatorKey(resource),
-                           getHashKey(resource));
+    private void removeFromIndex(BinaryResource resource, long locatorId) {
+        removeFromIndexImpl(resource.getId(),
+                            getLocatorKey(resource, locatorId),
+                            getHashKey(resource));
     }
 
-    private void removeFromIndex(BinaryRow row) {
-        removeFromInexImpl(row.thing_binary_id,
-                           getLocatorKey(row.locator_id, row.mimetype),
-                           getHashKey(row.sha1, row.length, row.mimetype));
+    private void removeFromIndex(BinaryRow row, long locatorId) {
+        removeFromIndexImpl(row.thing_binary_id,
+                            getLocatorKey(locatorId, row.mimetype),
+                            getHashKey(row.sha1, row.length, row.mimetype));
     }
 
     private String getHashKey(BinaryResource resource) {
         return getHashKey(resource.getSha1Hash(), resource.getLength(), resource.getType().mimeType());
     }
 
-    private String getLocatorKey(BinaryResource resource) {
-        return getLocatorKey(resource.getLocatorId(), resource.getType().mimeType());
+    private String getLocatorKey(BinaryResource resource, long locatorId) {
+        return getLocatorKey(locatorId, resource.getType().mimeType());
     }
 
     private void addToIndexImpl(Long id, String... keys) {
@@ -347,7 +346,7 @@ public class MemStore extends AbstractDataStore {
         }
     }
 
-    private void removeFromInexImpl(Long id, String... keys) {
+    private void removeFromIndexImpl(Long id, String... keys) {
         for (String key : keys) {
             if (!id.equals(index.get(key))) {
                 throw new RuntimeException("Key either does not exist, or references a different object: " + key + " -> " + index.get(key));
@@ -370,6 +369,10 @@ public class MemStore extends AbstractDataStore {
 
     public UUID getInstanceUuid() {
         return uuid;
+    }
+
+    public boolean isReadonly() {
+        return false;
     }
 
     private static class CubeIndexComparator implements Comparator<Pair<Long,Long>> {
@@ -399,7 +402,6 @@ public class MemStore extends AbstractDataStore {
         long thing_binary_id;
         int reference_count;
         String mimetype;
-        long locator_id;
         String metadata;
         String sha1;
         int length;

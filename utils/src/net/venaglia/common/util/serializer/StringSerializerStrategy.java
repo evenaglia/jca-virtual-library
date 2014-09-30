@@ -16,11 +16,11 @@ public class StringSerializerStrategy extends AbstractSerializerStrategy<String>
     }
 
     public void serialize(String value, ByteBuffer out) {
-        serializeString(value, out);
+        serializeString("str", value, out);
     }
 
     public String deserialize(ByteBuffer in) {
-        return deserializeString(in);
+        return deserializeString("str", in);
     }
 
     static void init() {

@@ -16,7 +16,9 @@ public interface BinaryStore {
 
     BinaryResource createBinaryResource(BinaryType type, long locatorId, byte[] data);
 
-    BinaryResource updateBinaryResource(BinaryResource resource, byte[] data);
+    BinaryResource updateBinaryResource(BinaryResource resource, long locatorId, byte[] data);
 
-    void destroyBinaryResource(BinaryResource resource);
+    void destroyBinaryResource(BinaryResource resource, long locatorId);
+
+    void freeBinaryResource(BinaryResource resource);
 }

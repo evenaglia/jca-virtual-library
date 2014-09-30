@@ -6,8 +6,8 @@ import net.venaglia.realms.common.map.BinaryStore;
 import net.venaglia.realms.common.map.CubeUtils;
 import net.venaglia.realms.common.map.DataStore;
 import net.venaglia.realms.common.map.PropertyStore;
+import net.venaglia.realms.common.map.VertexStore;
 import net.venaglia.realms.common.map.WorldMap;
-import net.venaglia.realms.common.map.data.AbstractDataStore;
 import net.venaglia.realms.common.map.data.CommonDataSources;
 import net.venaglia.realms.common.map.data.CubeImpl;
 import net.venaglia.realms.common.map.data.Sequence;
@@ -38,6 +38,7 @@ public class WorldMapImpl implements WorldMap {
     private final DataStore dataStore;
     private final CommonDataSources commonDataSources;
     private final BinaryStore binaryStore;
+    private final VertexStore vertexStore = null; // todo
 
     static {
         ColorSerializerStrategy.init();
@@ -50,15 +51,10 @@ public class WorldMapImpl implements WorldMap {
 
     public WorldMapImpl() {
         try {
-            Object dataStore = Class.forName(Configuration.DATA_STORE_CLASS.getString()).newInstance();
-            if (dataStore instanceof AbstractDataStore) {
-                this.dataStore = (DataStore)dataStore;
-                this.dataStore.init();
-                this.commonDataSources = this.dataStore.getCommonDataSources();
-                this.binaryStore = new BinaryStoreImpl();
-            } else {
-                throw new ClassCastException("Unable to cast object of type " + dataStore.getClass() + " to " + DataStore.class);
-            }
+            this.dataStore = Configuration.DATA_STORE_CLASS.getBean();
+            this.dataStore.init();
+            this.commonDataSources = this.dataStore.getCommonDataSources();
+            this.binaryStore = new BinaryStoreImpl();
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
@@ -87,6 +83,10 @@ public class WorldMapImpl implements WorldMap {
 
     public BinaryStore getBinaryStore() {
         return binaryStore;
+    }
+
+    public VertexStore getVertexStore() {
+        return vertexStore;
     }
 
     public PropertyStore getPropertyStore() {
@@ -119,16 +119,20 @@ public class WorldMapImpl implements WorldMap {
 
         public BinaryResource createBinaryResource(BinaryType type, long locatorId, byte[] data) {
             BinaryResource resource = new BinaryResource();
-            resource.init(null, type, locatorId, type.generateMetadata(data), null, data);
-            return commonDataSources.getBinaryCache().insert(resource);
+            resource.init(null, type, type.generateMetadata(data), null, data);
+            return commonDataSources.getBinaryCache().insert(resource, locatorId);
         }
 
-        public BinaryResource updateBinaryResource(BinaryResource resource, byte[] data) {
-            return commonDataSources.getBinaryCache().update(resource, data);
+        public BinaryResource updateBinaryResource(BinaryResource resource, long locatorId, byte[] data) {
+            return commonDataSources.getBinaryCache().update(resource, locatorId, data);
         }
 
-        public void destroyBinaryResource(BinaryResource resource) {
-            commonDataSources.getBinaryCache().delete(resource);
+        public void destroyBinaryResource(BinaryResource resource, long locatorId) {
+            commonDataSources.getBinaryCache().delete(resource, locatorId);
+        }
+
+        public void freeBinaryResource(BinaryResource resource) {
+            commonDataSources.getBinaryCache().evict(resource);
         }
 
     }

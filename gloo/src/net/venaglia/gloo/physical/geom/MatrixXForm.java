@@ -14,7 +14,7 @@ import java.util.List;
 public class MatrixXForm implements XForm {
 
     private Matrix_4x4 matrix;
-    private Matrix_1x4.View<Vector> curriedVector;
+    private XForm.View<Vector> curriedVector;
 
     public MatrixXForm(Matrix_4x4 matrix) {
         if (matrix == null) {
@@ -24,28 +24,42 @@ public class MatrixXForm implements XForm {
     }
 
     public Vector apply(Vector v) {
-        return apply(v.i, v.j, v.k, getCurriedVector());
+        return apply(v.i, v.j, v.k, 1.0, getCurriedVector());
     }
 
-    private Matrix_1x4.View<Vector> getCurriedVector() {
+    private XForm.View<Vector> getCurriedVector() {
         if (curriedVector == null) {
-            curriedVector = apply(0, 0, 0, Matrix_1x4.View.CURRIED_VECTOR);
+            curriedVector = apply(0, 0, 0, 1.0, Vector.CURRIED_VECTOR_XFORM_VIEW);
         }
         return curriedVector;
     }
 
     public Point apply(Point p) {
-        return apply(p.x, p.y, p.z, Matrix_1x4.View.POINT);
+        return apply(p.x, p.y, p.z, 1.0, Point.POINT_XFORM_VIEW);
     }
 
-    private <V> V apply(double b00, double b01, double b02, Matrix_1x4.View<V> view) {
+    public <V> V apply(Vector vector, View<V> view) {
+        return apply(vector.i, vector.j, vector.k, 1, view);
+    }
+
+    public <V> V apply(Point point, View<V> view) {
+        return apply(point.x, point.y, point.z, 1, view);
+    }
+
+    public <V> V apply(Matrix_1x4 matrix, View<V> view) {
+        return apply(matrix.m00, matrix.m01, matrix.m02, matrix.m03, view);
+    }
+
+    public <V> V apply(double b00, double b01, double b02, double b03, XForm.View<V> view) {
         double a00 = matrix.m00, a10 = matrix.m10, a20 = matrix.m20, a30 = matrix.m30;
         double a01 = matrix.m01, a11 = matrix.m11, a21 = matrix.m21, a31 = matrix.m31;
         double a02 = matrix.m02, a12 = matrix.m12, a22 = matrix.m22, a32 = matrix.m32;
-        double n00 = a00 * b00 + a10 * b01 + a20 * b02 + a30;
-        double n01 = a01 * b00 + a11 * b01 + a21 * b02 + a31;
-        double n02 = a02 * b00 + a12 * b01 + a22 * b02 + a32;
-        return view.convert(n00, n01, n02, 0);
+        double a03 = matrix.m03, a13 = matrix.m13, a23 = matrix.m23, a33 = matrix.m33;
+        double n00 = a00 * b00 + a10 * b01 + a20 * b02 + b03 * a30;
+        double n01 = a01 * b00 + a11 * b01 + a21 * b02 + b03 * a31;
+        double n02 = a02 * b00 + a12 * b01 + a22 * b02 + b03 * a32;
+        double n03 = a03 * b00 + a13 * b01 + a23 * b02 + b03 * a33;
+        return view.convert(n00, n01, n02, n03);
     }
 
     public Vector[] apply(Vector[] vectors) {

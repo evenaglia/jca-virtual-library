@@ -118,11 +118,16 @@ public class MapSerializerStrategy extends AbstractSerializerStrategy<Map<?,?>> 
         if (mapFactory == null) {
             throw new SerializerException("No MapFactory found for map: " + value.getClass());
         }
-        serializeChar(mapFactory.getKey(), out);
-        serializeSmallNonNegativeInteger(value.size(), out);
-        for (Map.Entry<?,?> o : ((Map<?,?>)value).entrySet()) {
-            serializeObject(o.getKey(), out);
-            serializeObject(o.getValue(), out);
+        serializeChar("map<type>", mapFactory.getKey(), out);
+        serializeSmallNonNegativeInteger("map.size", value.size(), out);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("map");
+        try {
+            for (Map.Entry<?,?> o : ((Map<?,?>)value).entrySet()) {
+                serializeObject("map.item(n).key", o.getKey(), out);
+                serializeObject("map.item(n).value", o.getValue(), out);
+            }
+        } finally {
+            marker.close();
         }
     }
 
@@ -133,34 +138,49 @@ public class MapSerializerStrategy extends AbstractSerializerStrategy<Map<?,?>> 
         if (mapFactory == null) {
             throw new SerializerException("No MapFactory found for type override: " + typeOverride);
         }
-        serializeChar(mapFactory.getKey(), out);
-        serializeSmallNonNegativeInteger(value.size(), out);
-        for (Map.Entry<?,?> o : ((Map<?,?>)value).entrySet()) {
-            serializeObject(o.getKey(), out);
-            serializeObject(o.getValue(), out);
+        serializeChar("map<type>", mapFactory.getKey(), out);
+        serializeSmallNonNegativeInteger("map.size", value.size(), out);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("map");
+        try {
+            for (Map.Entry<?,?> o : ((Map<?,?>)value).entrySet()) {
+                serializeObject("map.item(n).key", o.getKey(), out);
+                serializeObject("map.item(n).value", o.getValue(), out);
+            }
+        } finally {
+            marker.close();
         }
     }
 
     public Map<?,?> deserialize(ByteBuffer in) {
-        char key = deserializeChar(in);
-        int size = (int)deserializeSmallNonNegativeInteger(in);
+        char key = deserializeChar("map<type>", in);
+        int size = (int)deserializeSmallNonNegativeInteger("map.size", in);
         MapFactory factory = factoriesByKey.get(key);
         Map<Object,Object> buffer = factory.createMap(size);
-        for (int i = 0; i < size; i++) {
-            Object k = deserializeObject(in);
-            Object v = deserializeObject(in);
-            buffer.put(k, v);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("map");
+        try {
+            for (int i = 0; i < size; i++) {
+                Object k = deserializeObject("map.item(n).key", in);
+                Object v = deserializeObject("map.item(n).value", in);
+                buffer.put(k, v);
+            }
+            return factory.finalizeMap(buffer);
+        } finally {
+            marker.close();
         }
-        return factory.finalizeMap(buffer);
     }
 
     public <K,V> void deserialize(ByteBuffer in, Map<K,V> buffer) {
-        deserializeChar(in); // ignored, but exists for compatibility
-        int size = (int)deserializeSmallNonNegativeInteger(in);
-        for (int i = 0; i < size; i++) {
-            K k = deserializeObject(in);
-            V v = deserializeObject(in);
-            buffer.put(k, v);
+        deserializeChar("map<type>", in); // ignored, but exists for compatibility
+        int size = (int)deserializeSmallNonNegativeInteger("map.size", in);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("map");
+        try {
+            for (int i = 0; i < size; i++) {
+                K k = deserializeObject("map.item(n).key", in);
+                V v = deserializeObject("map.item(n).value", in);
+                buffer.put(k, v);
+            }
+        } finally {
+            marker.close();
         }
     }
 

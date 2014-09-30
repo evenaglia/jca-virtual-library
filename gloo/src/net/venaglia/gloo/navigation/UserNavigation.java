@@ -6,7 +6,6 @@ import net.venaglia.gloo.physical.geom.Axis;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
 import net.venaglia.gloo.projection.Camera;
-import net.venaglia.gloo.util.matrix.Matrix_1x4;
 import net.venaglia.gloo.util.matrix.Matrix_4x4;
 import net.venaglia.gloo.view.KeyboardManager;
 import net.venaglia.gloo.view.ViewEventHandler;
@@ -230,9 +229,9 @@ public class UserNavigation implements ViewEventHandler {
         Matrix_4x4.product(cameraRotation, temp.loadRotation(Axis.Y, position.roll));
         Matrix_4x4.product(cameraRotation, temp.loadRotation(Axis.Z, position.heading));
         Matrix_4x4.product(cameraRotation, temp.loadRotation(Axis.X, -position.pitch));
-        Vector direction = cameraRotation.product(0, 1, 0, Matrix_1x4.View.VECTOR);
+        Vector direction = cameraRotation.product(0, 1, 0, Vector.VECTOR_XFORM_VIEW);
         camera.setDirection(direction);
-        camera.setRight(cameraRotation.product(-1, 0, 0, Matrix_1x4.View.VECTOR));
+        camera.setRight(cameraRotation.product(-1, 0, 0, Vector.VECTOR_XFORM_VIEW));
         position.moveX = direction.i;
         position.moveY = direction.j;
     }

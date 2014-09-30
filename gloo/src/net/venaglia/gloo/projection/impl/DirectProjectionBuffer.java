@@ -6,6 +6,7 @@ import net.venaglia.gloo.physical.bounds.BoundingBox;
 import net.venaglia.gloo.physical.decorators.AlphaRule;
 import net.venaglia.gloo.physical.decorators.Brush;
 import net.venaglia.gloo.physical.geom.Axis;
+import net.venaglia.gloo.physical.geom.XForm;
 import net.venaglia.gloo.physical.lights.Light;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
@@ -15,7 +16,6 @@ import net.venaglia.gloo.projection.ProjectionBuffer;
 import net.venaglia.gloo.projection.SelectObserver;
 import net.venaglia.gloo.projection.shaders.ShaderProgram;
 import net.venaglia.common.util.ChangeCounter;
-import net.venaglia.gloo.util.matrix.Matrix_1x4;
 import net.venaglia.gloo.util.matrix.Matrix_4x4;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
@@ -51,10 +51,10 @@ public class DirectProjectionBuffer extends DelegatingGeometryBuffer implements 
             if (this.lighting != lighting) {
                 enableOrDisable(lighting, GL_LIGHTING);
                 this.lighting = lighting;
-                if (lighting) {
+//                if (lighting) {
 //                    glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
 //                    if (logCalls) logCall("glLightModeli", GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
-                }
+//                }
             }
         }
 
@@ -529,7 +529,7 @@ public class DirectProjectionBuffer extends DelegatingGeometryBuffer implements 
         viewMatrix.product(bounds.max(Axis.X), bounds.min(Axis.Y), bounds.max(Axis.Z), whereIsScreenExtentsView);
         viewMatrix.product(bounds.max(Axis.X), bounds.max(Axis.Y), bounds.min(Axis.Z), whereIsScreenExtentsView);
         viewMatrix.product(bounds.max(Axis.X), bounds.max(Axis.Y), bounds.max(Axis.Z), whereIsScreenExtentsView);
-        return whereIsScreenExtentsView.getWidestAngle(viewMatrix.product(observer.x, observer.y, observer.z, Matrix_1x4.View.POINT));
+        return whereIsScreenExtentsView.getWidestAngle(viewMatrix.product(observer.x, observer.y, observer.z, Point.POINT_XFORM_VIEW));
     }
 
     protected Matrix_4x4 loadViewMatrix() {
@@ -586,7 +586,7 @@ public class DirectProjectionBuffer extends DelegatingGeometryBuffer implements 
         shaderStack.clear();
     }
 
-    private static class DoubleView implements Matrix_1x4.View<double[]> {
+    private static class DoubleView implements XForm.View<double[]> {
 
         private final double[] buffer = {0,0,0};
 
@@ -601,7 +601,7 @@ public class DirectProjectionBuffer extends DelegatingGeometryBuffer implements 
         }
     }
 
-    private static class ScreenExtentsView implements Matrix_1x4.View<Void> {
+    private static class ScreenExtentsView implements XForm.View<Void> {
 
         private static final int[][] CORNER_PAIR_PERMUTATIONS;
 

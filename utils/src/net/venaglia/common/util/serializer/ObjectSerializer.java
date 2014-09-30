@@ -25,11 +25,11 @@ public class ObjectSerializer {
 
     private final AbstractSerializerStrategy<Object> impl = new AbstractSerializerStrategy<Object>() {
         public void serialize(Object value, ByteBuffer out) {
-            serializeObject(value, out);
+            serializeObject("obj", value, out);
         }
 
         public Object deserialize(ByteBuffer in) {
-            return deserializeObject(in);
+            return deserializeObject("obj", in);
         }
     };
 

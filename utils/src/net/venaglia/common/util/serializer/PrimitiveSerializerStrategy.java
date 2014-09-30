@@ -3,6 +3,8 @@ package net.venaglia.common.util.serializer;
 import net.venaglia.common.util.Predicate;
 
 import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -12,6 +14,21 @@ import java.util.Map;
  */
 @SuppressWarnings("UnusedDeclaration")
 public abstract class PrimitiveSerializerStrategy<T> extends AbstractSerializerStrategy<T>  {
+
+    public static final Map<String, Class<?>> PRIMITIVE_TYPES_BY_NAME;
+
+    static {
+        Map<String,Class<?>> types = new LinkedHashMap<String,Class<?>>();
+        types.put("boolean", boolean.class);
+        types.put("byte", byte.class);
+        types.put("short", short.class);
+        types.put("int", int.class);
+        types.put("long", long.class);
+        types.put("float", float.class);
+        types.put("double", double.class);
+        types.put("char", char.class);
+        PRIMITIVE_TYPES_BY_NAME = Collections.unmodifiableMap(types);
+    }
 
     @SuppressWarnings("unchecked")
     private PrimitiveSerializerStrategy(Class<T> type, char typeMarker) {
@@ -62,11 +79,11 @@ public abstract class PrimitiveSerializerStrategy<T> extends AbstractSerializerS
 
     public static final PrimitiveSerializerStrategy<Boolean> BOOLEAN_OBJ = new PrimitiveSerializerStrategy<Boolean>(Boolean.class, '1') {
         public void serialize(Boolean value, ByteBuffer out) {
-            serializeBoolean(value, out);
+            serializeBoolean(null, value, out);
         }
 
         public Boolean deserialize(ByteBuffer in) {
-            return deserializeBoolean(in);
+            return deserializeBoolean(null, in);
         }
     };
 
@@ -74,11 +91,11 @@ public abstract class PrimitiveSerializerStrategy<T> extends AbstractSerializerS
 
     public static final PrimitiveSerializerStrategy<Byte> BYTE_OBJ = new PrimitiveSerializerStrategy<Byte>(Byte.class, 'B') {
         public void serialize(Byte value, ByteBuffer out) {
-            serializeByte(value, out);
+            serializeByte(null, value, out);
         }
 
         public Byte deserialize(ByteBuffer in) {
-            return deserializeByte(in);
+            return deserializeByte(null, in);
         }
     };
 
@@ -86,11 +103,11 @@ public abstract class PrimitiveSerializerStrategy<T> extends AbstractSerializerS
 
     public static final PrimitiveSerializerStrategy<Short> SHORT_OBJ = new PrimitiveSerializerStrategy<Short>(Short.class, 'S') {
         public void serialize(Short value, ByteBuffer out) {
-            serializeShort(value, out);
+            serializeShort(null, value, out);
         }
 
         public Short deserialize(ByteBuffer in) {
-            return deserializeShort(in);
+            return deserializeShort(null, in);
         }
     };
 
@@ -98,11 +115,11 @@ public abstract class PrimitiveSerializerStrategy<T> extends AbstractSerializerS
 
     public static final PrimitiveSerializerStrategy<Integer> INTEGER_OBJ = new PrimitiveSerializerStrategy<Integer>(Integer.class, 'I') {
         public void serialize(Integer value, ByteBuffer out) {
-            serializeInt(value, out);
+            serializeInt(null, value, out);
         }
 
         public Integer deserialize(ByteBuffer in) {
-            return deserializeInt(in);
+            return deserializeInt(null, in);
         }
     };
 
@@ -110,11 +127,11 @@ public abstract class PrimitiveSerializerStrategy<T> extends AbstractSerializerS
 
     public static final PrimitiveSerializerStrategy<Long> LONG_OBJ = new PrimitiveSerializerStrategy<Long>(Long.class, 'L') {
         public void serialize(Long value, ByteBuffer out) {
-            serializeLong(value, out);
+            serializeLong(null, value, out);
         }
 
         public Long deserialize(ByteBuffer in) {
-            return deserializeLong(in);
+            return deserializeLong(null, in);
         }
     };
 
@@ -122,11 +139,11 @@ public abstract class PrimitiveSerializerStrategy<T> extends AbstractSerializerS
 
     public static final PrimitiveSerializerStrategy<Float> FLOAT_OBJ = new PrimitiveSerializerStrategy<Float>(Float.class, 'F') {
         public void serialize(Float value, ByteBuffer out) {
-            serializeFloat(value, out);
+            serializeFloat(null, value, out);
         }
 
         public Float deserialize(ByteBuffer in) {
-            return deserializeFloat(in);
+            return deserializeFloat(null, in);
         }
     };
 
@@ -134,11 +151,11 @@ public abstract class PrimitiveSerializerStrategy<T> extends AbstractSerializerS
 
     public static final PrimitiveSerializerStrategy<Double> DOUBLE_OBJ = new PrimitiveSerializerStrategy<Double>(Double.class, 'D') {
         public void serialize(Double value, ByteBuffer out) {
-            serializeDouble(value, out);
+            serializeDouble(null, value, out);
         }
 
         public Double deserialize(ByteBuffer in) {
-            return deserializeDouble(in);
+            return deserializeDouble(null, in);
         }
     };
 
@@ -146,11 +163,11 @@ public abstract class PrimitiveSerializerStrategy<T> extends AbstractSerializerS
 
     public static final PrimitiveSerializerStrategy<Character> CHAR_OBJ = new PrimitiveSerializerStrategy<Character>(Character.class, 'C') {
         public void serialize(Character value, ByteBuffer out) {
-            serializeChar(value, out);
+            serializeChar(null, value, out);
         }
 
         public Character deserialize(ByteBuffer in) {
-            return deserializeChar(in);
+            return deserializeChar(null, in);
         }
     };
 

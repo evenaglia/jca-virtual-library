@@ -4,8 +4,8 @@ import net.venaglia.gloo.physical.decorators.Color;
 import net.venaglia.gloo.physical.decorators.Material;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Shape;
+import net.venaglia.gloo.physical.geom.Vector;
 import net.venaglia.gloo.physical.geom.primitives.TriangleSequence;
-import net.venaglia.realms.common.map.BinaryStore;
 import net.venaglia.realms.common.map.world.AcreDetail;
 
 import java.util.Arrays;
@@ -19,18 +19,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Acre extends AbstractCartographicElement {
 
     public enum Flavor {
-        INNER1(Material.makeFrontShaded(Color.RED), Material.makeFrontShaded(Color.GREEN)),
-        INNER2(Material.makeFrontShaded(Color.GREEN), Material.makeFrontShaded( Color.RED)),
-        INNER3(Material.makeFrontShaded(Color.BLUE), Material.makeFrontShaded( Color.BLUE)),
-        DUAL_SECTOR(Material.makeFrontShaded(Color.BLUE), Material.makeFrontShaded( Color.BLUE)),
-        MULTI_SECTOR(Material.makeFrontShaded(Color.BLUE), Material.makeFrontShaded( Color.BLUE));
+        INNER1(Material.makeFrontShaded(Color.RED), Material.makeFrontShaded(Color.GREEN), true),
+        INNER2(Material.makeFrontShaded(Color.GREEN), Material.makeFrontShaded( Color.RED), true),
+        INNER3(Material.makeFrontShaded(Color.BLUE), Material.makeFrontShaded( Color.BLUE), true),
+        DUAL_SECTOR(Material.makeFrontShaded(Color.BLUE), Material.makeFrontShaded( Color.BLUE), false),
+        MULTI_SECTOR(Material.makeFrontShaded(Color.BLUE), Material.makeFrontShaded( Color.BLUE), false);
 
-        public final Material material;
+        public final boolean inner;
+
+        private final Material material;
         private final Material invertMaterial;
 
-        private Flavor(Material material, Material invertMaterial) {
+        private Flavor(Material material, Material invertMaterial, boolean inner) {
             this.material = material;
             this.invertMaterial = invertMaterial;
+            this.inner = inner;
         }
 
         public Material getMaterial(boolean invert) {
@@ -41,10 +44,32 @@ public class Acre extends AbstractCartographicElement {
     public static final AtomicInteger SEQ = new AtomicInteger();
 
     public final Flavor flavor;
-    public final GeoPoint center;
 
+    public GeoPoint center;
     public int packId = -1;
     public int[] packNeighbors;
+
+    /**
+     * def[0] : center vertex id
+     * def[1..6] : edge midpoint vertex ids
+     * def[7..12] : corner vertex ids
+     * def[13..18] : spoke midpoint vertex ids
+     */
+    public long[] topographyDef;
+
+    /**
+     * starts[0..4] : zone seam vertex start ids
+     * starts[5..6] : acre seam vertex ids
+     * ...
+     * starts[35..39] : zone seam vertex start ids
+     * starts[40..41] : acre seam vertex ids
+     */
+    public long[] seamStartVertexIds;
+
+    /**
+     * starts[0..23] : zone inner vertex start ids
+     */
+    public long[] zoneStartVertexIds;
 
     public Acre(int seq, Sector sector, Flavor flavor, GeoPoint center, GeoPoint... points) {
         super(computeId(assertLessThan(seq, 14950), 18, 0, sector.id) | ACRE_BIT,
@@ -55,7 +80,9 @@ public class Acre extends AbstractCartographicElement {
         assert flavor != null && flavor != Flavor.MULTI_SECTOR;
         this.flavor = flavor;
         this.center = center;
-        sector.acres.add(this, center.toPoint(1000.0));
+        if (sector.acres != null) {
+            sector.acres.add(this, center.toPoint(1000.0));
+        }
         SEQ.incrementAndGet();
     }
 
@@ -67,11 +94,17 @@ public class Acre extends AbstractCartographicElement {
         assert points.length == 6 || Arrays.asList(sector1.getParent().getParent().points).contains(center);
         this.center = center;
         Point p = center.toPoint(1000.0);
-        sector1.acres.add(this, p);
-        sector2.acres.add(this, p);
+        if (sector1.acres != null) {
+            sector1.acres.add(this, p);
+        }
+        if (sector2.acres != null) {
+            sector2.acres.add(this, p);
+        }
         if (others != null) {
             for (Sector s : others) {
-                s.acres.add(this, p);
+                if (s.acres != null) {
+                    s.acres.add(this, p);
+                }
             }
             flavor = Flavor.MULTI_SECTOR;
         } else {
@@ -133,6 +166,69 @@ public class Acre extends AbstractCartographicElement {
         ga.setCenter(center);
         ga.setVertices(points.clone());
         ga.setNeighborIds(packNeighbors.clone());
-        ga.setAltitude(new float[points.length]);
+        ga.setAcreTopographyDef(topographyDef);
+        ga.setSeamFirstVertexIds(seamStartVertexIds);
+        ga.setZoneFirstVertexIds(zoneStartVertexIds);
+    }
+
+    @Override
+    public int countGeoPoints() {
+        return super.countGeoPoints() + 1;
+    }
+
+    @Override
+    public GeoPoint getGeoPoint(int index) {
+        return index == 0 ? center : super.getGeoPoint(index - 1);
+    }
+
+    @Override
+    public void setGeoPoint(int index, GeoPoint geoPoint) {
+        if (index == 0) {
+            center = geoPoint;
+        } else {
+            super.setGeoPoint(index - 1, geoPoint);
+        }
+    }
+
+    @Override
+    public RelativeCoordinateReference getRelativeCoordinateReference() {
+        // find the four corners of this acre
+        Point a, b, c, d;
+        Point t1, t2, b1, b2, p1, p2;
+        if (points == null) {
+            throw new NullPointerException("points");
+        }
+        switch (points.length) {
+            case 5:
+                b1 = points[0].toPoint(1000.0);
+                b2 = points[1].toPoint(1000.0);
+                t1 = points[3].toPoint(1000.0);
+                // special case, these pentagonal acres are equilateral
+                t2 = t1.translate(Vector.betweenPoints(b1, b2));
+                p1 = points[2].toPoint(1000.0);
+                p2 = points[4].toPoint(1000.0);
+                break;
+            case 6:
+                b1 = points[0].toPoint(1000.0);
+                b2 = points[1].toPoint(1000.0);
+                t1 = points[3].toPoint(1000.0);
+                t2 = points[4].toPoint(1000.0);
+                p1 = points[2].toPoint(1000.0);
+                p2 = points[5].toPoint(1000.0);
+                break;
+            default:
+                throw new UnsupportedOperationException();
+        }
+        a = findClosestPointOnLine(t1, t2, p1);
+        b = findClosestPointOnLine(t1, t2, p2);
+        c = findClosestPointOnLine(b1, b2, p1);
+        d = findClosestPointOnLine(b1, b2, p2);
+        return new RelativeCoordinateReference(a, b, c, d);
+    }
+
+    public Point findClosestPointOnLine(Point onLine_pointA, Point onLine_pointB, Point nearbyPoint) {
+        Vector a = Vector.betweenPoints(onLine_pointA, nearbyPoint);
+        Vector u = Vector.betweenPoints(onLine_pointA, onLine_pointB).normalize();
+        return onLine_pointA.translate(u.scale(a.dot(u)));
     }
 }

@@ -2,7 +2,6 @@ package net.venaglia.gloo.navigation;
 
 import net.venaglia.gloo.physical.geom.Axis;
 import net.venaglia.gloo.physical.geom.Vector;
-import net.venaglia.gloo.util.matrix.Matrix_1x4;
 import net.venaglia.gloo.util.matrix.Matrix_4x4;
 
 import java.util.concurrent.locks.Lock;
@@ -44,7 +43,7 @@ public class Position {
 
     public void dollyCamera(double fwd, double right, double up) {
         updateCameraRotation();
-        doMove(cameraRotation.product(right, fwd, up, Matrix_1x4.View.VECTOR));
+        doMove(cameraRotation.product(right, fwd, up, Vector.VECTOR_XFORM_VIEW));
     }
 
     private void updateCameraRotation() {

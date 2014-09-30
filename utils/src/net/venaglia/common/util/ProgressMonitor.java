@@ -18,6 +18,11 @@ public interface ProgressMonitor {
     int getCurrentStepNumber();
 
     /**
+     * @return The name if the current step, or null if there is none.
+     */
+    String getCurrentStepName();
+
+    /**
      * @return current progress, represented as a value between 0 and 1, or NaN
      *     if it is not known.
      */

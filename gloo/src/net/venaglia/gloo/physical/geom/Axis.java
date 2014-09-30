@@ -11,10 +11,20 @@ public enum Axis {
         public double of(double x, double y, double z) {
             return x;
         }
+
+        @Override
+        public <T> T of(T x, T y, T z) {
+            return x;
+        }
     },
     Y {
         @Override
         public double of(double x, double y, double z) {
+            return y;
+        }
+
+        @Override
+        public <T> T of(T x, T y, T z) {
             return y;
         }
     },
@@ -23,9 +33,16 @@ public enum Axis {
         public double of(double x, double y, double z) {
             return z;
         }
+
+        @Override
+        public <T> T of(T x, T y, T z) {
+            return z;
+        }
     };
 
     public abstract double of(double x, double y, double z);
+
+    public abstract <T> T of(T x, T y, T z);
 
     public Axis next() {
         switch (this) {

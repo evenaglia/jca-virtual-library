@@ -1,6 +1,7 @@
 package net.venaglia.gloo.util;
 
 import net.venaglia.gloo.physical.bounds.BoundingVolume;
+import net.venaglia.gloo.physical.bounds.SimpleBoundingVolume;
 import net.venaglia.gloo.physical.geom.Axis;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.common.util.Ref;
@@ -25,7 +26,7 @@ public interface BasicSpatialMap<E> {
 
     E get(double x, double y, double z, double r);
 
-    int intersect(BoundingVolume<?> region, BasicConsumer<E> consumer);
+    int intersect(SimpleBoundingVolume region, BasicConsumer<E> consumer);
 
     BoundingVolume<?> getBounds();
 

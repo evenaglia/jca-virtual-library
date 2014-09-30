@@ -149,6 +149,10 @@ public class ThingCache extends BasicWorkingCache<ThingRefImpl<?>> {
             throw new UnsupportedOperationException();
         }
 
+        public void evict(ThingRefImpl<?> value) {
+            throw new UnsupportedOperationException();
+        }
+
         public void evictOldest() {
             throw new UnsupportedOperationException();
         }

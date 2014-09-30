@@ -46,6 +46,11 @@ public class GlobalSector extends AbstractCartographicElement {
         return sectors[seq - 1];
     }
 
+    @Override
+    public RelativeCoordinateReference getRelativeCoordinateReference() {
+        return new RelativeCoordinateReference(points[0], points[1], points[2]);
+    }
+
     public Sector[] getSectors() {
         return sectors;
     }

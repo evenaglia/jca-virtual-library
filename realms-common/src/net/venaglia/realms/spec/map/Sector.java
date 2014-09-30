@@ -3,10 +3,12 @@ package net.venaglia.realms.spec.map;
 import static net.venaglia.realms.spec.GeoSpec.*;
 
 import net.venaglia.gloo.physical.geom.Point;
+import net.venaglia.gloo.physical.geom.Vector;
 import net.venaglia.gloo.util.SpatialMap;
 import net.venaglia.gloo.util.impl.SweepAndPrune;
 import net.venaglia.realms.common.util.work.WorkQueue;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -44,8 +46,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class Sector extends AbstractCartographicElement {
 
+    public static AtomicBoolean MAP_ACRES_BY_CENTER_POINT = new AtomicBoolean(false);
+
     // the (x,y,z) center point of these acres are the keys in this map, r=1 is used to compute (x,y,z)
-    public final SpatialMap<Acre> acres = new SweepAndPrune<Acre>();
+    public final SpatialMap<Acre> acres = MAP_ACRES_BY_CENTER_POINT.get() ? new SweepAndPrune<Acre>() : null;
     private final boolean inverted;
 //    public final SpatialMap<Acre> acres = new DummySpatialMap<Acre>();
     public Triangle[] triangles;
@@ -93,6 +97,11 @@ public class Sector extends AbstractCartographicElement {
             }
         }
         return null;
+    }
+
+    @Override
+    public RelativeCoordinateReference getRelativeCoordinateReference() {
+        return new RelativeCoordinateReference(points[0], points[1], points[2]);
     }
 
     public Acre[] getInnerAcres() {
@@ -185,7 +194,7 @@ public class Sector extends AbstractCartographicElement {
                                       Point j,
                                       Point k,
                                       boolean inverted) {
-            return new Triangle(index, a, b, c, i, j, k, inverted);
+            return new Triangle(index, a, b, c, inverted);
         }
 
         @Override
@@ -204,19 +213,22 @@ public class Sector extends AbstractCartographicElement {
         public GeoPoint a;
         public GeoPoint b;
         public GeoPoint c;
-        public final Point i;
-        public final Point j;
-        public final Point k;
+        public GeoPoint ab; // midpoint: a -- b
+        public GeoPoint bc; // midpoint: b -- c
+        public GeoPoint ca; // midpoint: c -- a
         public final boolean inverted;
 
-        private Triangle(int index, GeoPoint a, GeoPoint b, GeoPoint c, Point i, Point j, Point k, boolean inverted) {
+        private Triangle(int index, GeoPoint a, GeoPoint b, GeoPoint c, boolean inverted) {
             this.index = index;
             this.a = a;
             this.b = b;
             this.c = c;
-            this.i = i;
-            this.j = j;
-            this.k = k;
+            Point i = a.toPoint(1000.0);
+            Point j = b.toPoint(1000.0);
+            Point k = c.toPoint(1000.0);
+            this.ab = GeoPoint.fromPoint(midPoint(i, j));
+            this.bc = GeoPoint.fromPoint(midPoint(j, k));
+            this.ca = GeoPoint.fromPoint(midPoint(k, i));
             this.inverted = inverted;
 //            int cnt = count.incrementAndGet();
 //            if (cnt % 1000000 == 0) {
@@ -224,8 +236,16 @@ public class Sector extends AbstractCartographicElement {
 //            }
         }
 
+        private Point midPoint(Point p, Point q) {
+            double x = (p.x + q.x) * 0.5;
+            double y = (p.y + q.y) * 0.5;
+            double z = (p.z + q.z) * 0.5;
+            double s = 1000.0 / Vector.computeDistance(x, y, z);
+            return new Point(x * s, y * s, z * s);
+        }
+
         public int countGeoPoints() {
-            return 3;
+            return 6;
         }
 
         public GeoPoint getGeoPoint(int index) {
@@ -236,6 +256,12 @@ public class Sector extends AbstractCartographicElement {
                     return b;
                 case 2:
                     return c;
+                case 3:
+                    return ab;
+                case 4:
+                    return bc;
+                case 5:
+                    return ca;
             }
             throw new ArrayIndexOutOfBoundsException(index);
         }
@@ -251,6 +277,15 @@ public class Sector extends AbstractCartographicElement {
                     break;
                 case 2:
                     c = geoPoint;
+                    break;
+                case 3:
+                    ab = geoPoint;
+                    break;
+                case 4:
+                    bc = geoPoint;
+                    break;
+                case 5:
+                    ca = geoPoint;
                     break;
                 default:
                     throw new ArrayIndexOutOfBoundsException(index);

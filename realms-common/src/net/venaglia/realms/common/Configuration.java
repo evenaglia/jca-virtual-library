@@ -1,10 +1,15 @@
 package net.venaglia.realms.common;
 
+import net.venaglia.common.util.Ref;
+import net.venaglia.common.util.impl.SimpleRef;
+import net.venaglia.realms.common.map.DataStore;
 import net.venaglia.realms.common.map.PropertyStore;
 import net.venaglia.realms.common.map.WorldMap;
+import net.venaglia.realms.common.map.world.topo.VertexChangeEventBus;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
@@ -18,15 +23,17 @@ import java.util.regex.Pattern;
 public enum Configuration {
 
     // GEOSPEC must be first, it drives many others and has special handling
-    GEOSPEC("geospec", Storage.PERSISTENT) {
-        @Override
-        public boolean isWritable() {
-            return false;
-        }
-    },
+    GEOSPEC("geospec", Storage.PERSISTENT, false),
 
     // persistence properties, read from a file
-    DATA_STORE_CLASS("datastore.class", Storage.IMMUTABLE),
+    DATA_STORE_CLASS("datastore.class", Storage.IMMUTABLE) {
+        @Override
+        @SuppressWarnings("unchecked")
+        public DataStore getBean() {
+            return super.getBean(DataStore.class);
+        }
+    },
+    DATA_STORE_CLOUD_URL("datastore.cloud.url", Storage.IMMUTABLE),
     DATABASE_DIRECTORY("database.directory", Storage.IMMUTABLE),
     DATABASE_HARMLESS("database.harmless", Storage.IMMUTABLE),
     JDBC_DRIVER("database.jdbc.driver", Storage.IMMUTABLE),
@@ -37,7 +44,16 @@ public enum Configuration {
 
     // regular properties
     THING_CHECKPOINT_SIZE("things.dirty.checkpoint.size", Storage.PERSISTENT),
-    THING_CHECKPOINT_WAIT("things.dirty.checkpoint.wait", Storage.PERSISTENT);
+    THING_CHECKPOINT_WAIT("things.dirty.checkpoint.wait", Storage.PERSISTENT),
+
+    VERTEX_CHANGE_EVENT_BUS("bean.vertex-change-event-bus", Storage.PERSISTENT, false) {
+        @Override
+        @SuppressWarnings("unchecked")
+        public VertexChangeEventBus getBean() {
+            return super.getBean(VertexChangeEventBus.class);
+        }
+    },
+    TERAFORMING("terraform", Storage.TRANSIENT);
 
     private enum Storage {
         IMMUTABLE, // read from a file at startup, not editable at runtime
@@ -54,6 +70,7 @@ public enum Configuration {
     private static final Pattern MATCH_TRUE = Pattern.compile("true|t|yes|y|-1|1", Pattern.CASE_INSENSITIVE);
     private static final Pattern MATCH_FALSE = Pattern.compile("false|f|no|n|0", Pattern.CASE_INSENSITIVE);
     private static final AtomicReference<PropertyStore> PROPERTY_STORE = new AtomicReference<PropertyStore>();
+    private static final EnumMap<Configuration,Object> BEANS = new EnumMap<Configuration,Object>(Configuration.class);
 
     static {
         FILE_PROPERTIES = new Properties();
@@ -76,14 +93,22 @@ public enum Configuration {
 
     private final String propName;
     private final Storage storage;
+    private final boolean writable;
 
     private Configuration(String propName, Storage storage) {
         this.propName = propName;
         this.storage = storage;
+        this.writable = true;
+    }
+
+    private Configuration(String propName, Storage storage, boolean writable) {
+        this.propName = propName;
+        this.storage = storage;
+        this.writable = writable;
     }
 
     public boolean isWritable() {
-        return storage != Storage.IMMUTABLE && !JVM_PROPERTIES.containsKey(propName);
+        return writable && storage != Storage.IMMUTABLE && !JVM_PROPERTIES.containsKey(propName);
     }
 
     public boolean isPersistent() {
@@ -209,6 +234,50 @@ public enum Configuration {
                 MEM_PROPERTIES.remove(propName);
             }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T getBean() {
+        return (T)BEANS.get(this);
+    }
+
+    <T> T getBean(Class<T> type) {
+        return getBean(type, (T)null);
+    }
+
+    <T> T getBean(Class<T> type, T defaultValue) {
+        return getBean(type, defaultValue == null ? null : new SimpleRef<T>(defaultValue));
+    }
+
+    <T> T getBean(Class<T> type, Ref<? extends T> defaultValue) {
+        if (!BEANS.containsKey(this)) {
+            synchronized (BEANS) {
+                if (!BEANS.containsKey(this)) {
+                    BEANS.put(this, getBeanImpl(type, defaultValue));
+                }
+            }
+        }
+        return type.cast(BEANS.get(this));
+    }
+
+    private Object getBeanImpl(Class<?> type, Ref<?> defaultValue) {
+        String className = getString();
+        Class<?> impl;
+        if (className != null) {
+            try {
+                impl = Class.forName(className);
+                if (type.isAssignableFrom(impl)) {
+                    return impl.newInstance();
+                }
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException("Could not find bean of type " + className + " for " + this, e);
+            } catch (InstantiationException e) {
+                throw new RuntimeException("Unable to create bean of type " + className + " for " + this, e);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException("Unable to create bean of type " + className + " for " + this, e);
+            }
+        }
+        return defaultValue == null ? null : defaultValue.get();
     }
 
     public void override(String value) {

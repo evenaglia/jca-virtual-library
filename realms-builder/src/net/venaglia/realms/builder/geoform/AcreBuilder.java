@@ -5,11 +5,14 @@ import static net.venaglia.realms.builder.geoform.CartographicElementView.getFor
 
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
+import net.venaglia.gloo.util.BasicSpatialMap;
+import net.venaglia.realms.builder.utils.MutableBounds;
 import net.venaglia.realms.spec.map.AbstractCartographicElement;
 import net.venaglia.realms.spec.map.Acre;
 import net.venaglia.realms.spec.map.Edge;
 import net.venaglia.realms.spec.map.GeoPoint;
 import net.venaglia.realms.spec.map.GeoPointBasedElement;
+import net.venaglia.realms.spec.map.GlobalPointMap;
 import net.venaglia.realms.spec.map.GlobalSector;
 import net.venaglia.realms.spec.map.Globe;
 import net.venaglia.realms.spec.map.Sector;
@@ -38,6 +41,8 @@ class AcreBuilder implements Runnable {
     private final int subdivisions;
     private final boolean performAssertions;
 
+    private static TopographyIncrements increments;
+
     private Sector sector;
     private Map<GeoPoint,Sector[]> sectorMap;
     private final WorkQueue workQueue;
@@ -62,6 +67,9 @@ class AcreBuilder implements Runnable {
     private Set<Sector> neighborsA;
     private Set<Sector> neighborsB;
     private Set<Sector> neighborsC;
+    private AcreSeamSeq.Accessor acreSeamSeqAccessor;
+    private GlobalPointMap globalPointMap;
+    private PointLocator pointLocator;
 
     public void run() {
         run(nextStep++);
@@ -72,6 +80,24 @@ class AcreBuilder implements Runnable {
             public void run() {
                 AcreBuilder.this.run(100);
                 AcreBuilder.this.run(999);
+            }
+        };
+    }
+
+    public static TopographyIncrements getTopographyIncrements(int lastMultiZoneVertexId) {
+        if (increments == null) {
+            increments = new TopographyIncrements(lastMultiZoneVertexId);
+        }
+        return increments;
+    }
+
+    public Runnable thirdRun(AcreSeamSeq.Accessor acreSeamSeqAccessor, GlobalPointMap globalPointMap) {
+        this.acreSeamSeqAccessor = acreSeamSeqAccessor;
+        this.globalPointMap = globalPointMap;
+        return new Runnable() {
+            public void run() {
+                AcreBuilder.this.run(200);
+                AcreBuilder.this.run(1000);
             }
         };
     }
@@ -117,10 +143,18 @@ class AcreBuilder implements Runnable {
                 addNeighbors(Edge.BC, neighborsB, b, neighborsC, c);
                 addNeighbors(Edge.CA, neighborsC, c, neighborsA, a);
                 break;
+            case 200:
+                assignVertexIds();
+                break;
             case 999:
                 neighborsA = null;
                 neighborsB = null;
                 neighborsC = null;
+                break;
+            case 1000:
+                acreSeamSeqAccessor = null;
+                globalPointMap = null;
+                pointLocator = null;
                 break;
         }
         if (nextStep < 5) {
@@ -275,39 +309,51 @@ class AcreBuilder implements Runnable {
             CartographicElementView elementView = getFor(subdivisions);
             (sector.id < neighbor.sector.id ? sector.sharedAcresLock : neighbor.sector.sharedAcresLock).writeLock().lock();
             (sector.id < neighbor.sector.id ? neighbor.sector.sharedAcresLock : sector.sharedAcresLock).writeLock().lock();
-            try {
-                List<Acre> myShared = elementView.get(sector.getSharedAcres(), CartographicElementView.Position.Shared, edge, false);
-                List<Acre> urShared = elementView.get(neighbor.sector.getSharedAcres(), CartographicElementView.Position.Shared, neighbor.edge, true);
-                assert myShared.size() == urShared.size();
-                for (int i = 0, l = myShared.size(); i < l; i++) {
-                    Acre my = myShared.get(i);
-                    Acre ur = urShared.get(i);
-                    if (my != ur) {
-                        assert my == null || ur == null;
-                        if (my != null) {
-                            urShared.set(i, ur);
-                        } else {
-                            myShared.set(i, ur);
-                        }
-                    }
-                }
-
-                Acre[] myInner = sector.getInnerAcres();
-                Acre[] urInner = neighbor.sector.getInnerAcres();
-                List<Acre> myNear = elementView.get(myInner, CartographicElementView.Position.Near, edge,  false);
-                List<Acre> myBorder = elementView.get(myInner, CartographicElementView.Position.Border, edge, false);
-                List<Acre> urBorder = elementView.get(urInner, CartographicElementView.Position.Border, neighbor.edge, true);
-
-                count += addNeighbors(myShared.subList(1, myShared.size() - 1), myNear);
-                count += addNeighbors(myBorder, urBorder);
-                count += addNeighbors(myShared.subList(0, myShared.size() - 1), myBorder);
-                count += addNeighbors(myShared.subList(1, myShared.size()), myBorder);
-            } finally {
-                (sector.id < neighbor.sector.id ? neighbor.sector.sharedAcresLock : sector.sharedAcresLock).writeLock().unlock();
-                (sector.id < neighbor.sector.id ? sector.sharedAcresLock : neighbor.sector.sharedAcresLock).writeLock().unlock();
-            }
+            count = updateSharedAcres(edge, count, neighbor, elementView);
         }
         return count;
+    }
+
+    private int updateSharedAcres(Edge edge,
+                                  int count,
+                                  Neighbor neighbor,
+                                  CartographicElementView elementView) {
+        try {
+            List<Acre> myShared = elementView.get(sector.getSharedAcres(), CartographicElementView.Position.Shared, edge, false);
+            List<Acre> urShared = elementView.get(neighbor.sector.getSharedAcres(), CartographicElementView.Position.Shared, neighbor.edge, true);
+            assert myShared.size() == urShared.size();
+            for (int i = 0, l = myShared.size(); i < l; i++) {
+                updateSharedAcre(myShared, urShared, i);
+            }
+
+            Acre[] myInner = sector.getInnerAcres();
+            Acre[] urInner = neighbor.sector.getInnerAcres();
+            List<Acre> myNear = elementView.get(myInner, CartographicElementView.Position.Near, edge,  false);
+            List<Acre> myBorder = elementView.get(myInner, CartographicElementView.Position.Border, edge, false);
+            List<Acre> urBorder = elementView.get(urInner, CartographicElementView.Position.Border, neighbor.edge, true);
+
+            count += addNeighbors(myShared.subList(1, myShared.size() - 1), myNear);
+            count += addNeighbors(myBorder, urBorder);
+            count += addNeighbors(myShared.subList(0, myShared.size() - 1), myBorder);
+            count += addNeighbors(myShared.subList(1, myShared.size()), myBorder);
+        } finally {
+            (sector.id < neighbor.sector.id ? neighbor.sector.sharedAcresLock : sector.sharedAcresLock).writeLock().unlock();
+            (sector.id < neighbor.sector.id ? sector.sharedAcresLock : neighbor.sector.sharedAcresLock).writeLock().unlock();
+        }
+        return count;
+    }
+
+    private void updateSharedAcre(List<Acre> myShared, List<Acre> urShared, int i) {
+        Acre my = myShared.get(i);
+        Acre ur = urShared.get(i);
+        if (my != ur) {
+            assert my == null || ur == null;
+            if (my != null) {
+                urShared.set(i, ur);
+            } else {
+                myShared.set(i, ur);
+            }
+        }
     }
 
     private int addNeighbors(List<Acre> left, List<Acre> right) {
@@ -393,6 +439,133 @@ class AcreBuilder implements Runnable {
             this.sector = sector;
             this.edge = edge;
             this.reverse = reverse;
+        }
+    }
+
+    private void assignVertexIds() {
+        pointLocator = new PointLocator();
+        for (Acre acre : sector.getInnerAcres()) {
+            Point[] midpoints = AcreSeamSeq.buildMidpoints(acre);
+            acre.seamStartVertexIds = buildSeamStarts(acre.packId, midpoints);
+            acre.zoneStartVertexIds = buildZoneStarts(acre.packId, acre.points.length);
+            acre.topographyDef = buildTopographyDef(acre.center, acre.points);
+        }
+        for (Acre acre : sector.getSharedAcres()) {
+            Point[] midpoints = AcreSeamSeq.buildMidpoints(acre);
+            acre.seamStartVertexIds = buildSeamStarts(acre.packId, midpoints);
+            acre.zoneStartVertexIds = buildZoneStarts(acre.packId, acre.points.length);
+            acre.topographyDef = buildTopographyDef(acre.center, acre.points);
+        }
+    }
+
+    /**
+     * starts[0..4] : zone seam vertex start ids
+     * starts[5..6] : acre seam vertex ids
+     */
+    private long[] buildSeamStarts(long id, Point[] midpoints) {
+        int length = midpoints.length;
+        assert id >= 0;
+        long innerId = increments.zoneSeamSeqStart + increments.zoneSeamIncrement * id;
+        long[] result = new long[length * 7];
+        for (int i = 0, j = 0; i < length; i++, j += 7) {
+            long acreSeamId = acreSeamSeqAccessor.get(midpoints[i]);
+            long sharedId = increments.acreSeamSeqStart + increments.acreSeamIncrement * acreSeamId;
+            for (int k = 0; k < 5; k++) {
+                result[j + k] = innerId;
+                innerId += increments.zoneSeamStep;
+            }
+            result[j + 5] = sharedId;
+            result[j + 6] = sharedId + increments.acreSeamStep;
+        }
+        return result;
+    }
+
+    private long[] buildZoneStarts(long id, int length) {
+        assert id >= 0;
+        long vertexId = increments.zoneVertexSeqStart + increments.zoneVertexIncrement * id;
+        int l = length * 4;
+        long[] result = new long[l];
+        for (int i = 0; i < l; i++) {
+            result[i] = vertexId;
+            vertexId += increments.zoneVertexStep;
+        }
+        return result;
+    }
+
+    /**
+     * def[0] : center vertex id
+     * def[1..6] : edge midpoint vertex ids
+     * def[7..12] : corner vertex ids
+     * def[13..18] : spoke midpoint vertex ids
+     */
+    private long[] buildTopographyDef(GeoPoint center, GeoPoint[] points) {
+        assert points.length == 6 || points.length == 5;
+        long[] def = new long[points.length * 3 + 1];
+        int p = 0;
+        def[p++] = pointLocator.find(center);
+        for (int i = 0, l = points.length - 1; i <= l; i++) {
+            GeoPoint p1 = points[i];
+            GeoPoint p2 = points[i < l ? i + 1 :  0];
+            def[p++] = pointLocator.findBetween(p1, p2);
+        }
+        for (GeoPoint point : points) {
+            def[p++] = pointLocator.find(point);
+        }
+        for (GeoPoint point : points) {
+            def[p++] = pointLocator.findBetween(center, point);
+        }
+        assert p == def.length;
+        return def;
+    }
+
+    private class PointLocator implements BasicSpatialMap.BasicConsumer<GeoPoint> {
+
+        private boolean found = false;
+        private GlobalPointMap.GlobalPointEntry globalPointEntry;
+        private MutableBounds bounds = new MutableBounds();
+
+        public PointLocator reset() {
+            globalPointEntry = null;
+            found = false;
+            return this;
+        }
+
+        public void found(BasicSpatialMap.BasicEntry<GeoPoint> entry, double x, double y, double z) {
+            if (entry instanceof GlobalPointMap.GlobalPointEntry) {
+                globalPointEntry = (GlobalPointMap.GlobalPointEntry)entry;
+                found = true;
+            }
+        }
+
+        public long findBetween(GeoPoint pointA, GeoPoint pointB) {
+            Point a = pointA.toPoint(1000.0);
+            Point b = pointB.toPoint(1000.0);
+            double x = (a.x + b.x) * 0.5;
+            double y = (a.y + b.y) * 0.5;
+            double z = (a.z + b.z) * 0.5;
+            double l = 1000.0 / Vector.computeDistance(x, y, z);
+            x *= l;
+            y *= l;
+            z *= l;
+            assert Math.abs(Vector.computeDistance(a.x - x, a.y - y, a.z - z) - Vector.computeDistance(b.x - x, b.y - y, b.z - z)) < 0.0005;
+            globalPointMap.intersect(bounds.load(x, y, z), this.reset());
+            assert found;
+            assert globalPointEntry.getSeq() >= 0;
+            return globalPointEntry.getSeq();
+        }
+
+        public long find(GeoPoint point) {
+            globalPointMap.intersect(bounds.load(point), this.reset());
+            assert found;
+            assert globalPointEntry.getSeq() >= 0;
+            return globalPointEntry.getSeq();
+        }
+
+        public long find(Point point) {
+            globalPointMap.intersect(bounds.load(point), this.reset());
+            assert found;
+            assert globalPointEntry.getSeq() >= 0;
+            return globalPointEntry.getSeq();
         }
     }
 
@@ -599,6 +772,7 @@ class AcreBuilder implements Runnable {
             }
         });
 
+        Sector.MAP_ACRES_BY_CENTER_POINT.set(true);
         final GlobalSector gs = new GlobalSector(0, Globe.INSTANCE, geoPoints);
         final AtomicReference<Sector[]> sectors = new AtomicReference<Sector[]>();
         gs.setInit(gs.new Initializer(5, points[0], points[1], points[2], false, null) {
@@ -663,7 +837,7 @@ class AcreBuilder implements Runnable {
                 }
             }
         }
-        GeoFactory.combinePoints(Arrays.<GeoPointBasedElement>asList(sectors.get()));
+        GeoFactory.combinePoints(Arrays.<GeoPointBasedElement>asList(sectors.get()), Globe.INSTANCE);
         Map<GeoPoint,Sector[]> sectorMap = new HashMap<GeoPoint,Sector[]>();
         for (Sector s : sectors.get()) {
             GeoFactory.addSectorByPoint(sectorMap, s, s.points[0]);
@@ -816,7 +990,7 @@ class AcreBuilder implements Runnable {
                 double[] closed = new double[coords.length + 2];
                 System.arraycopy(coords, 0, closed, 0, coords.length);
                 System.arraycopy(coords, 0, closed, coords.length, 2);
-                out.addLine(polyColor, coords);
+                out.addLine(polyColor, closed);
             } else {
                 out.addPoly(polyColor, coords);
             }

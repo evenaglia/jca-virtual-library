@@ -35,6 +35,8 @@ public interface WorldMap {
                                               Point position,
                                               Visitor<ThingRef<T>> initializer);
 
+    VertexStore getVertexStore();
+
     BinaryStore getBinaryStore();
 
     PropertyStore getPropertyStore();

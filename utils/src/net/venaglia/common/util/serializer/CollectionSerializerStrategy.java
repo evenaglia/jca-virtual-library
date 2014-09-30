@@ -153,10 +153,15 @@ public class CollectionSerializerStrategy extends AbstractSerializerStrategy<Col
         if (collectionFactory == null) {
             throw new SerializerException("No CollectionFactory found for collection: " + value.getClass());
         }
-        serializeChar(collectionFactory.getKey(), out);
-        serializeSmallNonNegativeInteger(value.size(), out);
-        for (Object o : value) {
-            serializeObject(o, out);
+        serializeChar("collection<type>", collectionFactory.getKey(), out);
+        serializeSmallNonNegativeInteger("collection.size", value.size(), out);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("collection");
+        try {
+            for (Object o : value) {
+                serializeObject("collection.item(n)", o, out);
+            }
+        } finally {
+            marker.close();
         }
     }
 
@@ -167,31 +172,46 @@ public class CollectionSerializerStrategy extends AbstractSerializerStrategy<Col
         if (collectionFactory == null) {
             throw new SerializerException("No CollectionFactory found for collection: " + value.getClass());
         }
-        serializeChar(collectionFactory.getKey(), out);
-        serializeSmallNonNegativeInteger(value.size(), out);
-        for (Object o : value) {
-            serializeObject(o, out);
+        serializeChar("collection<type>", collectionFactory.getKey(), out);
+        serializeSmallNonNegativeInteger("collection.size", value.size(), out);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("collection");
+        try {
+            for (Object o : value) {
+                serializeObject("collection.item(n)", o, out);
+            }
+        } finally {
+            marker.close();
         }
     }
 
     public Collection<?> deserialize(ByteBuffer in) {
-        char key = deserializeChar(in);
-        int size = (int)deserializeSmallNonNegativeInteger(in);
+        char key = deserializeChar("collection<type>", in);
+        int size = (int)deserializeSmallNonNegativeInteger("collection.size", in);
         CollectionFactory factory = factoriesByKey.get(key);
         Collection<Object> buffer = factory.createCollection(size);
-        for (int i = 0; i < size; i++) {
-            Object v = deserializeObject(in);
-            buffer.add(v);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("collection");
+        try {
+            for (int i = 0; i < size; i++) {
+                Object v = deserializeObject("collection.item(n)", in);
+                buffer.add(v);
+            }
+            return factory.finalizeCollection(buffer);
+        } finally {
+            marker.close();
         }
-        return factory.finalizeCollection(buffer);
     }
 
     public <V> void deserialize(ByteBuffer in, Collection<V> buffer) {
-        deserializeChar(in); // ignored, but exists for compatibility
-        int size = (int)deserializeSmallNonNegativeInteger(in);
-        for (int i = 0; i < size; i++) {
-            V v = deserializeObject(in);
-            buffer.add(v);
+        deserializeChar("collection<type>", in); // ignored, but exists for compatibility
+        int size = (int)deserializeSmallNonNegativeInteger("collection.size", in);
+        SerializerDebugger.Marker marker = SerializerDebugger.start("collection");
+        try {
+            for (int i = 0; i < size; i++) {
+                V v = deserializeObject("collection.itme(n)", in);
+                buffer.add(v);
+            }
+        } finally {
+            marker.close();
         }
     }
 

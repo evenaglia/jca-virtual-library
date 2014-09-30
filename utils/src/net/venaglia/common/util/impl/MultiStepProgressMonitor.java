@@ -4,6 +4,7 @@ import net.venaglia.common.util.ProgressListener;
 import net.venaglia.common.util.ProgressMonitor;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * User: ed
@@ -14,6 +15,7 @@ public class MultiStepProgressMonitor implements ProgressMonitor {
 
     private final int numberOfSteps;
     private final AtomicInteger currentStep = new AtomicInteger(1);
+    private final AtomicReference<String> currentStepName = new AtomicReference<String>();
 
     public MultiStepProgressMonitor(int numberOfSteps) {
         if (numberOfSteps <= 0) {
@@ -30,11 +32,16 @@ public class MultiStepProgressMonitor implements ProgressMonitor {
         return currentStep.get();
     }
 
-    public void setCurrentStep(int currentStep) {
+    public String getCurrentStepName() {
+        return currentStepName.get();
+    }
+
+    public void setCurrentStep(int currentStep, String name) {
         if (currentStep <= 0 || currentStep > numberOfSteps) {
             throw new IllegalArgumentException();
         }
         this.currentStep.set(currentStep);
+        this.currentStepName.set(name);
     }
 
     public double getProgress() {

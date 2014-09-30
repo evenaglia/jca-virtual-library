@@ -1,5 +1,7 @@
 package net.venaglia.gloo.physical.geom;
 
+import static net.venaglia.gloo.physical.geom.XForm.View;
+
 import net.venaglia.gloo.util.matrix.Matrix_4x4;
 
 /**
@@ -10,6 +12,13 @@ import net.venaglia.gloo.util.matrix.Matrix_4x4;
 public final class Point implements Element<Point> {
 
     public static final Point ORIGIN = new Point(0,0,0);
+
+    public static final View<Point> POINT_XFORM_VIEW = new View<Point>() {
+        public Point convert(double x, double y, double z, double w) {
+            return new Point(x, y, z);
+        }
+    };
+
 
     public final double x;
     public final double y;
@@ -110,5 +119,4 @@ public final class Point implements Element<Point> {
         double z = (a.z * m + b.z * n);
         return new Point(x, y, z);
     }
-
 }

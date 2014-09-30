@@ -17,6 +17,8 @@ public interface DataStore {
 
     UUID getInstanceUuid();
 
+    boolean isReadonly();
+
     CommonDataSources getCommonDataSources();
 
     void intersect(BoundingVolume<?> bounds, Visitor<Cube> visitor);

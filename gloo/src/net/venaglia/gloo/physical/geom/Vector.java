@@ -1,5 +1,7 @@
 package net.venaglia.gloo.physical.geom;
 
+import static net.venaglia.gloo.physical.geom.XForm.View;
+
 import net.venaglia.gloo.physical.geom.primitives.Line;
 import net.venaglia.gloo.util.matrix.Matrix_4x4;
 
@@ -14,6 +16,22 @@ public final class Vector implements Element<Vector> {
     public static final Vector X = new Vector(1.0,0,0,1.0);
     public static final Vector Y = new Vector(0,1.0,0,1.0);
     public static final Vector Z = new Vector(0,0,1.0,1.0);
+
+    public static final View<Vector> VECTOR_XFORM_VIEW = new View<Vector>() {
+        public Vector convert(double x, double y, double z, double w) {
+            return new Vector(x, y, z);
+        }
+    };
+
+    public static final View<View<Vector>> CURRIED_VECTOR_XFORM_VIEW = new View<View<Vector>>() {
+        public View<Vector> convert(final double x1, final double y1, final double z1, final double w1) {
+            return new View<Vector>() {
+                public Vector convert(double x2, double y2, double z2, double w2) {
+                    return new Vector(x2 - x1, y2 - y1, z2 - z1);
+                }
+            };
+        }
+    };
 
     public final double i;
     public final double j;

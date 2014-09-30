@@ -90,16 +90,16 @@ public abstract class AbstractDataStore implements DataStore {
                 populateBinaryResource(id, binaryResource);
             }
 
-            public BinaryResource insert(BinaryResource resource) {
-                return insertBinaryResource(resource);
+            public BinaryResource insert(BinaryResource resource, long locatorId) {
+                return insertBinaryResource(resource, locatorId);
             }
 
-            public BinaryResource update(BinaryResource resource, byte[] data) {
-                return updateBinaryResource(mutateBinaryResource(resource, data));
+            public BinaryResource update(BinaryResource resource, long locatorId, byte[] data) {
+                return updateBinaryResource(mutateBinaryResource(resource, data), locatorId);
             }
 
-            public void delete(BinaryResource resource) {
-                deleteBinaryResource(resource);
+            public void delete(BinaryResource resource, long locatorId) {
+                deleteBinaryResource(resource, locatorId);
             }
 
             public Long lookupIdByLocator(String mimetype, long locatorId) {
@@ -214,16 +214,16 @@ public abstract class AbstractDataStore implements DataStore {
     protected BinaryResource mutateBinaryResource(BinaryResource resource, byte[] data) {
         BinaryResource mutated = createEmptyBinaryResource();
         Map<String,Object> metadata = resource.getType().generateMetadata(data);
-        mutated.init(resource.getId(), resource.getType(), resource.getLocatorId(), metadata, null, data);
+        mutated.init(resource.getId(), resource.getType(), metadata, null, data);
         resource.recycle();
         return mutated;
     }
 
     protected abstract void populateBinaryResource(Long id, BinaryResource binaryResource);
     protected abstract Long findBinaryResourceId(String mimetype, long locatorId);
-    protected abstract BinaryResource insertBinaryResource(BinaryResource resource);
-    protected abstract BinaryResource updateBinaryResource(BinaryResource resource);
-    protected abstract void deleteBinaryResource(BinaryResource resource);
+    protected abstract BinaryResource insertBinaryResource(BinaryResource resource, long locatorId);
+    protected abstract BinaryResource updateBinaryResource(BinaryResource resource, long locatorId);
+    protected abstract void deleteBinaryResource(BinaryResource resource, long locatorId);
     protected abstract String getProperty(String name);
     protected abstract void setProperty(String name, String value);
     protected abstract void removeProperty(String name);
@@ -299,7 +299,9 @@ public abstract class AbstractDataStore implements DataStore {
                 }
                 currentThing = null;
                 dirtyThingsToFlush.clear();
-                write(bufferedUpdates);
+                if (!isReadonly()) {
+                    write(bufferedUpdates);
+                }
                 bufferedUpdates.clear();
             }
             if (running.compareAndSet(2, 3)) {

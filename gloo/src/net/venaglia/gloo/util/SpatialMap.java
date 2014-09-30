@@ -1,6 +1,6 @@
 package net.venaglia.gloo.util;
 
-import net.venaglia.gloo.physical.bounds.BoundingVolume;
+import net.venaglia.gloo.physical.bounds.SimpleBoundingVolume;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.common.util.Series;
 
@@ -17,7 +17,7 @@ public interface SpatialMap<E> extends BasicSpatialMap<E>, Series<SpatialMap.Ent
 
     boolean add(E obj, double x, double y, double z) throws UnsupportedOperationException;
 
-    int intersect(BoundingVolume<?> region, Consumer<E> consumer);
+    int intersect(SimpleBoundingVolume region, Consumer<E> consumer);
 
     public interface Entry<S> extends BasicSpatialMap.BasicEntry<S> {
 

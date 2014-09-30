@@ -30,9 +30,9 @@ public class Program extends AbstractLoadableElement {
 
         glLinkProgram(program);
 
-        int status = glGetProgram(program, GL_LINK_STATUS);
+        int status = glGetProgrami(program, GL_LINK_STATUS);
         if (status == GL_FALSE) {
-            int infoLogLength = glGetProgram(program, GL_INFO_LOG_LENGTH);
+            int infoLogLength = glGetProgrami(program, GL_INFO_LOG_LENGTH);
 
             String strInfoLog = glGetProgramInfoLog(program, infoLogLength);
             System.err.printf("Linker failure: %s\n", strInfoLog);

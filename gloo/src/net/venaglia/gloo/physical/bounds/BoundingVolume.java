@@ -10,7 +10,7 @@ import net.venaglia.gloo.physical.geom.Shape;
  * Date: 9/10/12
  * Time: 11:41 PM
  */
-public interface BoundingVolume<T extends BoundingVolume<T>> extends Element<T>, Bounded {
+public interface BoundingVolume<T extends BoundingVolume<T>> extends SimpleBoundingVolume, Element<T>, Bounded {
 
     public enum Type {
         SPHERE {
@@ -38,14 +38,6 @@ public interface BoundingVolume<T extends BoundingVolume<T>> extends Element<T>,
     BoundingBox asBox();
 
     Shape<?> asShape(float minAccuracy);
-
-    double min(Axis axis);
-
-    double max(Axis axis);
-
-    boolean includes(Point point);
-
-    boolean includes(double x, double y, double z);
 
     boolean intersects(double v, Axis axis);
 

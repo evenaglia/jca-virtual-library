@@ -9,11 +9,11 @@ import net.venaglia.realms.common.map.Source;
  */
 public interface BinarySource extends Source<BinaryResource> {
 
-    BinaryResource insert (BinaryResource resource);
+    BinaryResource insert (BinaryResource resource, long locatorId);
 
-    BinaryResource update(BinaryResource resource, byte[] data);
+    BinaryResource update(BinaryResource resource, long locatorId, byte[] data);
 
-    void delete(BinaryResource resource);
+    void delete(BinaryResource resource, long locatorId);
 
     Long lookupIdByLocator(String mimetype, long locatorId);
 }

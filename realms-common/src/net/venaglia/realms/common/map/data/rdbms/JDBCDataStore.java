@@ -58,19 +58,27 @@ public class JDBCDataStore extends AbstractDataStore {
 
     private PooledDataSource cpds;
     private UUID instanceUuid;
+    private boolean readonly = true;
 
     public void init() {
+        readonly = Configuration.DATABASE_HARMLESS.getBoolean(false);
         int maxPoolSize = Configuration.JDBC_POOL_SIZE.getInteger();
         if (maxPoolSize <= 0) {
             throw new IllegalArgumentException("maxPoolSize must be positive: " + maxPoolSize);
         }
         cpds = buildDataSource(maxPoolSize);
 
-        if (RESET_DATABASE) {
-            wipeDatabase();
+        if (readonly) {
+            System.out.println("Database is READ ONLY");
+            loadUUID();
+        } else {
+            System.out.println("Database is READ/WRITE");
+            if (RESET_DATABASE) {
+                wipeDatabase();
+            }
+            loadUUID();
+            runUpgrades();
         }
-        loadUUID();
-        runUpgrades();
     }
 
     private PooledDataSource buildDataSource(int maxPoolSize) {
@@ -240,6 +248,10 @@ public class JDBCDataStore extends AbstractDataStore {
         return instanceUuid;
     }
 
+    public boolean isReadonly() {
+        return readonly;
+    }
+
     protected long runSingleValueQuery(String sql, Long valueIfNoRows, Object... params) {
         Connection con = null;
         PreparedStatement ps = null;
@@ -313,6 +325,9 @@ public class JDBCDataStore extends AbstractDataStore {
     }
 
     protected long runUpdateQuery(String sql, Object... params) {
+        if (readonly) {
+            throw new IllegalStateException("Denying write access to readonly database");
+        }
         Connection con = null;
         PreparedStatement ps = null;
         try {
@@ -379,6 +394,9 @@ public class JDBCDataStore extends AbstractDataStore {
 
     @Override
     protected void write(BufferedUpdates bufferedUpdates) {
+        if (readonly) {
+            throw new IllegalStateException("Denying write access to readonly database");
+        }
         Connection con = null;
         PreparedStatement ps = null;
         try {
@@ -410,13 +428,13 @@ public class JDBCDataStore extends AbstractDataStore {
 
     @Override
     protected Long findBinaryResourceId(String mimetype, long locatorId) {
-        long id = runSingleValueQuery("SELECT thing_binary_id FROM thing_binary WHERE locator_id = ? AND mimetype = ?",
+        long id = runSingleValueQuery("SELECT thing_binary_id FROM thing_binary_locator WHERE locator_id = ? AND mimetype = ?",
                                       Long.MIN_VALUE, locatorId, mimetype);
         return id == Long.MIN_VALUE ? null : id;
     }
 
     @Override
-    protected BinaryResource insertBinaryResource(BinaryResource resource) {
+    protected BinaryResource insertBinaryResource(BinaryResource resource, long locatorId) {
         BinaryType type = resource.getType();
         String sha1Hash = resource.getSha1Hash();
         long existingId = runSingleValueQuery("SELECT thing_binary_id FROM thing_binary WHERE mimetype = ? AND sha1 = ? AND length = ?",
@@ -430,7 +448,6 @@ public class JDBCDataStore extends AbstractDataStore {
         ReusableByteStream dataStream = ReusableByteStream.get().load(data);
         try {
             Map<String,Object> metadata = resource.getMetadata();
-            long locatorId = resource.getLocatorId();
             runUpdateQuery("INSERT INTO thing_binary (thing_binary_id, reference_count, mimetype, metadata, sha1, length, data) VALUES (?, 1, ?, ?, ?, ?, ?)",
                            id,
                            type.mimeType(),
@@ -440,7 +457,7 @@ public class JDBCDataStore extends AbstractDataStore {
                            dataStream);
             runUpdateQuery("INSERT INTO thing_binary_locator (locator_id, mimetype, thing_binary_id) VALUES (?, ?, ?)", locatorId, type.mimeType(), id);
             resource.recycle();
-            resource.init(id, type, locatorId, metadata, sha1Hash, data);
+            resource.init(id, type, metadata, sha1Hash, data);
             return resource;
         } finally {
             ReusableByteStream.recycle(dataStream);
@@ -448,7 +465,7 @@ public class JDBCDataStore extends AbstractDataStore {
     }
 
     @Override
-    protected BinaryResource updateBinaryResource(BinaryResource resource) {
+    protected BinaryResource updateBinaryResource(BinaryResource resource, long locatorId) {
         BinaryType type = resource.getType();
         String sha1Hash = resource.getSha1Hash();
         long existingId = runSingleValueQuery("SELECT thing_binary_id FROM thing_binary WHERE mimetype = ? AND sha1 = ? AND length = ?",
@@ -456,7 +473,7 @@ public class JDBCDataStore extends AbstractDataStore {
         if (existingId != Long.MIN_VALUE && existingId != resource.getId()) {
             bumpBinaryResourceReferenceCount(existingId, INCREMENT);
             runUpdateQuery("UPDATE thing_binary_locator SET thing_binary_id = ? WHERE locator_id = ? AND mimetype = ?",
-                           existingId, resource.getLocatorId(), resource.getType().mimeType());
+                           existingId, locatorId, resource.getType().mimeType());
             deleteResourceReferenceCount(resource);
             return commonDataSources.getBinaryCache().get(existingId);
         }
@@ -464,7 +481,7 @@ public class JDBCDataStore extends AbstractDataStore {
                                          Long.MIN_VALUE,
                                          resource.getId());
         if (count == Long.MIN_VALUE) {
-            return insertBinaryResource(resource);
+            return insertBinaryResource(resource, locatorId);
         }
         if (count == 1) {
             ReusableByteStream stream = ReusableByteStream.get();
@@ -481,8 +498,8 @@ public class JDBCDataStore extends AbstractDataStore {
             }
             return resource;
         }
-        deleteBinaryResource(resource);
-        return insertBinaryResource(resource);
+        deleteBinaryResource(resource, locatorId);
+        return insertBinaryResource(resource, locatorId);
     }
 
     private void deleteResourceReferenceCount(BinaryResource resource) {
@@ -491,8 +508,8 @@ public class JDBCDataStore extends AbstractDataStore {
     }
 
     @Override
-    protected void deleteBinaryResource(BinaryResource resource) {
-        runUpdateQuery("DELETE FROM thing_binary_locator WHERE locator_id = ? AND mimetype = ?", resource.getLocatorId(), resource.getType().mimeType());
+    protected void deleteBinaryResource(BinaryResource resource, long locatorId) {
+        runUpdateQuery("DELETE FROM thing_binary_locator WHERE locator_id = ? AND mimetype = ?", locatorId, resource.getType().mimeType());
         deleteResourceReferenceCount(resource);
         resource.recycle();
     }
@@ -755,7 +772,6 @@ public class JDBCDataStore extends AbstractDataStore {
         public void visit(ResultSet rs) throws SQLException {
             Long id = rs.getLong("thing_binary_id");
             String mimeType = rs.getString("mimetype");
-            long locatorId = rs.getLong("locator_id");
             BinaryType type = BinaryTypeRegistry.get(mimeType);
             if (type == null) {
                 throw new RuntimeException("Unable to find a BinaryType for " + mimeType);
@@ -772,7 +788,7 @@ public class JDBCDataStore extends AbstractDataStore {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            resource.init(id, type, locatorId, type.decodeMetadata(metadata), sha1Hash, data);
+            resource.init(id, type, type.decodeMetadata(metadata), sha1Hash, data);
         }
     }
 

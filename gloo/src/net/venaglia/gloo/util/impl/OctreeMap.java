@@ -2,6 +2,7 @@ package net.venaglia.gloo.util.impl;
 
 import net.venaglia.gloo.physical.bounds.BoundingBox;
 import net.venaglia.gloo.physical.bounds.BoundingVolume;
+import net.venaglia.gloo.physical.bounds.SimpleBoundingVolume;
 import net.venaglia.gloo.physical.decorators.Brush;
 import net.venaglia.gloo.physical.decorators.Color;
 import net.venaglia.gloo.physical.geom.Axis;
@@ -110,11 +111,7 @@ public class OctreeMap<E> extends AbstractSpatialMap<E> implements Projectable {
         return false;
     }
 
-    interface ConsumerWrapper<T> {
-        void consume(EntryImpl<T> entry);
-    }
-
-    public int intersect(BoundingVolume<?> region, Consumer<E> consumer) {
+    public int intersect(SimpleBoundingVolume region, Consumer<E> consumer) {
         double maxX = region.max(Axis.X);
         double minX = region.min(Axis.X);
         double maxY = region.max(Axis.Y);
@@ -130,7 +127,7 @@ public class OctreeMap<E> extends AbstractSpatialMap<E> implements Projectable {
             if (containsNodes) {
                 for (int i = 0; i < totalEntryCount; i++) {
                     @SuppressWarnings("unchecked")
-                    EntryImpl<E> child = (EntryImpl<E>)children[i];
+                    AbstractEntry<E> child = (AbstractEntry<E>)children[i];
                     if (region.includes(child.getAxis(Axis.X), child.getAxis(Axis.Y), child.getAxis(Axis.Z))) {
                         hits++;
                         consume(child, consumer);
@@ -199,7 +196,7 @@ public class OctreeMap<E> extends AbstractSpatialMap<E> implements Projectable {
                 containsNodes = false;
                 for (int i = 0; i < totalEntryCount; i++) {
                     @SuppressWarnings("unchecked")
-                    EntryImpl<E> e = (EntryImpl<E>)previousChildren[i];
+                    AbstractEntry<E> e = (AbstractEntry<E>)previousChildren[i];
                     double a = e.getAxis(Axis.X);
                     double b = e.getAxis(Axis.Y);
                     double c = e.getAxis(Axis.Z);
@@ -318,6 +315,11 @@ public class OctreeMap<E> extends AbstractSpatialMap<E> implements Projectable {
                 totalEntryCount = 0;
                 containsNodes = true;
                 modCount++;
+            } else {
+                Arrays.fill(children, null);
+                totalEntryCount = 0;
+                containsNodes = true;
+                modCount++;
             }
         } finally {
             lock.writeLock().unlock();
@@ -428,7 +430,7 @@ public class OctreeMap<E> extends AbstractSpatialMap<E> implements Projectable {
     }
 
     public NodeView<E> getNodeView() {
-        if (containsNodes) {
+        if (!containsNodes) {
             return new NodeViewImpl<E>() {
 
                 public boolean hasChildNodes() {
@@ -460,6 +462,101 @@ public class OctreeMap<E> extends AbstractSpatialMap<E> implements Projectable {
                 }
             };
         }
+    }
+
+    protected void reconstruct(Iterator<ReconstructOperation<E>> operations) {
+        lock.writeLock().lock();
+        Object[] children = this.children;
+        boolean containsNodes = this.containsNodes;
+        int totalEntryCount = this.totalEntryCount;
+        this.children = new Object[4];
+        this.containsNodes = true;
+        this.totalEntryCount = 0;
+        try {
+            children = reconstructImpl(operations, true);
+            containsNodes = this.containsNodes;
+            totalEntryCount = this.totalEntryCount;
+            modCount++;
+        } finally {
+            this.children = children;
+            this.containsNodes = containsNodes;
+            this.totalEntryCount = totalEntryCount;
+            lock.writeLock().unlock();
+        }
+    }
+
+    private Object[] reconstructImpl(Iterator<ReconstructOperation<E>> operations, boolean top) {
+        int nodeSeq = 0;
+        while (operations.hasNext()) {
+            ReconstructOperation<E> operation = operations.next();
+            switch (operation.getCode()) {
+                case ReconstructOperation.OPERATION_CODE_ADD_ENTRY:
+                    if (!containsNodes) {
+                        throw new IllegalStateException("Cannot add an entry to a voxel that contains other voxels");
+                    }
+                    if (nodeSeq > divideThreshold) {
+                        throw new IllegalArgumentException("Too many entries");
+                    }
+                    if (nodeSeq >= children.length) {
+                        Object[] c = new Object[divideThreshold];
+                        System.arraycopy(children, 0, c, 0, children.length);
+                        children = c;
+                    }
+                    Entry<E> entry = operation.getEntry();
+                    if (entry == null) {
+                        throw new NullPointerException("Entry cannot be null");
+                    }
+                    children[nodeSeq++] = entry;
+                    break;
+                case ReconstructOperation.OPERATION_CODE_MOVE_TO_NEW_CHILD:
+                    if (containsNodes && nodeSeq == 0) {
+                        children = new Object[8];
+                        containsNodes = false;
+                    }
+                    if (containsNodes) {
+                        throw new IllegalStateException("Cannot add a child to a voxel that contains entries");
+                    }
+                    int index = operation.getVoxel().ordinal();
+                    if (children[index] != null) {
+                        throw new IllegalStateException("Cannot add a child to a voxel where one already exists");
+                    }
+                    OctreeMap<E> child = createChild(index);
+                    children[index] = child;
+                    child.reconstructImpl(operations, false);
+                    break;
+                case ReconstructOperation.OPERATION_CODE_MOVE_TO_PARENT:
+                    if (top) {
+                        throw new IllegalStateException("Unexpected code \"move to parent\"");
+                    }
+                    closeReconstructedNode(nodeSeq, top);
+                    return children;
+                case ReconstructOperation.OPERATION_CODE_END:
+                    if (!top) {
+                        throw new IllegalStateException("Unexpected code \"end\"");
+                    }
+                    closeReconstructedNode(nodeSeq, top);
+                    return children;
+                default:
+                    throw new IllegalArgumentException("Unrecognized code: 0x" + Integer.toHexString(operation.getCode()));
+            }
+        }
+        throw new IllegalStateException("Unexpected end of operations");
+    }
+
+    private void closeReconstructedNode(int nodeSeq, boolean top) {
+        if (containsNodes) {
+            if (nodeSeq == 0 && !top) {
+                throw new IllegalStateException("Cannot create a child without any entries");
+            }
+            totalEntryCount = nodeSeq;
+        } else {
+            for (Object o : children) {
+                if (o instanceof OctreeMap) {
+                    totalEntryCount += ((OctreeMap<?>)o).totalEntryCount;
+                }
+            }
+        }
+
     }
 
     public boolean isStatic() {
@@ -510,6 +607,20 @@ public class OctreeMap<E> extends AbstractSpatialMap<E> implements Projectable {
         int getEntryCount();
 
         Entry<V> getEntry(int i);
+    }
+
+    protected interface ReconstructOperation<E> {
+
+        char OPERATION_CODE_MOVE_TO_NEW_CHILD = 'd';
+        char OPERATION_CODE_MOVE_TO_PARENT = 'u';
+        char OPERATION_CODE_ADD_ENTRY = '+';
+        char OPERATION_CODE_END = '\0';
+
+        char getCode();
+
+        OctreeVoxel getVoxel();
+
+        Entry<E> getEntry();
     }
 
     private static class NodeViewAdapter<V> implements NodeView<V> {

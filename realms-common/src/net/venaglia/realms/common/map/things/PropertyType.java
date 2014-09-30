@@ -54,6 +54,8 @@ public class PropertyType<P> {
             new PropertyType<Integer>(int.class, "integer", PrimitiveSerializerStrategy.INTEGER, 0);
     public static final PropertyType<int[]> INTEGERS =
             new PropertyType<int[]>(int[].class, "integers", ArraySerializerStrategy.INTS, null);
+    public static final PropertyType<long[]> LONGS =
+            new PropertyType<long[]>(long[].class, "longs", ArraySerializerStrategy.LONGS, null);
     public static final PropertyType<Long> LONG =
             new PropertyType<Long>(Long.class, "long", PrimitiveSerializerStrategy.LONG, 0L);
     public static final PropertyType<Float> FLOAT =

@@ -16,13 +16,16 @@ public class BinaryResource implements Identifiable {
 
     private Long id = null;
     private BinaryType type;
-    private long locatorId;
     private Map<String,Object> mutableMetadata = new HashMap<String,Object>();
     private Map<String,Object> immutableMetadata = Collections.unmodifiableMap(mutableMetadata);
     private String sha1Hash;
     private byte[] data;
 
-    public void init(Long id, BinaryType type, long locatorId, Map<String,Object> metadata, String sha1Hash, byte[] data) {
+    public void init(Long id,
+                     BinaryType type,
+                     Map<String,Object> metadata,
+                     String sha1Hash,
+                     byte[] data) {
         if (this.data != null) {
             throw new IllegalStateException("BinaryResource is already loaded");
         }
@@ -31,7 +34,6 @@ public class BinaryResource implements Identifiable {
         if (data == null) throw new NullPointerException("data");
         this.id = id;
         this.type = type;
-        this.locatorId = locatorId;
         this.mutableMetadata.putAll(metadata);
         this.sha1Hash = sha1Hash;
         this.data = data;
@@ -41,7 +43,6 @@ public class BinaryResource implements Identifiable {
         if (this.data != null) {
             this.id = null;
             this.type = null;
-            this.locatorId = 0L;
             this.mutableMetadata.clear();
             this.sha1Hash = null;
             this.data = null;
@@ -54,10 +55,6 @@ public class BinaryResource implements Identifiable {
 
     public BinaryType getType() {
         return type;
-    }
-
-    public long getLocatorId() {
-        return locatorId;
     }
 
     public Map<String,Object> getMetadata() {

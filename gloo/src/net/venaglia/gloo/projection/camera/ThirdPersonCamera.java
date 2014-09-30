@@ -2,7 +2,6 @@ package net.venaglia.gloo.projection.camera;
 
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
-import net.venaglia.gloo.util.matrix.Matrix_1x4;
 import net.venaglia.gloo.util.matrix.Matrix_4x4;
 
 /**
@@ -127,9 +126,9 @@ public class ThirdPersonCamera extends PerspectiveCamera {
             followPosition = new Point(a * followDistance + position.x,
                                        b * followDistance + position.y,
                                        c * followDistance + position.z);
-            followDirection = rotate.product(-a, -b, -c, Matrix_1x4.View.VECTOR);
-            followRight = rotate.product(b, -a, -c, Matrix_1x4.View.VECTOR);
-            followUp = rotate.product(i * s, j * s, k * s, Matrix_1x4.View.VECTOR);
+            followDirection = rotate.product(-a, -b, -c, Vector.VECTOR_XFORM_VIEW);
+            followRight = rotate.product(b, -a, -c, Vector.VECTOR_XFORM_VIEW);
+            followUp = rotate.product(i * s, j * s, k * s, Vector.VECTOR_XFORM_VIEW);
         }
     }
 

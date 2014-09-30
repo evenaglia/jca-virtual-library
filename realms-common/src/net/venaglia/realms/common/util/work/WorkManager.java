@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -22,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class WorkManager {
 
     private static final ThreadLocal<WorkSourceWrapper<?>> ACTIVE_WORK_SOURCE = new ThreadLocal<WorkSourceWrapper<?>>();
+    private static final int ONE_COMPLETE_WORK = 1048576;
 
     private final WorkHandler workHandler;
     private final Map<WorkSourceKey<?>,WorkSourceWrapper<?>> queue = new ConcurrentHashMap<WorkSourceKey<?>,WorkSourceWrapper<?>>();
@@ -148,6 +150,10 @@ public class WorkManager {
     private enum WorkSourceState {
         NEW, START, PENDING, COMPLETE, FAIL;
 
+        public boolean running() {
+            return this == PENDING;
+        }
+
         public boolean done() {
             return this == COMPLETE || this == FAIL;
         }
@@ -172,6 +178,15 @@ public class WorkManager {
             return done;
         }
 
+        public String getCurrentStepName() {
+            for (WorkSourceWrapper<?> w : queue.values().toArray(new WorkSourceWrapper[queue.size()])) {
+                if (w.state.get().running()) {
+                    return w.workSource.getKey().getName();
+                }
+            }
+            return null;
+        }
+
         public double getProgress() {
             if (queue.isEmpty()) {
                 return Double.NaN;
@@ -184,7 +199,13 @@ public class WorkManager {
                 if (state.done()) {
                     sum += w.relativeWeight;
                 } else if (state == WorkSourceState.PENDING) {
-                    sum += w.relativeWeight * (w.count.doubleValue() + 1.0) / (w.total.doubleValue() + 1.0);
+                    if (w.total.doubleValue() == 0) {
+                        sum += w.relativeWeight;
+                    } else {
+                        double fraction = w.workInProgress.doubleValue() / ((double)ONE_COMPLETE_WORK);
+                        double myPart = w.relativeWeight * (w.count.doubleValue() + fraction) / (w.total.doubleValue());
+                        sum += myPart;
+                    }
                 }
             }
             return sum / sumWeights;
@@ -201,6 +222,7 @@ public class WorkManager {
         private final double relativeWeight;
         private final Set<WorkSourceKey<?>> dependsOn;
         private final AtomicInteger count = new AtomicInteger(-1);
+        private final AtomicLong workInProgress = new AtomicLong();
         private final AtomicInteger total = new AtomicInteger();
         private final AtomicBoolean fail = new AtomicBoolean();
         private final AtomicReference<WorkSourceState> state = new AtomicReference<WorkSourceState>(WorkSourceState.NEW);
@@ -233,13 +255,21 @@ public class WorkManager {
                 public void run() {
                     boolean success = false;
                     ACTIVE_WORK_SOURCE.set(WorkSourceWrapper.this);
+                    MyProgressExporter exporter = null;
                     try {
+                        if (runnable instanceof ProgressExportingRunnable) {
+                            exporter = new MyProgressExporter();
+                            ((ProgressExportingRunnable)runnable).setProgressExporter(exporter);
+                        }
                         runnable.run();
                         success = true;
                     } finally {
                         ACTIVE_WORK_SOURCE.remove();
                         if (!success) {
                             fail.set(true);
+                        }
+                        if (exporter != null) {
+                            exporter.stop();
                         }
                         decrement();
                     }
@@ -266,6 +296,45 @@ public class WorkManager {
         @Override
         public String toString() {
             return String.format("WorkSource[%s](%d/%d items, state=%s)", workSource.getKey(), count.get(), total.get(), state.get());
+        }
+
+        private class MyProgressExporter implements ProgressExportingRunnable.ProgressExporter {
+
+            private boolean active = true;
+            private long lastSoFar = 0;
+            private long lastTotal = 0;
+            private long priorCount = 0;
+
+            public void exportProgress(long soFar, long total) {
+                exportProgress(((double)soFar)/((double)total));
+                lastSoFar = soFar;
+                lastTotal = total;
+            }
+
+            public void exportProgress(double percentage) {
+                if (active) {
+                    percentage = Math.max(Math.min(percentage, 1), 0);
+                    set(percentage);
+                }
+            }
+
+            public void oneMore() {
+                if (lastTotal <= 0) {
+                    throw new IllegalStateException();
+                }
+                exportProgress(lastSoFar + 1, lastTotal);
+            }
+
+            private synchronized void set(double percentage) {
+                long count = Math.round(percentage * ONE_COMPLETE_WORK);
+                workInProgress.addAndGet(count - priorCount);
+                priorCount = count;
+            }
+
+            void stop() {
+                active = false;
+                set(0.0);
+            }
         }
     }
 }

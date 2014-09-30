@@ -29,11 +29,7 @@ public class AcreDetailRef extends AbstractCachingRef<AcreDetail> implements Ide
         if (resource == null) {
             return null;
         }
-        try {
-            return AcreDetail.DEFINITION.getSerializer().deserialize(ByteBuffer.wrap(resource.getData()));
-        } finally {
-            resource.recycle();
-        }
+        return AcreDetail.DEFINITION.getSerializer().deserialize(ByteBuffer.wrap(resource.getData()));
     }
 
     public Long getId() {

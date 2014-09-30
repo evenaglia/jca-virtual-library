@@ -25,7 +25,6 @@ import net.venaglia.gloo.projection.GeometryBuffer;
 import net.venaglia.gloo.projection.ProjectionBuffer;
 import net.venaglia.gloo.projection.camera.PerspectiveCamera;
 import net.venaglia.gloo.projection.impl.DisplayListBuffer;
-import net.venaglia.gloo.util.SpatialMap;
 import net.venaglia.gloo.view.KeyHandler;
 import net.venaglia.gloo.view.MouseTargets;
 import net.venaglia.gloo.view.View3D;
@@ -34,6 +33,7 @@ import net.venaglia.gloo.view.ViewEventHandler;
 
 import java.awt.Dimension;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -69,8 +69,8 @@ public class GeoViewer implements ViewEventHandler, View3DMainLoop {
             this.fillAcresBySector.put(i, fillAcres);
             GlobalSector gs = globe.sectors[i];
             for (Sector s : gs.getSectors()) {
-                for (SpatialMap.Entry<Acre> entry : s.acres) {
-                    Acre a = entry.get();
+                Collections.addAll(fillAcres, s.getInnerAcres());
+                for (Acre a : s.getSharedAcres()) {
                     if (a.flavor == Acre.Flavor.MULTI_SECTOR) {
                         this.edgeAcres.add(a);
                     } else {
@@ -87,11 +87,6 @@ public class GeoViewer implements ViewEventHandler, View3DMainLoop {
         List<DisplayList> sectorDisplayLists = new ArrayList<DisplayList>((int)SECTORS.get());
         int i = 1;
         for (final Set<Acre> acres : fillAcresBySector.values()) {
-//                for (int side = 0; side < 6; side++) {
-//                    DisplayList list = new DisplayListBuffer("Fill Acres for Sector (" + ("abcdef".charAt(side)) + ") " + i++);
-//                    list.record(new MyDisplayListRecorder(acres, side));
-//                    sectorDisplayLists.add(list);
-//                }
             DisplayList list = new DisplayListBuffer("Fill Acres for Sector " + i++);
             list.record(new MyDisplayListRecorder(acres));
             sectorDisplayLists.add(list);
@@ -210,7 +205,7 @@ public class GeoViewer implements ViewEventHandler, View3DMainLoop {
     public void afterFrame(long nowMS) {
     }
 
-    public static void view(Globe globe, double radius, String windowTitle, Dimension windowSize) {
+    public static View3D view(Globe globe, double radius, String windowTitle, Dimension windowSize) {
         Camera camera = new PerspectiveCamera();
         camera.setPosition(new Point(0.0, radius * -2.0, 0.0));
         camera.setDirection(new Vector(0.0, radius * 2.0, 0.0));
@@ -224,6 +219,7 @@ public class GeoViewer implements ViewEventHandler, View3DMainLoop {
         view3D.addViewEventHandler(view);
         view3D.setMainLoop(view);
         view3D.start();
+        return view3D;
     }
 
     private class MyDisplayListRecorder implements GeometryRecorder {

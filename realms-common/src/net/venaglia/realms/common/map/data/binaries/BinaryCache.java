@@ -22,16 +22,18 @@ public class BinaryCache extends BasicWorkingCache<BinaryResource> {
         return resource;
     }
 
-    public BinaryResource insert(BinaryResource resource) {
-        return source.insert(resource);
+    public BinaryResource insert(BinaryResource resource, long locatorId) {
+        // todo: the returned object needs to be added to the cache.
+        return source.insert(resource, locatorId);
     }
 
-    public BinaryResource update(BinaryResource resource, byte[] data) {
-        return source.update(resource, data);
+    public BinaryResource update(BinaryResource resource, long locatorId, byte[] data) {
+        // todo: the returned object is typically not the same object passed in, so update the cache entry.
+        return source.update(resource, locatorId, data);
     }
 
-    public void delete(BinaryResource resource) {
-        source.delete(resource);
+    public void delete(BinaryResource resource, long locatorId) {
+        source.delete(resource, locatorId);
     }
 
     public BinaryResource lookupByLocator(String mimetype, long locatorId) {

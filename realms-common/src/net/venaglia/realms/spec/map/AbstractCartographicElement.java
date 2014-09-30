@@ -30,6 +30,7 @@ public abstract class AbstractCartographicElement implements GeoPointBasedElemen
         public void run() { }
     };
     private static final long[] BITS;
+    private static final long[] NO_NEIGHBORS = {};
 
     protected static final long ACRE_BIT = 0x1000000000000L;
 
@@ -73,7 +74,7 @@ public abstract class AbstractCartographicElement implements GeoPointBasedElemen
         this.id = computeId(seq, bits, position, parent == null ? 0 : parent.id);
         this.mask = computeId(-1, bits, position, parent == null ? 0 : parent.mask);
         this.parent = parent;
-        this.neighbors = new long[countNeighbors];
+        this.neighbors = countNeighbors > 0 ? new long[countNeighbors] : countNeighbors == 0 ? NO_NEIGHBORS : null;
         this.points = points;
     }
 
@@ -81,7 +82,7 @@ public abstract class AbstractCartographicElement implements GeoPointBasedElemen
         this.id = id;
         this.mask = -1L;
         this.parent = parent;
-        this.neighbors = new long[countNeighbors];
+        this.neighbors = countNeighbors > 0 ? new long[countNeighbors] : countNeighbors == 0 ? NO_NEIGHBORS : null;
         this.points = points;
     }
 
@@ -347,6 +348,10 @@ public abstract class AbstractCartographicElement implements GeoPointBasedElemen
     public void setGeoPoint(int index, GeoPoint geoPoint) {
         assert geoPoint.toPoint(1000.0).computeDistance(points[index].toPoint(1000.0)) < 0.0005;
         points[index] = geoPoint;
+    }
+
+    public RelativeCoordinateReference getRelativeCoordinateReference() {
+        throw new UnsupportedOperationException();
     }
 
     @Override

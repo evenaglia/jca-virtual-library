@@ -3,6 +3,7 @@ package net.venaglia.gloo.util.matrix;
 import net.venaglia.gloo.physical.geom.Axis;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
+import net.venaglia.gloo.physical.geom.XForm;
 
 import java.io.Serializable;
 
@@ -194,10 +195,10 @@ public class Matrix_4x4 implements Serializable, Cloneable {
                        _.m01,
                        _.m02,
                        _.m03,
-                      Matrix_1x4.View.MATRIX);
+                      Matrix_1x4.MATRIX_XFORM_VIEW);
     }
 
-    public <T> T product(double x, double y, double z, Matrix_1x4.View<T> view) {
+    public <T> T product(double x, double y, double z, XForm.View<T> view) {
         return product(m00, m10, m20, m30,
                        m01, m11, m21, m31,
                        m02, m12, m22, m32,
@@ -302,7 +303,7 @@ public class Matrix_4x4 implements Serializable, Cloneable {
                                 double b01,
                                 double b02,
                                 double b03,
-                                Matrix_1x4.View<T> view) {
+                                XForm.View<T> view) {
         double n00, n01, n02, n03;
 
         n00 = a00 * b00 + a10 * b01 + a20 * b02 + a30 * b03;

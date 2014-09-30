@@ -5,6 +5,9 @@ import net.venaglia.gloo.physical.bounds.BoundingVolume;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.primitives.Icosahedron;
 
+import java.util.Map;
+import java.util.TreeMap;
+
 /**
  * User: ed
  * Date: 7/15/12
@@ -28,8 +31,8 @@ public class Globe extends AbstractCartographicElement {
     }
 
     public final GlobalSector[] sectors = new GlobalSector[20]; // length = 20; geodesic icosahedron
-
-//    private final SpatialMap<Acre> acres =
+    public final GlobalPointMap pointMap = new GlobalPointMap();
+    public final Map<Long,Acre> acresById = new TreeMap<Long,Acre>();
 
     private Globe(GeoPoint[] points) {
         super(0, null, 0, points);
@@ -42,10 +45,6 @@ public class Globe extends AbstractCartographicElement {
     public boolean isStatic() {
         return true;
     }
-
-//    public Acre findAcreByPoint(GeoPoint geoPoint) {
-//        acres.intersect(new BoundingSphere(geoPoint.toPoint(1000.0), ), )
-//    }
 
     @Override
     public BoundingVolume<?> getBounds(double radius) {

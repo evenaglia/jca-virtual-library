@@ -43,6 +43,10 @@ public final class Color {
         this(color.getRGBComponents(null));
     }
 
+    public Color(int rgba) {
+        this(getRGBComponents(rgba));
+    }
+
     private Color(float[] components) {
         this(components[0], components[1], components[2], components[3]);
     }
@@ -56,6 +60,14 @@ public final class Color {
 
     public boolean isOpaque() {
         return a < 1;
+    }
+
+    public int toRGBA() {
+        int r = Math.round(this.r * 255.0f) & 0xFF;
+        int g = Math.round(this.g * 255.0f) & 0xFF;
+        int b = Math.round(this.b * 255.0f) & 0xFF;
+        int a = Math.round(this.a * 255.0f) & 0xFF;
+        return a << 24 | r << 16 | g << 8 | b;
     }
 
     @Override
@@ -85,5 +97,18 @@ public final class Color {
     @Override
     public String toString() {
         return String.format("c[%02x%02x%02x,a=%4.2f]", Math.round(r * 255), Math.round(g * 255), Math.round(b * 255), a);
+    }
+
+    private static float[] getRGBComponents(int rgba) {
+        int r = rgba >> 16 & 0xFF;
+        int g = rgba >> 8 & 0xFF;
+        int b = rgba & 0xFF;
+        int a = rgba >> 24 & 0xFF;
+        return new float[]{
+                r / 255.0f,
+                g / 255.0f,
+                b / 255.0f,
+                a / 255.0f
+        };
     }
 }

@@ -9,6 +9,7 @@ import net.venaglia.realms.common.map.things.PropertyType;
 import net.venaglia.realms.common.map.things.Thing;
 import net.venaglia.realms.common.map.things.ThingMetadata;
 import net.venaglia.common.util.Predicate;
+import net.venaglia.realms.common.util.Visitor;
 
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
@@ -98,8 +99,15 @@ public class AnnotationDrivenThingProcessor {
         return definition;
     }
 
-    @SuppressWarnings("unchecked")
     public static <O> SerializerStrategy<O> generateSerializer(final Class<O> type, final Factory<O> factory) {
+        return generateSerializer(type, factory, null, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <O> SerializerStrategy<O> generateSerializer(final Class<O> type,
+                                                               final Factory<O> factory,
+                                                               final Visitor<O> preProcessor,
+                                                               final Visitor<O> postProcessor) {
         @SuppressWarnings("unchecked")
         SerializerStrategy<O> serializer = (SerializerStrategy<O>)SERIALIZER_CACHE.get(type);
         if (serializer == null) {
@@ -115,7 +123,7 @@ public class AnnotationDrivenThingProcessor {
                     fieldAccessors.put(field.getName(), accessor);
                 }
             }
-            serializer = new GeneratedSerializerStrategy<O>(fieldAccessors, factory);
+            serializer = new GeneratedSerializerStrategy<O>(fieldAccessors, factory, preProcessor, postProcessor);
             SERIALIZER_CACHE.put(type, serializer);
         }
         return serializer;
@@ -218,24 +226,35 @@ public class AnnotationDrivenThingProcessor {
 
         private final Map<String, FieldAccessor<O, ?>> fieldAccessors;
         private final Factory<O> factory;
+        private final Visitor<O> preProcessor;
+        private final Visitor<O> postProcessor;
 
-        public GeneratedSerializerStrategy(Map<String, FieldAccessor<O, ?>> fieldAccessors, Factory<O> factory) {
+        public GeneratedSerializerStrategy(Map<String, FieldAccessor<O, ?>> fieldAccessors,
+                                           Factory<O> factory,
+                                           Visitor<O> preProcessor,
+                                           Visitor<O> postProcessor) {
             this.fieldAccessors = fieldAccessors;
             this.factory = factory;
+            this.preProcessor = preProcessor;
+            this.postProcessor = postProcessor;
         }
 
         public void serialize(O value, ByteBuffer out) {
-            serializeSmallNonNegativeInteger(fieldAccessors.size(), out);
+            if (preProcessor != null) {
+                preProcessor.visit(value);
+            }
+            serializeSmallNonNegativeInteger("<fields>", fieldAccessors.size(), out);
             for (FieldAccessor<O, ?> accessor : fieldAccessors.values()) {
                 writeField(accessor, value, out);
             }
         }
 
         private <O,P> void writeField(FieldAccessor<O,P> accessor, O value, ByteBuffer out) {
-            serializeString(accessor.field.getName(), out);
+            String name = accessor.field.getName();
+            serializeString("<name>", name, out);
             P fieldValue = accessor.get(value, accessor.getType().getDefaultValue());
             if (fieldValue == null) {
-                serializeInt(-1, out);
+                serializeInt(name + ".bytes", -1, out);
             } else {
                 SizeMarker sizeMarker = serializeSize(out);
                 accessor.getType().getSerializer().serialize(fieldValue, out);
@@ -244,9 +263,9 @@ public class AnnotationDrivenThingProcessor {
         }
 
         public void deserializePartial(ByteBuffer in, Predicate<String> filter, Map<String, Object> out) {
-            int n = (int)deserializeSmallNonNegativeInteger(in);
+            int n = (int)deserializeSmallNonNegativeInteger("<fields>", in);
             for (int i = 0; i < n; i++) {
-                String name = deserializeString(in);
+                String name = deserializeString("<name>", in);
                 if (filter.allow(name)) {
                     FieldAccessor<O,?> fieldAccessor = fieldAccessors.get(name);
                     readField(fieldAccessor, out, in);
@@ -256,17 +275,20 @@ public class AnnotationDrivenThingProcessor {
 
         public O deserialize(ByteBuffer in) {
             O value = factory.createEmpty();
-            int n = (int)deserializeSmallNonNegativeInteger(in);
+            int n = (int)deserializeSmallNonNegativeInteger("<fields>", in);
             for (int i = 0; i < n; i++) {
-                String name = deserializeString(in);
+                String name = deserializeString("<name>", in);
                 FieldAccessor<O,?> fieldAccessor = fieldAccessors.get(name);
                 readField(fieldAccessor, value, in);
+            }
+            if (postProcessor != null) {
+                postProcessor.visit(value);
             }
             return value;
         }
 
         private <P> void readField(FieldAccessor<O,P> fieldAccessor, O object, ByteBuffer in) {
-            int size = deserializeInt(in);
+            int size = deserializeInt("<size>", in);
             if (fieldAccessor == null) {
                 if (size > 0) {
                     skip(size, in);
@@ -278,7 +300,8 @@ public class AnnotationDrivenThingProcessor {
         }
 
         private <P> void readField(FieldAccessor<O,P> fieldAccessor, Map<String,Object> out, ByteBuffer in) {
-            int size = deserializeInt(in);
+            String name = fieldAccessor == null ? "<?>" : fieldAccessor.field.getName();
+            int size = deserializeInt(name + ".bytes", in);
             if (fieldAccessor == null) {
                 if (size > 0) {
                     skip(size, in);

@@ -11,7 +11,6 @@ import net.venaglia.gloo.physical.geom.Vector;
 import net.venaglia.gloo.physical.geom.XForm;
 import net.venaglia.gloo.physical.geom.base.AbstractShape;
 import net.venaglia.gloo.projection.GeometryBuffer;
-import net.venaglia.gloo.util.matrix.Matrix_1x4;
 import net.venaglia.gloo.util.matrix.Matrix_4x4;
 import net.venaglia.gloo.demo.SingleShapeDemo;
 
@@ -72,7 +71,7 @@ public class Dome extends AbstractShape<Dome> implements FlippableShape<Dome> {
         for (int i = 0; i < segments; i++) {
             angles[i] = halfAngles[i << 1];
         }
-        Point xformTop = xform.product(0, 0, 1, Matrix_1x4.View.POINT);
+        Point xformTop = xform.product(0, 0, 1, Point.POINT_XFORM_VIEW);
         xform = Matrix_4x4.translate(Vector.betweenPoints(xformTop, top)).product(xform);
         Vector xlate = Vector.betweenPoints(xformTop, top);
 
@@ -88,7 +87,7 @@ public class Dome extends AbstractShape<Dome> implements FlippableShape<Dome> {
             for (Angle angle : angles) {
                 double x = angle.sin * elevation.sin;
                 double y = angle.cos * elevation.sin;
-                points.add(xform.product(x, y, z, Matrix_1x4.View.POINT).translate(xlate));
+                points.add(xform.product(x, y, z, Point.POINT_XFORM_VIEW).translate(xlate));
             }
             if (elevation.angle >= chordAngle) {
                 break; // last layer
@@ -97,7 +96,7 @@ public class Dome extends AbstractShape<Dome> implements FlippableShape<Dome> {
         }
 
         Vector[] normals = new Vector[points.size()];
-        Point center = xform.product(0, 0, 0, Matrix_1x4.View.POINT);
+        Point center = xform.product(0, 0, 0, Point.POINT_XFORM_VIEW);
         for (int i = 0, l = points.size(); i < l; i++) {
             normals[i] = Vector.betweenPoints(points.get(i), center).normalize();
         }

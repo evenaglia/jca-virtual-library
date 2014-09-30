@@ -1,7 +1,7 @@
 package net.venaglia.gloo.util.impl;
 
 import net.venaglia.gloo.physical.bounds.BoundingSphere;
-import net.venaglia.gloo.physical.bounds.BoundingVolume;
+import net.venaglia.gloo.physical.bounds.SimpleBoundingVolume;
 import net.venaglia.gloo.physical.geom.Axis;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
@@ -35,15 +35,20 @@ public abstract class AbstractSpatialMap<E> implements SpatialMap<E> {
     }
 
     public E get(Point p, double r) {
+        BasicEntry<E> basicEntry = getEntry(p, r);
+        return basicEntry == null ? null : basicEntry.get();
+    }
+
+    protected BasicEntry<E> getEntry(Point p, double r) {
         final double x = p.x, y = p.y, z = p.z;
-        final AtomicReference<E> result = new AtomicReference<E>();
+        final AtomicReference<BasicEntry<E>> result = new AtomicReference<BasicEntry<E>>();
         intersect(new BoundingSphere(p, r), new Consumer<E>() {
             double best = Double.MAX_VALUE;
 
             public void found(BasicEntry<E> entry, double i, double j, double k) {
                 double d = Vector.computeDistance(i - x, j - y, k - z);
                 if (d < best) {
-                    result.set(entry.get());
+                    result.set(entry);
                     best = d;
                 }
             }
@@ -59,7 +64,7 @@ public abstract class AbstractSpatialMap<E> implements SpatialMap<E> {
         return get(new Point(x, y, z), r);
     }
 
-    public int intersect(BoundingVolume<?> region, final BasicConsumer<E> consumer) {
+    public int intersect(SimpleBoundingVolume region, final BasicConsumer<E> consumer) {
         return intersect(region, new Consumer<E>() {
             public void found(Entry<E> entry, double x, double y, double z) {
                 consumer.found(entry, x, y, z);
@@ -163,7 +168,7 @@ public abstract class AbstractSpatialMap<E> implements SpatialMap<E> {
         consumer.found(entry, entry.x, entry.y, entry.z);
     }
 
-    protected static boolean includes(BoundingVolume<?> bounds, Entry<?> entry) {
+    protected static boolean includes(SimpleBoundingVolume bounds, Entry<?> entry) {
         if (entry instanceof AbstractEntry) {
             AbstractEntry<?> entryImpl = (AbstractEntry<?>)entry;
             return includes(bounds, entryImpl);
@@ -172,7 +177,7 @@ public abstract class AbstractSpatialMap<E> implements SpatialMap<E> {
         }
     }
 
-    protected static boolean includes(BoundingVolume<?> bounds, AbstractEntry<?> entry) {
+    protected static boolean includes(SimpleBoundingVolume bounds, AbstractEntry<?> entry) {
         return bounds.includes(entry.x, entry.y, entry.z);
     }
 
@@ -197,7 +202,7 @@ public abstract class AbstractSpatialMap<E> implements SpatialMap<E> {
         return consumer != null ? consumer : (Consumer<T>)DUMMY_CONSUMER;
     }
 
-    protected static abstract class AbstractEntry<S> extends AbstractMutableEntry<S> {
+    public static abstract class AbstractEntry<S> extends AbstractMutableEntry<S> {
 
         protected AbstractSpatialMap<S> parent;
 
@@ -236,7 +241,7 @@ public abstract class AbstractSpatialMap<E> implements SpatialMap<E> {
 
         protected final S object;
 
-        EntryImpl(S object, double x, double y, double z) {
+        protected EntryImpl(S object, double x, double y, double z) {
             super(x, y, z);
             this.object = object;
         }

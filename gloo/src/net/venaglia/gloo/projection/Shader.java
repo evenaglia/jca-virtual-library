@@ -28,9 +28,9 @@ public class Shader extends AbstractLoadableElement {
 
         glCompileShader(shader);
 
-        int status = glGetShader(shader, GL_COMPILE_STATUS);
+        int status = glGetShaderi(shader, GL_COMPILE_STATUS);
         if (status == GL_FALSE) {
-            int infoLogLength = glGetShader(shader, GL_INFO_LOG_LENGTH);
+            int infoLogLength = glGetShaderi(shader, GL_INFO_LOG_LENGTH);
 
             String infoLog = glGetShaderInfoLog(shader, infoLogLength);
 

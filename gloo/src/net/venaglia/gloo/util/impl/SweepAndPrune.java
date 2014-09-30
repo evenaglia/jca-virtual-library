@@ -1,6 +1,7 @@
 package net.venaglia.gloo.util.impl;
 
 import net.venaglia.gloo.physical.bounds.BoundingVolume;
+import net.venaglia.gloo.physical.bounds.SimpleBoundingVolume;
 import net.venaglia.gloo.physical.geom.Axis;
 import net.venaglia.gloo.physical.geom.Point;
 
@@ -92,7 +93,7 @@ public class SweepAndPrune<E> extends AbstractSpatialMap<E> {
         return false;
     }
 
-    public int intersect(BoundingVolume<?> region, Consumer<E> consumer) {
+    public int intersect(SimpleBoundingVolume region, Consumer<E> consumer) {
         sort();
         int hits = 0;
         lock.readLock().lock();

@@ -2,7 +2,6 @@ package net.venaglia.common.util.impl;
 
 import net.venaglia.common.util.ProgressMonitor;
 import net.venaglia.common.util.ProgressListener;
-import net.venaglia.common.util.ProgressMonitor;
 
 /**
  * User: ed
@@ -56,6 +55,17 @@ public class CompoundProgressMonitor implements ProgressMonitor {
             sum += Math.max(pm.getCurrentStepNumber() - 1, 0);
         }
         return sum;
+    }
+
+    public String getCurrentStepName() {
+        for (ProgressMonitor pm : delegates) {
+            int current = pm.getCurrentStepNumber();
+            int total = pm.getNumberOfSteps();
+            if (current > 0 && current < total) {
+                return pm.getCurrentStepName();
+            }
+        }
+        return null;
     }
 
     public double getProgress() {
