@@ -19,22 +19,25 @@ import java.util.Set;
  */
 public abstract class AbstractCoordinateList extends AbstractList<Coordinate> implements CoordinateList, RandomAccess {
 
-    private int[] offsets = { -2, -2, -2, -2 };
-    private int[] strides = { -2, -2, -2, -2 };
+    protected final boolean mutable;
+
+    protected AbstractCoordinateList(boolean mutable) {
+        this.mutable = mutable;
+    }
 
     @Override
     public Coordinate get(int i) {
         if (i < 0 || i >= size()) {
             throw new ArrayIndexOutOfBoundsException(i);
         }
-        ByteBuffer data = data();
         Point vertex = null;
         Vector normal = null;
         Color color = null;
         TextureCoordinate textureCoordinate = null;
         for (Field field : Field.values()) {
             if (has(field)) {
-                data.position(i * recordSize() + offset(field));
+                ByteBuffer data = data(field);
+                data.position(i * recordSize(field));
                 switch (field) {
                     case VERTEX:
                         vertex = new Point(data.getDouble(), data.getDouble(), data.getDouble());
@@ -54,49 +57,169 @@ public abstract class AbstractCoordinateList extends AbstractList<Coordinate> im
         return new Coordinate(vertex, normal, color, textureCoordinate);
     }
 
-    protected abstract Set<Field> getFields();
+    private void ensureMutable() {
+        if (!mutable) {
+            throw new UnsupportedOperationException();
+        }
+    }
 
-    private int recordSize = -1;
+    @Override
+    public Coordinate set(int i, Coordinate coordinate) {
+        ensureMutable();
+        if (coordinate == null) {
+            throw new NullPointerException("coordinate");
+        }
+        Point vertex = null;
+        Vector normal = null;
+        Color color = null;
+        TextureCoordinate textureCoordinate = null;
+        for (Field field : getFields()) {
+            int position = i * recordSize(field);
+            ByteBuffer data = data(field);
+            data.position(position);
+            switch (field) {
+                case VERTEX:
+                    try {
+                        vertex = new Point(data.getDouble(), data.getDouble(), data.getDouble());
+                    } finally {
+                        Point p = coordinate.getVertex();
+                        if (p != null) { // should always be true
+                            data.position(position);
+                            data.putDouble(p.x).putDouble(p.y).putDouble(p.z);
+                        }
+                    }
+                    break;
+                case NORMAL:
+                    try {
+                        normal = new Vector(data.getDouble(), data.getDouble(), data.getDouble());
+                    } finally {
+                        Vector v = coordinate.getNormal();
+                        if (v != null) {
+                            data.position(position);
+                            data.putDouble(v.i).putDouble(v.j).putDouble(v.k);
+                        }
+                    }
+                    break;
+                case COLOR:
+                    try {
+                        color = new Color(data.getFloat(), data.getFloat(), data.getFloat(), data.getFloat());
+                    } finally {
+                        Color c = coordinate.getColor();
+                        if (c != null) {
+                            data.position(position);
+                            data.putFloat(c.r).putFloat(c.g).putFloat(c.b).putFloat(c.a);
+                        }
+                    }
+                    break;
+                case TEXTURE_COORDINATE:
+                    try {
+                        textureCoordinate = new TextureCoordinate(data.getFloat(), data.getFloat());
+                    } finally {
+                        TextureCoordinate t = coordinate.getTextureCoordinate();
+                        if (t != null) {
+                            data.position(position);
+                            data.putFloat(t.s).putFloat(t.t);
+                        }
+                    }
+                    break;
+            }
+        }
+        return new Coordinate(vertex, normal, color, textureCoordinate);
+    }
+
+    @Override
+    public Point set(int i, Point vertex) {
+        ensureMutable();
+        if (vertex == null) {
+            throw new NullPointerException("vertex");
+        }
+        ByteBuffer data = data(Field.VERTEX);
+        int position = i * recordSize(Field.VERTEX);
+        data.position(position);
+        try {
+            return new Point(data.getDouble(), data.getDouble(), data.getDouble());
+        } finally {
+            data.position(position);
+            data.putDouble(vertex.x).putDouble(vertex.y).putDouble(vertex.z);
+        }
+    }
+
+    @Override
+    public Vector set(int i, Vector normal) {
+        ensureMutable();
+        if (normal == null) {
+            throw new NullPointerException("normal");
+        }
+        ByteBuffer data = data(Field.NORMAL);
+        int position = i * recordSize(Field.NORMAL);
+        data.position(position);
+        try {
+            return new Vector(data.getDouble(), data.getDouble(), data.getDouble());
+        } finally {
+            data.position(position);
+            data.putDouble(normal.i).putDouble(normal.j).putDouble(normal.k);
+        }
+    }
+
+    @Override
+    public Color set(int i, Color color) {
+        ensureMutable();
+        if (color == null) {
+            throw new NullPointerException("color");
+        }
+        ByteBuffer data = data(Field.COLOR);
+        int position = i * recordSize(Field.COLOR);
+        data.position(position);
+        try {
+            return new Color(data.getFloat(), data.getFloat(), data.getFloat(), data.getFloat());
+        } finally {
+            data.position(position);
+            data.putFloat(color.r).putFloat(color.g).putFloat(color.b).putFloat(color.a);
+        }
+    }
+
+    @Override
+    public TextureCoordinate set(int i, TextureCoordinate textureCoordinate) {
+        ensureMutable();
+        if (textureCoordinate == null) {
+            throw new NullPointerException("textureCoordinate");
+        }
+        ByteBuffer data = data(Field.TEXTURE_COORDINATE);
+        int position = i * recordSize(Field.TEXTURE_COORDINATE);
+        data.position(position);
+        try {
+            return new TextureCoordinate(data.getFloat(), data.getFloat());
+        } finally {
+            data.position(position);
+            data.putFloat(textureCoordinate.s).putFloat(textureCoordinate.t);
+        }
+    }
+
+    protected abstract Set<Field> getFields();
 
     public boolean has(Field field) {
         return getFields().contains(field);
     }
 
-    public int recordSize() {
-        if (recordSize >= 0) {
-            return recordSize;
+    public int recordSize(Field field) {
+        switch (field) {
+            case VERTEX:
+                return 24;
+            case NORMAL:
+                return 24;
+            case COLOR:
+                return 16;
+            case TEXTURE_COORDINATE:
+                return 8;
         }
-        int size = 0;
-        for (Field field : getFields()) {
-            size += field.size;
-        }
-        recordSize = size;
-        return size;
+        return 0;
     }
 
     public int offset(Field field) {
-        int offset = offsets[field.ordinal()];
-        if (offset == -2) {
-            offset = -1;
-            int sum = 0;
-            for (Field f : getFields()) {
-                if (f == field) {
-                    offset = sum;
-                    break;
-                }
-                sum += field.size;
-            }
-            offsets[field.ordinal()] = offset;
-        }
-        return offset;
+        return 0;
     }
 
     public int stride(Field field) {
-        int stride = strides[field.ordinal()];
-        if (stride == -2) {
-            stride = has(field) ? recordSize() - field.size : -1;
-            strides[field.ordinal()] = stride;
-        }
-        return stride;
+        return 0;
     }
 }

@@ -267,8 +267,8 @@ class AcreBuilder implements Runnable {
             for (int i = 0; i < lengthA; i++) {
                 Acre acreA = acresA[rowA + i];
                 Acre acreB = acresB[rowB + i];
-                acreA.addNeighbor(acreB);
-                acreB.addNeighbor(acreA);
+                acreA.addNeighbor(acreB, indexOfMyNeighbor(acreA, acreB));
+                acreB.addNeighbor(acreA, indexOfMyNeighbor(acreB, acreA));
             }
             return lengthA * 2;
         } else {
@@ -278,22 +278,40 @@ class AcreBuilder implements Runnable {
                     Acre acreA = acresA[rowA + i];
                     Acre acreB = acresB[rowB + i];
                     Acre acreC = acresA[rowA + i + 1];
-                    acreA.addNeighbor(acreB);
-                    acreB.addNeighbor(acreA);
-                    acreB.addNeighbor(acreC);
-                    acreC.addNeighbor(acreB);
+                    acreA.addNeighbor(acreB, indexOfMyNeighbor(acreA, acreB));
+                    acreB.addNeighbor(acreA, indexOfMyNeighbor(acreB, acreA));
+                    acreB.addNeighbor(acreC, indexOfMyNeighbor(acreB, acreC));
+                    acreC.addNeighbor(acreB, indexOfMyNeighbor(acreC, acreB));
                 }
                 return lengthB * 4;
             } else {
                 for (int i = 0; i < lengthB; i++) {
                     Acre acreA = acresA[rowA + i + 1];
                     Acre acreB = acresB[rowB + i];
-                    acreA.addNeighbor(acreB);
-                    acreB.addNeighbor(acreA);
+                    acreA.addNeighbor(acreB, indexOfMyNeighbor(acreA, acreB));
+                    acreB.addNeighbor(acreA, indexOfMyNeighbor(acreB, acreA));
                 }
                 return lengthB * 4;
             }
         }
+    }
+
+
+    private int indexOfMyNeighbor(Acre me, Acre neighbor) {
+        for (int i = 0, j = 1, l = me.points.length; i < l; i++, j = (i + 1) % l) {
+            GeoPoint pointA = me.points[i];
+            GeoPoint pointB = me.points[j];
+            for (GeoPoint point : neighbor.points) {
+                if (point.equals(pointA)) {
+                    pointA = null;
+                    if (pointB == null) return i;
+                } else if (point.equals(pointB)) {
+                    pointB = null;
+                    if (pointA == null) return i;
+                }
+            }
+        }
+        throw new AssertionError("Failed to find the index of a neighbor: " + neighbor + " --> add to --> " + me);
     }
 
     private int addNeighbors(Edge edge,
@@ -363,8 +381,8 @@ class AcreBuilder implements Runnable {
             Acre l = left.get(i);
             Acre r = right.get(i);
             if (l != null && r != null) {
-                l.addNeighbor(r);
-                r.addNeighbor(l);
+                l.addNeighbor(r, indexOfMyNeighbor(l, r));
+                r.addNeighbor(l, indexOfMyNeighbor(r, l));
                 count++;
             }
         }

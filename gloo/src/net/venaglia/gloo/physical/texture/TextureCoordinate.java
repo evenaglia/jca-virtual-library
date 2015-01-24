@@ -1,5 +1,6 @@
 package net.venaglia.gloo.physical.texture;
 
+import net.venaglia.gloo.physical.geom.XForm;
 import net.venaglia.gloo.projection.GeometryBuffer;
 import net.venaglia.gloo.projection.Projectable;
 
@@ -14,6 +15,12 @@ public class TextureCoordinate implements Projectable {
         @Override
         public String toString() {
             return "TexCoord(?,?)";
+        }
+    };
+
+    public static final XForm.View<TextureCoordinate> TEXTURE_COORDINATE_XFORM_VIEW = new XForm.View<TextureCoordinate>() {
+        public TextureCoordinate convert(double x, double y, double z, double w) {
+            return new TextureCoordinate((float)x, (float)y);
         }
     };
 

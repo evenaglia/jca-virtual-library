@@ -2,6 +2,7 @@ package net.venaglia.realms.common.map.data;
 
 import net.venaglia.common.util.Ref;
 import net.venaglia.common.util.Tuple2;
+import net.venaglia.common.util.Visitor;
 import net.venaglia.gloo.physical.bounds.BoundingVolume;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.realms.common.Configuration;
@@ -18,7 +19,6 @@ import net.venaglia.realms.common.map.things.AbstractThing;
 import net.venaglia.realms.common.map.data.binaries.BinaryCache;
 import net.venaglia.realms.common.map.data.binaries.BinaryResource;
 import net.venaglia.realms.common.map.data.binaries.BinarySource;
-import net.venaglia.realms.common.util.Visitor;
 import net.venaglia.realms.common.util.cache.Cache;
 
 import java.util.Map;

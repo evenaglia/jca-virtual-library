@@ -192,43 +192,6 @@ public class Acre extends AbstractCartographicElement {
 
     @Override
     public RelativeCoordinateReference getRelativeCoordinateReference() {
-        // find the four corners of this acre
-        Point a, b, c, d;
-        Point t1, t2, b1, b2, p1, p2;
-        if (points == null) {
-            throw new NullPointerException("points");
-        }
-        switch (points.length) {
-            case 5:
-                b1 = points[0].toPoint(1000.0);
-                b2 = points[1].toPoint(1000.0);
-                t1 = points[3].toPoint(1000.0);
-                // special case, these pentagonal acres are equilateral
-                t2 = t1.translate(Vector.betweenPoints(b1, b2));
-                p1 = points[2].toPoint(1000.0);
-                p2 = points[4].toPoint(1000.0);
-                break;
-            case 6:
-                b1 = points[0].toPoint(1000.0);
-                b2 = points[1].toPoint(1000.0);
-                t1 = points[3].toPoint(1000.0);
-                t2 = points[4].toPoint(1000.0);
-                p1 = points[2].toPoint(1000.0);
-                p2 = points[5].toPoint(1000.0);
-                break;
-            default:
-                throw new UnsupportedOperationException();
-        }
-        a = findClosestPointOnLine(t1, t2, p1);
-        b = findClosestPointOnLine(t1, t2, p2);
-        c = findClosestPointOnLine(b1, b2, p1);
-        d = findClosestPointOnLine(b1, b2, p2);
-        return new RelativeCoordinateReference(a, b, c, d);
-    }
-
-    public Point findClosestPointOnLine(Point onLine_pointA, Point onLine_pointB, Point nearbyPoint) {
-        Vector a = Vector.betweenPoints(onLine_pointA, nearbyPoint);
-        Vector u = Vector.betweenPoints(onLine_pointA, onLine_pointB).normalize();
-        return onLine_pointA.translate(u.scale(a.dot(u)));
+        return RelativeCoordinateReference.forAcre(this);
     }
 }

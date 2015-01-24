@@ -7,9 +7,13 @@ package net.venaglia.realms.builder.terraform.flow;
  */
 public interface FlowQueryInterface {
 
+    boolean isStable();
+
     void changeSettings(double fps, double timeScale);
 
     int getFrameCount();
 
     void query(Iterable<? extends FlowQuery> queries);
+
+    void runNext(Iterable<? extends Runnable> work);
 }

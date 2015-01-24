@@ -1,7 +1,7 @@
 package net.venaglia.realms.common.map.data.binaries;
 
 import net.venaglia.common.util.Digest;
-import net.venaglia.realms.common.util.Identifiable;
+import net.venaglia.common.util.Identifiable;
 
 import java.util.Collections;
 import java.util.HashMap;

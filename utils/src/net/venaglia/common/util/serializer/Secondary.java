@@ -1,4 +1,4 @@
-package net.venaglia.common.util;
+package net.venaglia.common.util.serializer;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

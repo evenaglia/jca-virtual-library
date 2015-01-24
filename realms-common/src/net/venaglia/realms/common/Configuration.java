@@ -1,6 +1,7 @@
 package net.venaglia.realms.common;
 
 import net.venaglia.common.util.Ref;
+import net.venaglia.common.util.impl.AbstractCachingRef;
 import net.venaglia.common.util.impl.SimpleRef;
 import net.venaglia.realms.common.map.DataStore;
 import net.venaglia.realms.common.map.PropertyStore;
@@ -26,7 +27,7 @@ public enum Configuration {
     GEOSPEC("geospec", Storage.PERSISTENT, false),
 
     // persistence properties, read from a file
-    DATA_STORE_CLASS("datastore.class", Storage.IMMUTABLE) {
+    DATA_STORE_CLASS("data-store.class", Storage.IMMUTABLE) {
         @Override
         @SuppressWarnings("unchecked")
         public DataStore getBean() {
@@ -43,6 +44,7 @@ public enum Configuration {
     JDBC_POOL_SIZE("database.jdbc.poolSize", Storage.IMMUTABLE),
 
     // regular properties
+    PARANOIA_ON_ACRES("paranoia.acres", Storage.TRANSIENT),
     THING_CHECKPOINT_SIZE("things.dirty.checkpoint.size", Storage.PERSISTENT),
     THING_CHECKPOINT_WAIT("things.dirty.checkpoint.wait", Storage.PERSISTENT),
 
@@ -71,6 +73,12 @@ public enum Configuration {
     private static final Pattern MATCH_FALSE = Pattern.compile("false|f|no|n|0", Pattern.CASE_INSENSITIVE);
     private static final AtomicReference<PropertyStore> PROPERTY_STORE = new AtomicReference<PropertyStore>();
     private static final EnumMap<Configuration,Object> BEANS = new EnumMap<Configuration,Object>(Configuration.class);
+    private static final Ref<String> GEOSPEC_LOWER_CASE = new AbstractCachingRef<String>() {
+        protected String getImpl() {
+            return PROPERTIES.getProperty("geospec").toLowerCase();
+        }
+    };
+
 
     static {
         FILE_PROPERTIES = new Properties();
@@ -121,7 +129,7 @@ public enum Configuration {
 
     public Boolean getBoolean() {
         ensureLoaded();
-        String value = PROPERTIES.getProperty(propName);
+        String value = getPropertyImpl();
         if (value != null) {
             if (MATCH_TRUE.matcher(value).matches()) {
                 return true;
@@ -158,7 +166,7 @@ public enum Configuration {
 
     public boolean getBoolean(boolean defaultValue) {
         ensureLoaded();
-        String value = PROPERTIES.getProperty(propName);
+        String value = getPropertyImpl();
         if (value != null) {
             if (MATCH_TRUE.matcher(value).matches()) {
                 return true;
@@ -177,7 +185,7 @@ public enum Configuration {
     public Integer getInteger() {
         ensureLoaded();
         try {
-            String value = PROPERTIES.getProperty(propName);
+            String value = getPropertyImpl();
             return value == null ? null : Integer.parseInt(value);
         } catch (Exception e) {
             return null;
@@ -187,7 +195,7 @@ public enum Configuration {
     public int getInteger(int defaultValue) {
         ensureLoaded();
         try {
-            return Integer.parseInt(PROPERTIES.getProperty(propName));
+            return Integer.parseInt(getPropertyImpl());
         } catch (Exception e) {
             return defaultValue;
         }
@@ -199,7 +207,7 @@ public enum Configuration {
 
     public String getString() {
         ensureLoaded();
-        return PROPERTIES.getProperty(propName);
+        return getPropertyImpl();
     }
 
     public String getString(String defaultValue) {
@@ -287,6 +295,15 @@ public enum Configuration {
         } else {
             PROPERTIES.setProperty(propName, value);
         }
+    }
+
+    private String getPropertyImpl() {
+        String name = propName.contains("{geospec}") ? propName.replace("{geospec}", GEOSPEC_LOWER_CASE.get()) : propName;
+        String value = PROPERTIES.getProperty(name);
+        if (value != null && value.contains("{geospec}")) {
+            value = value.replace("{geospec}", GEOSPEC_LOWER_CASE.get());
+        }
+        return value;
     }
 
     @Override

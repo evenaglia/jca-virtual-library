@@ -9,9 +9,10 @@ import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
 import net.venaglia.gloo.physical.texture.Texture;
 import net.venaglia.gloo.physical.texture.TextureMapping;
-import net.venaglia.common.util.Tuple2;
 
 import java.awt.geom.Rectangle2D;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 
 /**
  * User: ed
@@ -59,9 +60,11 @@ public interface GeometryBuffer extends CoordinateBuffer {
 
     void coordinates(CoordinateList coordinateList, GeometrySequence seq);
 
-    void coordinates(CoordinateList coordinateList, GeometrySequence seq, int[] order);
+    void coordinates(CoordinateList coordinateList, GeometrySequence seq, ShortBuffer order);
 
-    void coordinates(CoordinateList coordinateList, Iterable<Tuple2<GeometrySequence,int[]>> sequences);
+    void coordinates(CoordinateList coordinateList, GeometrySequence seq, IntBuffer order);
+
+    void coordinates(CoordinateList coordinateList, Drawable drawable);
 
     void pushTransform();
 
@@ -94,4 +97,43 @@ public interface GeometryBuffer extends CoordinateBuffer {
     boolean isOverlay();
 
     boolean isVirtual();
+
+    interface Drawable {
+        void draw(CoordinateListGeometryBuffer buffer);
+    }
+
+    interface CoordinateListGeometryBuffer extends ColorBuffer {
+
+        void draw(GeometrySequence seq, ShortBuffer offsets);
+
+        void draw(GeometrySequence seq, IntBuffer offsets);
+
+        // todo: implement multi-draw
+
+        void applyBrush(Brush brush);
+
+        void pushBrush();
+
+        void popBrush();
+
+        void normal(Vector normal);
+
+        void normal(double i, double j, double k);
+
+        void pushTransform();
+
+        void popTransform();
+
+        void identity();
+
+        void rotate(Axis axis, double angle);
+
+        void rotate(Vector axis, double angle);
+
+        void translate(Vector magnitude);
+
+        void scale(double magnitude);
+
+        void scale(Vector magnitude);
+    }
 }

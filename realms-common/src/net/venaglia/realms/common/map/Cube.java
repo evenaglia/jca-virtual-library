@@ -4,7 +4,7 @@ import net.venaglia.gloo.physical.bounds.BoundingBox;
 import net.venaglia.realms.common.map.things.Thing;
 import net.venaglia.realms.common.map.things.ThingMetadata;
 import net.venaglia.realms.common.map.things.ThingRef;
-import net.venaglia.realms.common.util.Identifiable;
+import net.venaglia.common.util.Identifiable;
 
 import java.util.Iterator;
 import java.util.Set;

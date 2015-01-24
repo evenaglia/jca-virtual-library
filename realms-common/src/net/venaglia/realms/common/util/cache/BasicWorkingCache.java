@@ -1,6 +1,6 @@
 package net.venaglia.realms.common.util.cache;
 
-import net.venaglia.realms.common.util.Identifiable;
+import net.venaglia.common.util.Identifiable;
 
 /**
  * User: ed

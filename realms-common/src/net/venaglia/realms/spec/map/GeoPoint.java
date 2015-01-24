@@ -2,6 +2,7 @@ package net.venaglia.realms.spec.map;
 
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
+import net.venaglia.gloo.physical.geom.XForm;
 
 /**
  * User: ed
@@ -18,6 +19,22 @@ public final class GeoPoint {
 
     public static final GeoPoint NORTH_POLE = new GeoPoint(0, HALF_PI_NEGATIVE);
     public static final GeoPoint SOUTH_POLE = new GeoPoint(0, HALF_PI);
+
+    public static final XForm.View<GeoPoint> GEO_POINT_FROM_XYZ = new XForm.View<GeoPoint>() {
+        public GeoPoint convert(double x, double y, double z, double w) {
+            if (x == 0 && y == 0) {
+                if (z < 0) return NORTH_POLE;
+                if (z > 0) return SOUTH_POLE;
+                throw new IllegalArgumentException("Cannot synthesize a GeoPoint for the origin: (0,0,0)");
+            }
+            @SuppressWarnings("SuspiciousNameCombination")
+            double longitude = Math.atan2(x, y);
+            if (longitude > Math.PI) longitude -= 2.0 * Math.PI;
+            double latitude = Math.atan2(z, Math.sqrt(x * x + y * y));
+            if (latitude > HALF_PI) latitude -= Math.PI;
+            return new GeoPoint(Math.max(longitude, PI_NEGATIVE), Math.max(latitude, HALF_PI_NEGATIVE));
+        }
+    };
 
     public final double longitude;
     public final double latitude;
@@ -99,17 +116,42 @@ public final class GeoPoint {
                              east[0], east[1], east[2], east[4]);
     }
 
+    public String toSourceLiteral() {
+        return String.format("new GeoPoint(longBitsToDouble(%dL), longBitsToDouble(%dL))",
+                             Double.doubleToLongBits(longitude),
+                             Double.doubleToLongBits(latitude));
+    }
+
     public static GeoPoint fromPoint(Point p) {
-        if (p.x == 0 && p.y == 0) {
-            if (p.z < 0) return NORTH_POLE;
-            if (p.z > 0) return SOUTH_POLE;
-            throw new IllegalArgumentException("Cannot synthesize a GeoPoint for the origin: " + p);
+        return GEO_POINT_FROM_XYZ.convert(p.x, p.y, p.z, 1);
+    }
+
+    public static GeoPoint fromPoint(double x, double y, double z) {
+        return GEO_POINT_FROM_XYZ.convert(x, y, z, 1);
+    }
+
+    public static GeoPoint midPoint(GeoPoint a, GeoPoint b, double n) {
+        if (n == 0.0) {
+            return a;
         }
-        double longitude = Math.atan2(p.x, p.y);
-        if (longitude > Math.PI) longitude -= 2.0 * Math.PI;
-        double latitude = Math.atan2(p.z, Math.sqrt(p.x * p.x + p.y * p.y));
-        if (latitude > HALF_PI) latitude -= Math.PI;
-        return new GeoPoint(Math.max(longitude, PI_NEGATIVE), Math.max(latitude, HALF_PI_NEGATIVE));
+        if (n == 1.0) {
+            return b;
+        }
+        double m = 1.0 - n;
+
+        double ac = Math.cos(a.latitude);
+        double ax = Math.sin(a.longitude) * ac;
+        double ay = Math.cos(a.longitude) * ac;
+        double az = Math.sin(a.latitude);
+        double bc = Math.cos(b.latitude);
+        double bx = Math.sin(b.longitude) * bc;
+        double by = Math.cos(b.longitude) * bc;
+        double bz = Math.sin(b.latitude);
+
+        double x = (ax * m + bx * n);
+        double y = (ay * m + by * n);
+        double z = (az * m + bz * n);
+        return fromPoint(x, y, z);
     }
 
     public static void main(String[] args) {

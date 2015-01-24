@@ -1,12 +1,21 @@
 package net.venaglia.realms.builder.terraform.flow;
 
+import net.venaglia.common.util.CumulativeDeviation;
+import net.venaglia.common.util.Factory;
+import net.venaglia.common.util.Ref;
+import net.venaglia.common.util.impl.AbstractCachingRef;
+import net.venaglia.common.util.recycle.Recyclable;
+import net.venaglia.common.util.recycle.RecycleBin;
+import net.venaglia.common.util.recycle.RecycleDeque;
 import net.venaglia.gloo.physical.bounds.BoundingBox;
 import net.venaglia.gloo.physical.bounds.BoundingSphere;
 import net.venaglia.gloo.physical.bounds.MutableSimpleBounds;
 import net.venaglia.gloo.physical.decorators.Color;
+import net.venaglia.gloo.physical.decorators.Material;
 import net.venaglia.gloo.physical.geom.Facet;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
+import net.venaglia.gloo.physical.geom.XForm;
 import net.venaglia.gloo.physical.geom.primitives.Dodecahedron;
 import net.venaglia.gloo.util.SpatialMap;
 import net.venaglia.gloo.util.impl.OctreeMap;
@@ -16,9 +25,12 @@ import net.venaglia.realms.common.util.work.WorkQueue;
 import net.venaglia.realms.common.util.work.WorkSourceAdapter;
 import net.venaglia.realms.common.util.work.WorkSourceKey;
 
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.Observable;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -27,13 +39,14 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * User: ed
  * Date: 9/16/12
  * Time: 3:42 PM
  */
-public class FlowSimulator extends Observable {
+public class FlowSimulator {
 
     private final ThreadPoolExecutor executor;
 
@@ -43,10 +56,7 @@ public class FlowSimulator extends Observable {
             private final ThreadGroup tg = new ThreadGroup("work");
             private final AtomicInteger seq = new AtomicInteger();
 
-            {
-                tg.setDaemon(true);
-            }
-
+            @SuppressWarnings("NullableProblems")
             public Thread newThread(Runnable runnable) {
                 Thread thread = new Thread(tg, runnable, String.format("Worker-%02d", seq.incrementAndGet()));
                 thread.setDaemon(true);
@@ -64,36 +74,45 @@ public class FlowSimulator extends Observable {
     private final double radius;
     private final double nominalRadius;
     private final String fragmentFormat;
+    private final int count;
     private final int numTectonicPoints = 32;
+    private final boolean captureFragmentContributions;
 
     private double fps;
     private double timeScale;
-    private SpatialMap<Fragment> map;
+    private double pressureBias = 0.0;
+    private double pressureScale = 1.0;
+    private SpatialMap<FragmentImpl> map;
     private TectonicPoint[] tectonicPoints;
     private Advance advance;
-    private Fragment[] fragments;
-    private SpatialMap.Entry<Fragment>[] entries;
+    private FragmentImpl[] fragments;
+    private SpatialMap.Entry<FragmentImpl>[] entries;
 
     private FlowObserver observer;
 
     private final QueryInterface queryInterface = new QueryInterface();
     private final AtomicBoolean observerQueryLock = new AtomicBoolean(false);
-    private final AtomicInteger activeQueryCount = new AtomicInteger();
+    private final AtomicInteger pendingWorkCount = new AtomicInteger();
 
     public FlowSimulator(double radius, int count, double fps, double timeScale) {
+        this(radius, count, fps, timeScale, System.currentTimeMillis(), false);
+    }
+
+    public FlowSimulator(double radius, int count, double fps, double timeScale, long seed, boolean captureContributions) {
         this.radius = radius;
+        this.count = count;
         double surfaceAreaPerFragment = (radius * radius * 1.333333333333333) / count;
         this.nominalRadius = Math.sqrt(surfaceAreaPerFragment);
         this.fps = fps;
         this.timeScale = timeScale;
         double min = -2.0 - radius;
         double max =  2.0 + radius;
-        Random random = new Random();
+        Random random = new Random(seed);
         BoundingBox bounds = new BoundingBox(new Point(min, min, min), new Point(max, max, max));
-        map = new OctreeMap<Fragment>(bounds, 12, 5) {
+        map = new OctreeMap<FragmentImpl>(bounds, 12, 5) {
             @Override
-            protected AbstractEntry<Fragment> createEntry(Fragment fragment, double x, double y, double z) {
-                AbstractEntry<Fragment> entry = super.createEntry(fragment, x, y, z);
+            protected AbstractEntry<FragmentImpl> createEntry(FragmentImpl fragment, double x, double y, double z) {
+                AbstractEntry<FragmentImpl> entry = super.createEntry(fragment, x, y, z);
                 entries[fragment.seq] = entry;
                 return entry;
             }
@@ -104,7 +123,8 @@ public class FlowSimulator extends Observable {
         Dodecahedron dodecahedron = new Dodecahedron().scale(radius);
         for (Point p : dodecahedron) {
             startingPoints[index] = p;
-            tectonicPoints[index++] = new TectonicPoint(p, randomTectonicVector(random, p));
+            tectonicPoints[index++] = new TectonicPoint(p, randomTectonicVector(random, p),
+                                                        TectonicPoint.PointClass.PLATONIC);
         }
         for (int i = 0, l = dodecahedron.facetCount(); i < l; i++) {
             Facet f = dodecahedron.getFacet(i);
@@ -120,39 +140,54 @@ public class FlowSimulator extends Observable {
             z /= d;
             Point p = new Point(x, y, z);
             startingPoints[index] = p;
-            tectonicPoints[index++] = new TectonicPoint(p, randomTectonicVector(random, p));
+            tectonicPoints[index++] = new TectonicPoint(p, randomTectonicVector(random, p),
+                                                        TectonicPoint.PointClass.MIDPOINT);
         }
         for (int i = 0, l = startingPoints.length; i < l; i++) {
             startingPoints[i] = Point.ORIGIN.translate(Vector.betweenPoints(Point.ORIGIN, startingPoints[i]).normalize(radius));
         }
         fragmentFormat = "Fragment[%0" + String.valueOf(count).length() + "d]";
+        this.captureFragmentContributions = captureContributions;
 
         advance = new Advance(startingPoints);
 
-        Color[] fragmentColors = new Color[15];
-        for (int i = 0, l = fragmentColors.length; i < l; i++) {
-            double a = Math.PI * -2.0 * (((double)i) / l);
-            fragmentColors[i] = new Color(colorSine(a, 0.0), colorSine(a, 1.0), colorSine(a, 2.0), 1.0f);
-        }
-        fragments = new Fragment[count];
-        int endPadding = 0; //numTectonicPoints * 4;
+        fragments = new FragmentImpl[count];
         for (int i = 0; i < count; i++) {
-            double a = Math.PI * -2.0 * (((double)i) / count);
-            Color color = i < endPadding || (i + endPadding) > count ? Color.WHITE : new Color(colorSine(a, 0.0), colorSine(a, 1.0), colorSine(a, 2.0), 1.0f);
-//            fragments[i] = new Fragment(i, fragmentColors[random.nextInt(fragmentColors.length)]);
-            fragments[i] = new Fragment(i, color);
+            fragments[i] = new FragmentImpl(i);
         }
         //noinspection unchecked
-        entries = (SpatialMap.Entry<Fragment>[])new SpatialMap.Entry[count];
+        entries = (SpatialMap.Entry<FragmentImpl>[])new SpatialMap.Entry[count];
+    }
 
+    public int getCount() {
+        return count;
+    }
+
+    public List<TectonicVectorArrow> getTectonicArrows(double radius) {
+        Material green = Material.makeSelfIlluminating(Color.GREEN);
+        List<TectonicVectorArrow> arrows = new ArrayList<>(tectonicPoints.length);
+        for (TectonicPoint tectonicPoint : tectonicPoints) {
+            arrows.add(TectonicVectorArrow.createArrow(tectonicPoint)
+                               .scale(radius)
+                               .setMaterial(green));
+        }
+        return Collections.unmodifiableList(arrows);
     }
 
     public void setObserver(FlowObserver observer) {
         this.observer = observer;
     }
 
+    public synchronized void start() {
+        switch (advance.runState.getAndSet(RunState.RUNNING)) {
+            case STOPPED:
+                queueIsEmpty();
+                waitUntilAllIn();
+        }
+    }
+
     public void stop() {
-        advance.running.set(false);
+        advance.runState.compareAndSet(RunState.RUNNING, RunState.STOPPING);
     }
 
     private Vector randomTectonicVector(Random random, Point p) {
@@ -171,24 +206,29 @@ public class FlowSimulator extends Observable {
         return radius;
     }
 
+    public double getTimeScale() {
+        return timeScale;
+    }
+
     public Fragment[] getFragments() {
         return fragments;
     }
 
-    private float colorSine(double a, double part) {
-        float v = (float)(Math.sin((a + Math.PI / 2.0) + Math.PI * part * 0.6666666667) * 1.5 + 0.5);
-        return Math.max(Math.min(v,1.0f),0.0f);
-    }
-
-    public void run() {
-        queueIsEmpty();
-        waitUntilAllIn();
-    }
-
     private void queueIsEmpty() {
-        if (advance.running.get()) {
-            processCounter.set(0);
-            advance.addToQueue();
+        switch (advance.runState.get()) {
+            case RUNNING:
+                processCounter.set(0);
+                advance.addToQueue();
+                break;
+            case STOPPING:
+                if (advance.runState.compareAndSet(RunState.STOPPING, RunState.STOPPED)) {
+                    synchronized (this) {
+                        notifyAll();
+                    }
+                } else {
+                    queueIsEmpty(); // something changed mid execution, run it again
+                }
+                return;
         }
         if (advance.allPointsIn.get()) {
             synchronized (this) {
@@ -207,13 +247,58 @@ public class FlowSimulator extends Observable {
         }
     }
 
-    public synchronized void waitUntilDone() {
-        while (advance.running.get()) {
+    public synchronized void waitUntilRunning() {
+        while (advance.runState.get() != RunState.RUNNING) {
             try {
                 wait(250L);
             } catch (InterruptedException e) {
                 // don't care
             }
+        }
+    }
+
+    public synchronized void waitUntilDone() {
+        while (advance.runState.get() != RunState.STOPPED) {
+            try {
+                wait(250L);
+            } catch (InterruptedException e) {
+                // don't care
+            }
+        }
+    }
+
+    public synchronized void waitUntilStable() {
+        while (!queryInterface.isStable()) {
+            try {
+                wait(250L);
+            } catch (InterruptedException e) {
+                // don't care
+            }
+        }
+    }
+
+    public synchronized void startThenStopOnceStable() {
+        start();
+        waitUntilStable();
+        stop();
+        waitUntilDone();
+    }
+
+    public synchronized void runOneQuery(FlowQuery query) {
+        if (advance.runState.get() != RunState.STOPPED) {
+            throw new IllegalStateException("Flow simulator is not stopped");
+        }
+        if (observerQueryLock.get()) {
+            throw new IllegalStateException("Cannot call runOneQuery() inside FlowObserver.frame()");
+        }
+        if (!pendingWorkCount.compareAndSet(0, 2)) {
+            throw new IllegalStateException("Cannot call runOneQuery() while another query is running");
+        }
+        try {
+            queryInterface.queryRunnerRecycleBin.get().init(query).run();
+        } finally {
+            assert pendingWorkCount.get() == 1;
+            pendingWorkCount.set(0);
         }
     }
 
@@ -232,32 +317,38 @@ public class FlowSimulator extends Observable {
         queryInterface.frameCount++;
         if (queryInterface.frameCount >= 0 && observer != null) {
             observerQueryLock.set(true);
+            queryInterface.advanceFrame();
             try {
                 observer.frame(queryInterface);
             } finally {
-                while (activeQueryCount.get() != 0) {
-                    synchronized (activeQueryCount) {
-                        try {
-                            activeQueryCount.wait(250L);
-                        } catch (InterruptedException e) {
-                            // don't care
+                try {
+                    while (pendingWorkCount.get() != 0) {
+                        synchronized (pendingWorkCount) {
+                            try {
+                                pendingWorkCount.wait(250L);
+                            } catch (InterruptedException e) {
+                                // don't care
+                            }
                         }
                     }
+                } finally {
+                    observerQueryLock.set(false);
                 }
-                observerQueryLock.set(false);
             }
         }
     }
 
-    private class TectonicPoint {
-
-        private final Vector vector;
-        private final Point point;
-
-        public TectonicPoint(Point point, Vector vector) {
-            this.point = point;
-            this.vector = vector;
+    private void calculateNormalizedPressure() {
+        CumulativeDeviation cumulativeDeviation = new CumulativeDeviation();
+        pressureBias = 0.0;
+        pressureScale = 1.0;
+        assert queryInterface.isStable();
+        for (FragmentImpl fragment : fragments) {
+            double pressure = fragment.getPressure();
+            cumulativeDeviation.add(pressure);
         }
+        pressureBias = 0 - cumulativeDeviation.average();
+        pressureScale = 1.0 / cumulativeDeviation.deviation();
     }
 
     protected abstract class AbstractWorker implements Runnable {
@@ -288,12 +379,15 @@ public class FlowSimulator extends Observable {
         protected abstract void doWork();
     }
 
-    protected class Fragment extends AbstractWorker implements SpatialMap.Consumer<Fragment>, Comparator<Integer> {
+    protected class FragmentImpl
+            extends AbstractWorker
+            implements SpatialMap.Consumer<FragmentImpl>, Comparator<Integer>, Fragment {
 
         private final int seq;
-        private final Color color;
         private final Integer[] tectonicPointIndices = genIntSeq();
         private final MutableSimpleBounds bounds = new MutableSimpleBounds(true, 2.5);
+
+        private Color color;
 
         private Integer[] genIntSeq() {
             Integer[] integers = new Integer[numTectonicPoints];
@@ -307,18 +401,35 @@ public class FlowSimulator extends Observable {
 
         private double x, y, z;
         private double i, j, k;
+        private double p;
 
-        public Fragment(int seq, Color color) {
+        public FragmentImpl(int seq) {
             this.seq = seq;
-            this.color = color;
+            this.color = Color.WHITE;
         }
 
-        public Vector getVectorXYZ() {
-            return new Vector(x, y, z);
+        public <T> T getCenterXYZ(XForm.View<T> view) {
+            return view.convert(x, y, z, 1);
+        }
+
+        public <T> T getVectorXYZ(XForm.View<T> view) {
+            return view.convert(i, j, k, 1);
+        }
+
+        public double getPressure() {
+            return (p + pressureBias) * pressureScale;
         }
 
         public Color getColor() {
             return color;
+        }
+
+        public void setColor(Color color) {
+            this.color = color;
+        }
+
+        public Fragment immutableCopy() {
+            return new ImmutableFragment(x, y, z, i, j, k, p, color);
         }
 
         @Override
@@ -343,7 +454,7 @@ public class FlowSimulator extends Observable {
             j = 0.0;
             k = 0.0;
             double sumWeight = 0.0;
-            double runOut = Math.sqrt(tectonicPointDistances[tectonicPointIndices[6]]);
+            double runOut = Math.sqrt(tectonicPointDistances[tectonicPointIndices[9]]);
             for (int a = 0; a < 6; a++) {
                 double weight = runOut - Math.sqrt(tectonicPointDistances[tectonicPointIndices[a]]);
                 sumWeight += weight;
@@ -366,7 +477,7 @@ public class FlowSimulator extends Observable {
 
 //        private double a1, a2, b1, b2, c1, c2;
 
-        public void move(SpatialMap.Entry<Fragment> entry) {
+        public void move(SpatialMap.Entry<FragmentImpl> entry) {
             double v = Vector.computeDistance(i, j, k);
             if (v > 0.0125) {
                 i = i * 0.0125 / v;
@@ -376,24 +487,17 @@ public class FlowSimulator extends Observable {
             double s = x + i * timeScale;
             double t = y + j * timeScale;
             double u = z + k * timeScale;
-//            double s = x + (i - a1 * 0.5 + a2 * 0.125) * timeScale;
-//            double t = y + (j - b1 * 0.5 + a2 * 0.125) * timeScale;
-//            double u = z + (k - c1 * 0.5 + a2 * 0.125) * timeScale;
-            double d = radius / Vector.computeDistance(s, t, u);
-//            a2 = a1;
-//            b2 = b1;
-//            c2 = c1;
-//            a1 = i;
-//            b1 = j;
-//            c1 = k;
+            double r = Vector.computeDistance(s, t, u);
+            double d = radius / r;
+            p = r - radius;
             x = s * d;
             y = t * d;
             z = u * d;
             entry.move(x, y, z);
         }
 
-        public void found(SpatialMap.Entry<Fragment> entry, double x, double y, double z) {
-            Fragment fragment = entry.get();
+        public void found(SpatialMap.Entry<FragmentImpl> entry, double x, double y, double z) {
+            FragmentImpl fragment = entry.get();
             if (fragment != this) {
                 Vector vector = new Vector(this.x - x, this.y - y, this.z - z);
                 if (vector.l > 0) {
@@ -412,13 +516,65 @@ public class FlowSimulator extends Observable {
         }
     }
 
-    protected class Advance extends AbstractWorker implements SpatialMap.Consumer<Fragment> {
+    private static class ImmutableFragment implements Fragment {
 
-        private final AtomicBoolean running = new AtomicBoolean(true);
+        private final double x;
+        private final double y;
+        private final double z;
+        private final double i;
+        private final double j;
+        private final double k;
+        private final double p;
+        private final Color color;
+
+        public ImmutableFragment(double x, double y, double z, double i, double j, double k, double p, Color color) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.i = i;
+            this.j = j;
+            this.k = k;
+            this.p = p;
+            this.color = color;
+        }
+
+        public <T> T getCenterXYZ(XForm.View<T> view) {
+            return view.convert(x, y, z, 1);
+        }
+
+        public <T> T getVectorXYZ(XForm.View<T> view) {
+            return view.convert(i, j, k, 1);
+        }
+
+        public double getPressure() {
+            return p;
+        }
+
+        public Color getColor() {
+            return color;
+        }
+
+        public void setColor(Color color) {
+            throw new UnsupportedOperationException();
+        }
+
+        public Fragment immutableCopy() {
+            return this;
+        }
+    }
+    
+    enum RunState {
+        STOPPED, RUNNING, STOPPING,
+    }
+
+    protected class Advance extends AbstractWorker implements SpatialMap.Consumer<FragmentImpl> {
+
+        private final AtomicReference<RunState> runState = new AtomicReference<RunState>(RunState.STOPPED);
         private final AtomicBoolean allPointsIn = new AtomicBoolean(false);
         private final BoundingSphere[] startingPoints;
         private final AtomicInteger counter = new AtomicInteger();
 
+        private int bootstrapFrameCount = 0;
         private long nextRun;
         private double frameDither = 0;
 
@@ -455,6 +611,7 @@ public class FlowSimulator extends Observable {
             int l = map.size();
             int j = 0;
             if (!allPointsIn.get()) {
+                bootstrapFrameCount++;
                 while (l < fragments.length && j < startingPoints.length) {
                     if (insert(fragments[l], startingPoints[j])) {
                         l++;
@@ -464,13 +621,19 @@ public class FlowSimulator extends Observable {
                 if (l >= fragments.length) {
                     allPointsIn.set(true);
                 }
+            } else if (bootstrapFrameCount > 0) {
+                bootstrapFrameCount -= 2;
+                if (bootstrapFrameCount <= 0) {
+                    queryInterface.stable.set(true);
+                    calculateNormalizedPressure();
+                }
             }
 //            try {
 //                Thread.sleep(90000L);
 //            } catch (InterruptedException e) { }
             for (int i = 0; i < l; i++) {
-                SpatialMap.Entry<Fragment> entry = entries[i];
-                Fragment fragment = entry.get();
+                SpatialMap.Entry<FragmentImpl> entry = entries[i];
+                FragmentImpl fragment = entry.get();
                 fragment.move(entry);
                 fragment.addToQueue();
             }
@@ -483,7 +646,7 @@ public class FlowSimulator extends Observable {
 //            return counter.get() == 0;
         }
 
-        private boolean insert(Fragment fragment, BoundingSphere startingPoint) {
+        private boolean insert(FragmentImpl fragment, BoundingSphere startingPoint) {
             if (canInsert(startingPoint)) {
                 fragment.x = startingPoint.center.x;
                 fragment.y = startingPoint.center.y;
@@ -495,24 +658,57 @@ public class FlowSimulator extends Observable {
             return false;
         }
 
-        public void found(SpatialMap.Entry<Fragment> entry, double x, double y, double z) {
+        public void found(SpatialMap.Entry<FragmentImpl> entry, double x, double y, double z) {
             counter.incrementAndGet();
         }
     }
 
-    private class QueryInterface implements FlowQueryInterface {
+    protected class QueryInterface implements FlowQueryInterface {
 
         private final WorkManager workManager = new WorkManager("Query");
         private final AtomicInteger seq = new AtomicInteger(1);
+        private final AtomicBoolean stable = new AtomicBoolean(false);
+        private final RecycleBin<QueryRunner> queryRunnerRecycleBin;
+        private final RecycleBin<WorkRunner> workRunnerRecycleBin;
 
         int frameCount = (int)Math.round(-100.0 / timeScale);
+        WorkSourceKey<Void> lastKey = null;
+
+        private QueryInterface() {
+            {
+                RecycleDeque<WeakReference<QueryRunner>> recycleDeque = new RecycleDeque<WeakReference<QueryRunner>>();
+                Factory<QueryRunner> runnerFactory = new Factory<QueryRunner>() {
+                    public QueryRunner createEmpty() {
+                        return new QueryRunner(queryRunnerRecycleBin, nominalRadius, captureFragmentContributions);
+                    }
+                };
+                queryRunnerRecycleBin = new RecycleBin<QueryRunner>(runnerFactory, recycleDeque);
+            }
+            {
+                RecycleDeque<WeakReference<WorkRunner>> recycleDeque = new RecycleDeque<WeakReference<WorkRunner>>();
+                Factory<WorkRunner> runnerFactory = new Factory<WorkRunner>() {
+                    public WorkRunner createEmpty() {
+                        return new WorkRunner(workRunnerRecycleBin);
+                    }
+                };
+                workRunnerRecycleBin = new RecycleBin<WorkRunner>(runnerFactory, recycleDeque);
+            }
+        }
 
         private void ensureInsideQueryCall(final String methodName) {
-            activeQueryCount.incrementAndGet();
+            pendingWorkCount.incrementAndGet();
             if (!observerQueryLock.get()) {
                 oneLess();
-                throw new IllegalStateException("Cannot call " + methodName + "() outside a call to LiquidGlobeObserver.frame()");
+                throw new IllegalStateException("Cannot call " + methodName + "() outside a call to FlowObserver.frame()");
             }
+        }
+
+        public boolean isStable() {
+            return stable.get();
+        }
+
+        void advanceFrame() {
+            lastKey = null;
         }
 
         public int getFrameCount() {
@@ -530,9 +726,9 @@ public class FlowSimulator extends Observable {
         }
 
         private void oneLess() {
-            if (activeQueryCount.decrementAndGet() == 0) {
-                synchronized (activeQueryCount) {
-                    activeQueryCount.notifyAll();
+            if (pendingWorkCount.decrementAndGet() == 0) {
+                synchronized (pendingWorkCount) {
+                    pendingWorkCount.notifyAll();
                 }
             }
         }
@@ -541,87 +737,125 @@ public class FlowSimulator extends Observable {
             ensureInsideQueryCall("query");
             try {
                 WorkSourceKey<Void> key = WorkSourceKey.create("query-" + seq.get(), Void.class);
+                if (lastKey == null) {
+                    lastKey = key;
+                }
                 workManager.addWorkSource(new WorkSourceAdapter<Void>(key) {
                     public void addWork(WorkQueue workQueue, Results dependencies) {
-                        activeQueryCount.incrementAndGet();
                         for (final FlowQuery query : queries) {
-                            workQueue.addWorkUnit(new QueryRunner(query));
+                            pendingWorkCount.incrementAndGet();
+                            workQueue.addWorkUnit(getQueryRunner(query));
                         }
                     }
                 });
                 workManager.getResults().getResult(key);
             } finally {
-                activeQueryCount.decrementAndGet();
+                pendingWorkCount.decrementAndGet();
             }
+        }
+
+        public void runNext(final Iterable<? extends Runnable> work) {
+            ensureInsideQueryCall("runNext");
+            if (lastKey == null) {
+                throw new IllegalStateException("Cannot call runNext() before calling query()");
+            }
+            try {
+                WorkSourceKey<Void> key = WorkSourceKey.create(lastKey.getName() + ".next", Void.class);
+                workManager.addWorkSource(new WorkSourceAdapter<Void>(key, lastKey) {
+                    public void addWork(WorkQueue workQueue, Results dependencies) {
+                        for (final Runnable runnable : work) {
+                            pendingWorkCount.incrementAndGet();
+                            workQueue.addWorkUnit(getWorkRunner(runnable));
+                        }
+                    }
+                });
+                workManager.getResults().getResult(key);
+            } finally {
+                pendingWorkCount.decrementAndGet();
+            }
+        }
+
+        protected QueryRunner getQueryRunner(FlowQuery query) {
+            return queryRunnerRecycleBin.get().init(query);
+        }
+
+        protected WorkRunner getWorkRunner(Runnable runnable) {
+            return workRunnerRecycleBin.get().init(runnable);
         }
     }
 
-    private class QueryRunner extends FlowPointData implements Runnable, SpatialMap.Consumer<Fragment> {
+    protected class QueryRunner extends AbstractFlowPointData implements Runnable, SpatialMap.Consumer<FragmentImpl>, Recyclable<QueryRunner> {
 
-        private final FlowQuery query;
-        private final MutableSimpleBounds bounds = new MutableSimpleBounds(true, nominalRadius * 3);
+        private final RecycleBin<QueryRunner> recycleBin;
+        private final WeakReference<QueryRunner> me;
+        private final MutableSimpleBounds bounds = new MutableSimpleBounds(true, nominalFragmentRadius * 3);
 
-        private double i = 0.0, j = 0.0, k = 0.0, l = 0.0;
-        private double contributorSum = 0.0;
+        private QueryRunner(RecycleBin<QueryRunner> recycleBin, double nominalRadius, boolean captureContributions) {
+            super(nominalRadius, captureContributions);
+            if (recycleBin == null) throw new NullPointerException("recycleBin");
+            this.recycleBin = recycleBin;
+            this.me = new WeakReference<QueryRunner>(this);
+        }
 
-        public QueryRunner(FlowQuery query) {
-            this.query = query;
-            this.geoPoint = query.getPoint();
-            this.point = geoPoint.toPoint(radius);
+        public QueryRunner init(FlowQuery query) {
+            load(radius, query);
+            return this;
+        }
+
+        public WeakReference<QueryRunner> getMyWeakReference() {
+            return me;
         }
 
         public void run() {
             try {
-                direction = null;
-                velocity = Double.NaN;
-                map.intersect(bounds.load(point), this);
-                if (l > 0) {
-                    double avg = 1.0 / contributorSum;
-                    magnitude = new Vector(i * avg, j * avg, k * avg);
-                    pressure = Math.log(l / nominalRadius);
-                    query.processDataForPoint(this);
-                } else {
-                    magnitude = Vector.ZERO;
-                    pressure = Double.NEGATIVE_INFINITY;
-                }
+                begin(radius);
+                map.intersect(bounds.load(x, y, z), this);
+                processData();
             } finally {
                 queryInterface.oneLess();
+                synchronized (recycleBin) {
+                    recycleBin.put(this);
+                }
             }
         }
 
-        private double calcContribution(double distance) {
-            double exp = distance / (nominalRadius * nominalRadius);
-            exp = exp * exp * -0.5;
-            return Math.exp(exp);
+        public void found(SpatialMap.Entry<FragmentImpl> entry, double x, double y, double z) {
+            fragmentConsumer.consume(entry.get());
         }
 
-        public void found(SpatialMap.Entry<Fragment> entry, double x, double y, double z) {
-            double i = point.x - x;
-            double j = point.y - y;
-            double k = point.z - z;
-            double l = Vector.computeDistance(i, j, k);
-            double contribution = calcContribution(l);
-            this.i += i * contribution;
-            this.j += j * contribution;
-            this.k += k * contribution;
-            this.l += l * contribution;
-            this.contributorSum += contribution;
+    }
+
+    protected class WorkRunner implements Runnable, Recyclable<WorkRunner> {
+
+        private final RecycleBin<WorkRunner> recycleBin;
+        private final WeakReference<WorkRunner> me;
+
+        private Runnable runnable;
+
+        private WorkRunner(RecycleBin<WorkRunner> recycleBin) {
+            if (recycleBin == null) throw new NullPointerException("recycleBin");
+            this.recycleBin = recycleBin;
+            this.me = new WeakReference<WorkRunner>(this);
         }
 
-        @Override
-        public Vector getDirection() {
-            if (direction == null) {
-                direction = magnitude.normalize();
+        public WorkRunner init(Runnable runnable) {
+            this.runnable = runnable;
+            return this;
+        }
+
+        public WeakReference<WorkRunner> getMyWeakReference() {
+            return me;
+        }
+
+        public void run() {
+            try {
+                runnable.run();
+            } finally {
+                queryInterface.oneLess();
+                synchronized (recycleBin) {
+                    recycleBin.put(this);
+                }
             }
-            return direction;
-        }
-
-        @Override
-        public double getVelocity() {
-            if (Double.isNaN(velocity)) {
-                velocity = magnitude.l;
-            }
-            return velocity;
         }
 
     }

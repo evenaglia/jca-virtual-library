@@ -1,5 +1,6 @@
 package net.venaglia.realms.common.map.things;
 
+import net.venaglia.common.util.Identifiable;
 import net.venaglia.common.util.serializer.ArraySerializerStrategy;
 import net.venaglia.common.util.serializer.PrimitiveSerializerStrategy;
 import net.venaglia.common.util.serializer.SerializerStrategy;
@@ -13,7 +14,6 @@ import net.venaglia.realms.common.map.serializers.GeoPointSerializerStrategy;
 import net.venaglia.realms.common.map.serializers.PointSerializerStrategy;
 import net.venaglia.realms.common.map.serializers.TextureCoordinateSerializerStrategy;
 import net.venaglia.realms.common.map.serializers.VectorSerializerStrategy;
-import net.venaglia.realms.common.util.Identifiable;
 import net.venaglia.realms.spec.map.GeoPoint;
 
 import java.nio.ByteBuffer;

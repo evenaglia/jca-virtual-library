@@ -92,6 +92,7 @@ public class OutputGraph {
                 Graphics2D g2d = (Graphics2D)graphics;
                 g2d.setFont(font);
                 g2d.setStroke(new BasicStroke(0.75f));
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 for (RenderedElement e : elements.toArray(new RenderedElement[elements.size()])) {
                     e.render(g2d, xf);
                 }
@@ -527,7 +528,16 @@ public class OutputGraph {
             this.r = r;
         }
 
-        protected void renderElement(Graphics2D g2d, PointXForm xf) {
+        protected void renderElement(Graphics2D g2d, final PointXForm xf) {
+            super.renderElement(g2d, new PointXForm() {
+                public int processX(double x) {
+                    return xf.processX(x);
+                }
+
+                public int processY(double y) {
+                    return xf.processY(y) + r;
+                }
+            });
             int x = xf.processX(this.x);
             int y = xf.processY(this.y);
             g2d.drawOval(x - r, y - r, r + r, r + r);

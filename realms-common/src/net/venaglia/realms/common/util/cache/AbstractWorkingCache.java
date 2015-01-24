@@ -1,6 +1,6 @@
 package net.venaglia.realms.common.util.cache;
 
-import net.venaglia.realms.common.util.Identifiable;
+import net.venaglia.common.util.Identifiable;
 import net.venaglia.common.util.Predicate;
 
 import java.util.Collection;
@@ -291,9 +291,9 @@ public abstract class AbstractWorkingCache<E extends Identifiable, N extends Abs
 
     protected static class Node<E> {
 
-        private Long id;
-        private Node<E> prev;
-        private Node<E> next;
+        Long id;
+        Node<E> prev;
+        Node<E> next;
 
         private E value;
 

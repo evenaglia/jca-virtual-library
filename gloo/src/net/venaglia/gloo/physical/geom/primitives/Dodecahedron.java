@@ -3,6 +3,7 @@ package net.venaglia.gloo.physical.geom.primitives;
 import net.venaglia.gloo.physical.decorators.Brush;
 import net.venaglia.gloo.physical.decorators.Color;
 import net.venaglia.gloo.physical.decorators.Material;
+import net.venaglia.gloo.physical.geom.PlatonicShape;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
 import net.venaglia.gloo.physical.geom.XForm;
@@ -16,14 +17,13 @@ import net.venaglia.gloo.projection.camera.PerspectiveCamera;
 import net.venaglia.gloo.view.MouseTargets;
 import net.venaglia.gloo.view.View3D;
 import net.venaglia.gloo.view.View3DMainLoop;
-import org.lwjgl.util.Dimension;
 
 /**
  * User: ed
  * Date: 10/24/12
  * Time: 6:56 PM
  */
-public class Dodecahedron extends AbstractPolygonFacetedType<Dodecahedron> {
+public class Dodecahedron extends AbstractPolygonFacetedType<Dodecahedron> implements PlatonicShape<Dodecahedron> {
 
     private static final int[][] facets = {
         {10,18,12,13,0},
@@ -41,6 +41,14 @@ public class Dodecahedron extends AbstractPolygonFacetedType<Dodecahedron> {
         {1,11,14,5,4},
 
         {5,15,9,7,4}
+    };
+
+    private static final int[][] edges = {
+            {10, 18}, {18, 12}, {12, 13}, {13, 0}, {0, 10},
+            {10, 8}, {18, 16}, {12, 17}, {13, 11}, {0, 3},
+            {8, 6}, {6, 16}, {16, 19}, {19, 17}, {17, 14}, {14, 11}, {11, 1}, {1, 3}, {3, 2}, {2, 8},
+            {5, 14}, {15, 19}, {9, 6}, {7, 2}, {4, 1},
+            {5, 15}, {15, 9}, {9, 7}, {7, 4}, {4, 5}
     };
 
     private final Point center;
@@ -75,6 +83,25 @@ public class Dodecahedron extends AbstractPolygonFacetedType<Dodecahedron> {
     protected void findFacetPoints(int index, FacetBuilder facetBuilder) {
         int[] facet = facets[index];
         facetBuilder.usePoints(facet[0], facet[1], facet[2], facet[3], facet[4]);
+    }
+
+    @Override
+    public int getEdgeCount() {
+        return edges.length;
+    }
+
+    @Override
+    public Edge getEdge(int i) {
+        if (i < 0 || i >= edges.length) {
+            throw new IllegalArgumentException();
+        }
+        int[] endpoints = edges[i];
+        return new Edge(points[endpoints[0]], points[endpoints[1]]);
+    }
+
+    @Override
+    public PlatonicBaseType getPlatanicBaseType() {
+        return PlatonicBaseType.DODECAHEDRON;
     }
 
     @Override

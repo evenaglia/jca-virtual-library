@@ -7,14 +7,18 @@ import static net.venaglia.realms.spec.GeoSpec.SECTORS;
 import static net.venaglia.realms.spec.GeoSpec.SECTOR_DIVISIONS;
 import static net.venaglia.realms.spec.GeoSpec.SUMMARY;
 
+import net.venaglia.common.util.Consumer;
+import net.venaglia.common.util.RangeBasedLongSet;
 import net.venaglia.common.util.serializer.SerializerStrategy;
 import net.venaglia.gloo.physical.geom.*;
 import net.venaglia.gloo.physical.geom.primitives.Icosahedron;
 import net.venaglia.realms.builder.utils.MutableBounds;
 import net.venaglia.realms.common.Configuration;
 import net.venaglia.realms.common.map.BinaryStore;
+import net.venaglia.realms.common.map.VertexStore;
 import net.venaglia.realms.common.map.WorldMap;
 import net.venaglia.realms.common.map.world.AcreDetail;
+import net.venaglia.realms.common.map.world.topo.VertexBlock;
 import net.venaglia.realms.common.util.work.ProgressExportingRunnable;
 import net.venaglia.realms.spec.GeoSpec;
 import net.venaglia.realms.spec.map.*;
@@ -28,6 +32,8 @@ import net.venaglia.realms.common.util.work.WorkSourceKey;
 
 import java.awt.Dimension;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -56,6 +62,7 @@ public class GeoFactory {
 
     private final WorkManager workManager;
     private final AtomicBoolean success = new AtomicBoolean();
+    private final AtomicReference<File> globalVerticesFile = new AtomicReference<File>();
 
     public GeoFactory() {
         workManager = new WorkManager("GeoFactory");
@@ -73,6 +80,7 @@ public class GeoFactory {
         final WorkSourceKey<TopographyIncrements> acreGraphKey = WorkSourceKey.create("acre graph", TopographyIncrements.class);
         final WorkSourceKey<AcreSeamSeq> seamSequenceKey = WorkSourceKey.create("acre seam sequence", Void.class);
         final WorkSourceKey<Void> topographyKey = WorkSourceKey.create("topography", Void.class);
+        final WorkSourceKey<File> globalVertexKey = WorkSourceKey.create("collect global vertices", File.class);
         workManager.addWorkSource(new WorkSourceAdapter<GlobalSector[]>(globalSectorsKey) {
             public void addWork(WorkQueue workQueue, Results dependencies) {
                 resultBuffer.set(initGlobeStep1(workQueue, globeInstance));
@@ -116,12 +124,19 @@ public class GeoFactory {
                 initGlobeStep7(workQueue, acreBuilders, acreSeamSeq, globeInstance.pointMap);
             }
         }, 60);
+        workManager.addWorkSource(new WorkSourceAdapter<File>(globalVertexKey, topographyKey) {
+            public void addWork(WorkQueue workQueue, Results dependencies) {
+                final File vertices = initGlobeStep8(globeInstance.pointMap);
+                globalVerticesFile.set(vertices);
+                resultBuffer.set(vertices);
+            }
+        }, 10);
 
         // validation steps
         final WorkSourceKey<ValidateResult> acreValidateKey = WorkSourceKey.create("validate acre graph", Void.class);
         final WorkSourceKey<Void> vertexValidateKey = WorkSourceKey.create("validate vertex ids", List.class);
         final WorkSourceKey<Globe> globalVertexValidateKey = WorkSourceKey.create("validate global vertex ids", List.class);
-        workManager.addWorkSource(new WorkSourceAdapter<ValidateResult>(acreValidateKey, topographyKey) {
+        workManager.addWorkSource(new WorkSourceAdapter<ValidateResult>(acreValidateKey, globalVertexKey) {
             public void addWork(WorkQueue workQueue, Results dependencies) {
                 ValidateResult validateResult = new ValidateResult();
                 validateGlobeStep1(workQueue, globeInstance, validateResult);
@@ -135,7 +150,7 @@ public class GeoFactory {
                 validateGlobeStep2(workQueue, globeInstance, validateResult);
             }
         }, 160);
-        workManager.addWorkSource(new WorkSourceAdapter<Globe>(globalVertexValidateKey, vertexValidateKey, acreValidateKey) {
+        workManager.addWorkSource(new WorkSourceAdapter<Globe>(globalVertexValidateKey, globalVertexKey, vertexValidateKey, acreValidateKey) {
             public void addWork(WorkQueue workQueue, Results dependencies) {
                 ValidateResult validateResult = dependencies.getResult(acreValidateKey);
                 validateGlobeStep3(workQueue, globeInstance, validateResult);
@@ -359,6 +374,45 @@ public class GeoFactory {
         for (AcreBuilder acreBuilder : acreBuilders) {
             workQueue.addWorkUnit(acreBuilder.thirdRun(acreSeamSeq.getAccessor(), globalPointMap));
         }
+    }
+
+    private File initGlobeStep8(final GlobalPointMap globalPointMap) {
+        System.out.println("Packing global vertices...");
+        final int count = (int)GeoSpec.POINTS_SHARED_MANY_ZONE.get();
+        final int step = 2 * (Double.SIZE >> 3);
+        final byte[] bytes = new byte[count * step];
+        final ByteBuffer buffer = ByteBuffer.wrap(bytes);
+        for (SpatialMap.Entry<GeoPoint> entry : globalPointMap) {
+            int seq = ((GlobalPointMap.GlobalPointEntry)entry).getSeq();
+            buffer.position(seq * step);
+            GeoPoint point = entry.get();
+            buffer.putDouble(point.longitude);
+            buffer.putDouble(point.latitude);
+        }
+        assert buffer.remaining() == 0;
+
+        System.out.printf("Writing global vertices to temp file... (%,d bytes)\n", count * step);
+        buffer.flip();
+        File verticesFile = null;
+        FileOutputStream out = null;
+        try {
+            verticesFile = File.createTempFile("global.", ".vtx");
+            verticesFile.deleteOnExit();
+            out = new FileOutputStream(verticesFile);
+            out.getChannel().write(buffer);
+            out.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                }
+            } catch (IOException e) {
+                // don't care;
+            }
+        }
+        return verticesFile;
     }
 
     private void validateGlobeStep1(WorkQueue workQueue,
@@ -697,6 +751,7 @@ public class GeoFactory {
     }
 
     public static void main(String[] args) {
+        Configuration.TERAFORMING.setBoolean(true);
         final double radius = 1000.0;
         System.out.println(SUMMARY);
         final GeoFactory geoFactory = new GeoFactory();
@@ -742,10 +797,13 @@ public class GeoFactory {
         final Dimension windowSize = new Dimension(1280,1024);
 
         final WriteSummary writeSummary;
+        final AcreListener newAcreListener = "SMALL".equals(Configuration.GEOSPEC.getString()) &&
+                                             !Configuration.DATABASE_HARMLESS.getBoolean()
+                                             ? new AcreListener() : null;
         if (success) {
-            boolean processingSmallGlobe = Configuration.GEOSPEC.getString("LARGE").equals("SMALL");
+            boolean saveParanoiaFile = Configuration.PARANOIA_ON_ACRES.getBoolean();
             final ConcurrentMap<String,Boolean> signatures =
-                    processingSmallGlobe ? new ConcurrentHashMap<String,Boolean>(8192) : null;
+                    saveParanoiaFile ? new ConcurrentHashMap<String,Boolean>(8192) : null;
             WorkSourceKey<WriteSummary> writeCount = WorkSourceKey.create("summary", Void.class);
             geoFactory.workManager.addWorkSource(new WorkSourceAdapter<WriteSummary>(writeCount) {
 
@@ -758,22 +816,36 @@ public class GeoFactory {
                     List<Acre> acres = new ArrayList<Acre>(globe.acresById.values());
                     for (int i = 0, l = acres.size(); i < l; i += 100) {
                         int j = Math.min(i + 100, l);
-                        workQueue.addWorkUnit(new AcreWriter(acres.subList(i, j), binaryStore, writeSummary));
+                        workQueue.addWorkUnit(new AcreWriter(acres.subList(i, j),
+                                                             binaryStore,
+                                                             newAcreListener,
+                                                             writeSummary));
                     }
                     resultBuffer.set(writeSummary);
                 }
             });
             writeSummary = geoFactory.workManager.getResults().getResult(writeCount);
-            if (processingSmallGlobe && !Configuration.DATABASE_HARMLESS.getBoolean()) {
+            System.out.println();
+            new VertexWriter(writeSummary, geoFactory.globalVerticesFile.get(), WorldMap.INSTANCE.get().getVertexStore()).run();
+            if (saveParanoiaFile && !Configuration.DATABASE_HARMLESS.getBoolean()) {
                 writeSignatures(signatures.keySet());
             }
             GeoViewer.view(globe, radius, "The world", windowSize);
         } else {
             writeSummary = new WriteSummary();
         }
-        System.out.printf("\nWrote %,d acres, %,d bytes\n",
+        System.out.printf("\nWrote %,d acres, %,d vertices, %,d bytes\n",
                           writeSummary.acreCount.get(),
+                          writeSummary.vertexCount.get(),
                           writeSummary.byteCount.get());
+        if (newAcreListener != null && newAcreListener.captureSuccessful()) {
+            System.out.println("-----------------------------------");
+            AcreDetail[] capturedAcres = newAcreListener.getCapturedAcres();
+            for (int i = 0; i < capturedAcres.length; i++) {
+                AcreDetail detail = capturedAcres[i];
+                System.out.println(detail.toSourceLiteral("acre[" + i + "]"));
+            }
+        }
     }
 
     private static void writeSignatures(Set<String> signatures) {
@@ -804,6 +876,7 @@ public class GeoFactory {
 
     private static class WriteSummary {
         public final AtomicInteger acreCount = new AtomicInteger();
+        public final AtomicInteger vertexCount = new AtomicInteger();
         public final AtomicLong byteCount = new AtomicLong();
     }
 
@@ -822,8 +895,9 @@ public class GeoFactory {
         }
 
         public void run() {
-            outer:
-            for (long neighborID : acre.neighbors) {
+            long[] neighbors = acre.neighbors;
+            for (int i = 0, l = neighbors.length; i < l; i++) {
+                long neighborID = neighbors[i];
                 if (neighborID != 0) {
                     AbstractCartographicElement obj = globe.findByID(neighborID);
                     if (obj == null) {
@@ -835,13 +909,43 @@ public class GeoFactory {
                         for (GeoPoint p : obj.points) {
                             assert globalPoints.contains(p);
                         }
-                        for (long l : obj.neighbors) {
-                            if (l == acre.id) {
-                                continue outer;
+                        boolean reciprocate = false;
+                        for (long neighbor : obj.neighbors) {
+                            if (neighbor == acre.id) {
+                                reciprocate = true;
+                                break;
                             }
                         }
-                        System.err.printf("Returned Acre does not reciprocate neighbor ids: %s !--> %s\n",
-                                          obj, acre);
+                        if (!reciprocate) {
+                            System.err.printf("Returned Acre does not reciprocate neighbor ids: %s !--> %s\n",
+                                              obj, acre);
+                        }
+                        if (!containsBothPoints(obj, acre.points[i], acre.points[(i + 1) % l])) {
+                            int foundAt = -1;
+                            for (int j = 0; j < l; j++) {
+                                if (j == i) {
+                                    continue; // no need to look here
+                                }
+                                if (containsBothPoints(obj, acre.points[i], acre.points[(i + 1) % l])) {
+                                    foundAt = j;
+                                    break;
+                                }
+                            }
+                            if (foundAt >= 0) {
+                                System.err.printf("Neighbor is not at expected position: acre[%s].neighbors[%d] !--> %s, was found at neighbors[%d]\n",
+                                                  acre.getIDString(),
+                                                  i,
+                                                  AbstractCartographicElement.toIdString(neighborID),
+                                                  foundAt);
+                            } else {
+                                System.err.printf("Neighbor is not at expected position: acre[%s].neighbors[%d] !--> %s, and does not share two points\n",
+                                                  acre.getIDString(),
+                                                  i,
+                                                  AbstractCartographicElement.toIdString(neighborID));
+                            }
+                        } else if (reciprocate) {
+                            continue;
+                        }
                     }
                 }
                 errorCount.incrementAndGet();
@@ -852,6 +956,20 @@ public class GeoFactory {
             assert acre.seamStartVertexIds.length == l * 7;
             assert validAcreSeamStarts(acre.seamStartVertexIds) : toString(chopDown(7, acre.seamStartVertexIds));
             assert acre.zoneStartVertexIds != null && acre.zoneStartVertexIds.length == l * 4;
+        }
+
+        private boolean containsBothPoints(AbstractCartographicElement obj, GeoPoint pointA, GeoPoint pointB) {
+            for (GeoPoint pointP : obj.points) {
+                if (pointP.equals(pointA)) {
+                    pointA = null;
+                    if (pointB == null) break;
+                }
+                if (pointP.equals(pointB)) {
+                    pointB = null;
+                    if (pointA == null) break;
+                }
+            }
+            return pointA == null && pointB == null;
         }
 
         private String toString(long[][] longs) {
@@ -1056,15 +1174,18 @@ public class GeoFactory {
         private final List<Acre> acres;
         private final BinaryStore binaryStore;
         private final WriteSummary writeSummary;
+        private final Consumer<AcreDetail> newAcreListener;
         private final boolean dataWriteEnabled;
         private SerializerStrategy<AcreDetail> serializer;
         private ByteBuffer buffer;
 
         public AcreWriter(List<Acre> acres,
                           BinaryStore binaryStore,
+                          Consumer<AcreDetail> newAcreListener,
                           WriteSummary writeSummary) {
             this.acres = acres;
             this.binaryStore = binaryStore;
+            this.newAcreListener = newAcreListener;
             this.writeSummary = writeSummary;
             this.dataWriteEnabled = !Configuration.DATABASE_HARMLESS.getBoolean(false);
         }
@@ -1097,6 +1218,114 @@ public class GeoFactory {
             if ((writeSummary.acreCount.incrementAndGet() & 0x3FF) == 0) {
                 System.out.print('.');
             }
+            if (newAcreListener != null) {
+                newAcreListener.consume(detail);
+            }
+        }
+    }
+
+    private static class AcreListener implements Consumer<AcreDetail> {
+
+        private final AcreDetail[] capturedAcres;
+        private final Map<Integer,Integer> captureAcresToArray;
+
+        private AcreListener() {
+            capturedAcres = new AcreDetail[7];
+            captureAcresToArray = new HashMap<Integer,Integer>();
+        }
+
+        public AcreDetail[] getCapturedAcres() {
+            return capturedAcres;
+        }
+
+        public boolean captureSuccessful() {
+            for (AcreDetail capturedAcre : capturedAcres) {
+                if (capturedAcre == null) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public synchronized void consume(AcreDetail value) {
+            if (captureAcresToArray.isEmpty()) {
+                capturedAcres[0] = value;
+                int[] ids = new int[6];
+                if (value.getNeighborIds(ids) == 6) {
+                    for (int i = 0; i < 6; i++) {
+                        captureAcresToArray.put(ids[i], i + 1);
+                    }
+                }
+            } else {
+                Integer index = captureAcresToArray.get(value.getId());
+                if (index != null) {
+                    capturedAcres[index] = value;
+                }
+            }
+        }
+    }
+
+    private static class VertexWriter implements Runnable {
+
+        private final WriteSummary writeSummary;
+        private final File globalVerticesFile;
+        private final VertexStore vertexStore;
+        private final int count;
+        private final double radius;
+
+        public VertexWriter(WriteSummary writeSummary, File globalVerticesFile, VertexStore vertexStore) {
+            this.writeSummary = writeSummary;
+            this.globalVerticesFile = globalVerticesFile;
+            this.vertexStore = vertexStore;
+            this.count = (int)GeoSpec.POINTS_SHARED_MANY_ZONE.get();
+            this.radius = GeoSpec.APPROX_RADIUS_METERS.get();
+        }
+
+        @Override
+        public void run() {
+            final int count = (int)GeoSpec.POINTS_SHARED_MANY_ZONE.get();
+            final int step = 2 * (Double.SIZE >> 3);
+            System.out.printf("Reading global vertices to temp file... (%,d bytes)\n", count * step);
+            final ByteBuffer buffer = ByteBuffer.allocate(count * step);
+            try {
+                FileInputStream in = new FileInputStream(globalVerticesFile);
+                in.getChannel().read(buffer);
+                in.close();
+                globalVerticesFile.delete();
+            } catch (IOException e) {
+                throw new RuntimeException(e.getMessage(), e);
+            }
+            assert buffer.remaining() == 0;
+
+            buffer.flip();
+            System.out.println("Saving to disk...   (each '.' represents 1024 vertices)");
+            RangeBasedLongSet ids = new RangeBasedLongSet();
+            int j, k, n = 0;
+            double x, y, z;
+            double c, latitude, longitude;
+            for (int i = 0; i < count; i += VertexBlock.VERTEX_COUNT) {
+                k = Math.min(i + VertexBlock.VERTEX_COUNT, count) - 1;
+                ids.clear();
+                ids.addAll(i, k);
+                VertexStore.VertexWriter vertexWriter = vertexStore.write(ids);
+                for (j = i; j <= k; j++) {
+                    longitude = buffer.getDouble();
+                    latitude = buffer.getDouble();
+                    c = Math.cos(latitude);
+                    x = Math.sin(longitude) * c;
+                    y = Math.cos(longitude) * c;
+                    z = Math.sin(latitude);
+                    vertexWriter.next(0xFFFFFF, x * radius, y * radius, z * radius, 0.0f);
+                    if ((++n & 0x03FF) == 0) {
+                        System.out.print(".");
+                    }
+                }
+                vertexWriter.done();
+            }
+            assert n == count;
+            writeSummary.vertexCount.addAndGet(n);
+            writeSummary.byteCount.addAndGet(n * 16);
+            vertexStore.flushChanges();
         }
     }
 }

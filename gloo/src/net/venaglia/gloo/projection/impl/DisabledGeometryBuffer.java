@@ -1,5 +1,6 @@
 package net.venaglia.gloo.projection.impl;
 
+import net.venaglia.common.util.Consumer;
 import net.venaglia.gloo.physical.bounds.BoundingBox;
 import net.venaglia.gloo.physical.decorators.Brush;
 import net.venaglia.gloo.physical.decorators.Color;
@@ -14,6 +15,8 @@ import net.venaglia.gloo.projection.GeometryBuffer;
 import net.venaglia.common.util.Tuple2;
 
 import java.awt.geom.Rectangle2D;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 
 /**
  * User: ed
@@ -54,11 +57,15 @@ public abstract class DisabledGeometryBuffer implements GeometryBuffer {
         fail();
     }
 
-    public void coordinates(CoordinateList coordinateList, GeometrySequence seq, int[] order) {
+    public void coordinates(CoordinateList coordinateList, GeometrySequence seq, ShortBuffer order) {
         fail();
     }
 
-    public void coordinates(CoordinateList coordinateList, Iterable<Tuple2<GeometrySequence, int[]>> sequences) {
+    public void coordinates(CoordinateList coordinateList, GeometrySequence seq, IntBuffer order) {
+        fail();
+    }
+
+    public void coordinates(CoordinateList coordinateList, Drawable drawable) {
         fail();
     }
 

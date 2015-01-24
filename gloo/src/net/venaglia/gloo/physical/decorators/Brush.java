@@ -40,6 +40,7 @@ public class Brush {
         wireframe.setPolygonBackFace(Brush.PolygonMode.LINE);
         WIRE_FRAME = wireframe.immutable("WIRE_FRAME");
         Brush frontShaded = new Brush();
+        frontShaded.setColor(true);
         frontShaded.setCulling(Brush.PolygonSide.BACK);
         frontShaded.setTexturing(false);
         FRONT_SHADED = frontShaded.immutable("FRONT_SHADED");

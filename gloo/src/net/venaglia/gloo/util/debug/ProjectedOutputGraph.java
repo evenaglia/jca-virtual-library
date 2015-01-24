@@ -24,6 +24,10 @@ public class ProjectedOutputGraph<P> {
         this.projection = projection;
     }
 
+    public void clear() {
+        out.clear();
+    }
+
     public void addPoint(Color color, String label, P point) {
         double[] buffer = projectOne(point);
         out.addPoint(color, label, buffer[0], buffer[1]);

@@ -82,13 +82,9 @@ public class Matrix_4x4 implements Serializable, Cloneable {
 
     public static Matrix_4x4 rotate(Vector x, Vector y, Vector z) {
         Matrix_4x4 m = new Matrix_4x4();
-//        m.load(x.i, y.i, z.i, 0,
-//               x.j, y.j, z.j, 0,
-//               x.k, y.k, z.k, 0,
-//                 0,   0,   0, 1);
-        m.load(x.i, x.j, x.k, 0,
-               y.i, y.j, y.k, 0,
-               z.i, z.j, z.k, 0,
+        m.load(x.i, y.i, z.i, 0,
+               x.j, y.j, z.j, 0,
+               x.k, y.k, z.k, 0,
                  0,   0,   0, 1);
         return m;
     }
@@ -172,29 +168,29 @@ public class Matrix_4x4 implements Serializable, Cloneable {
         return this;
     }
 
-    public Matrix_4x4 product(Matrix_4x4 _) {
+    public Matrix_4x4 product(Matrix_4x4 m) {
         Matrix_4x4 result = new Matrix_4x4();
         product(m00, m10, m20, m30,
                 m01, m11, m21, m31,
                 m02, m12, m22, m32,
                 m03, m13, m23, m33,
-                _.m00, _.m10, _.m20, _.m30,
-                _.m01, _.m11, _.m21, _.m31,
-                _.m02, _.m12, _.m22, _.m32,
-                _.m03, _.m13, _.m23, _.m33,
+                m.m00, m.m10, m.m20, m.m30,
+                m.m01, m.m11, m.m21, m.m31,
+                m.m02, m.m12, m.m22, m.m32,
+                m.m03, m.m13, m.m23, m.m33,
                 result);
         return result;
     }
 
-    public Matrix_1x4 product(Matrix_1x4 _) {
+    public Matrix_1x4 product(Matrix_1x4 m) {
         return product(m00, m10, m20, m30,
                        m01, m11, m21, m31,
                        m02, m12, m22, m32,
                        m03, m13, m23, m33,
-                       _.m00,
-                       _.m01,
-                       _.m02,
-                       _.m03,
+                       m.m00,
+                       m.m01,
+                       m.m02,
+                       m.m03,
                       Matrix_1x4.MATRIX_XFORM_VIEW);
     }
 

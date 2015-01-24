@@ -1,7 +1,5 @@
 package net.venaglia.common.util.serializer;
 
-import net.venaglia.common.util.Secondary;
-
 import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentHashMap;

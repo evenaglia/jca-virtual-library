@@ -9,7 +9,9 @@ import net.venaglia.gloo.physical.texture.Texture;
 import net.venaglia.gloo.physical.texture.TextureMapping;
 import net.venaglia.gloo.projection.Coordinate;
 import net.venaglia.gloo.projection.CoordinateList;
-import net.venaglia.common.util.Tuple2;
+
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 
 /**
  * User: ed
@@ -50,11 +52,15 @@ public abstract class NoOpGeometryBuffer extends DisabledGeometryBuffer {
         // no-op
     }
 
-    public void coordinates(CoordinateList coordinateList, GeometrySequence seq, int[] order) {
+    public void coordinates(CoordinateList coordinateList, GeometrySequence seq, ShortBuffer order) {
         // no-op
     }
 
-    public void coordinates(CoordinateList coordinateList, Iterable<Tuple2<GeometrySequence, int[]>> sequences) {
+    public void coordinates(CoordinateList coordinateList, GeometrySequence seq, IntBuffer order) {
+        // no-op
+    }
+
+    public void coordinates(CoordinateList coordinateList, Drawable drawable) {
         // no-op
     }
 

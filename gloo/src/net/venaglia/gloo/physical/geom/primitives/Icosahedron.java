@@ -2,6 +2,7 @@ package net.venaglia.gloo.physical.geom.primitives;
 
 import net.venaglia.gloo.physical.bounds.BoundingSphere;
 import net.venaglia.gloo.physical.bounds.BoundingVolume;
+import net.venaglia.gloo.physical.geom.PlatonicShape;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
 import net.venaglia.gloo.physical.geom.XForm;
@@ -16,9 +17,17 @@ import java.util.List;
  * Date: 9/1/12
  * Time: 9:51 AM
  */
-public final class Icosahedron extends AbstractTriangleFacetedType<Icosahedron> {
+public final class Icosahedron extends AbstractTriangleFacetedType<Icosahedron> implements PlatonicShape<Icosahedron> {
 
     public static final Point[] VERTICES = getVertices();
+
+    private static final int[][] edges = {
+            {0, 1}, {0, 2}, {0, 3}, {0, 4}, {0, 5},
+            {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 1},
+            {8, 1}, {1, 9}, {9, 2}, {2, 10}, {10, 3}, {3, 6}, {6, 4}, {4, 7}, {7, 5},
+            {5, 8}, {6, 7}, {7, 8}, {8, 9}, {9, 10}, {10, 6},
+            {6, 11}, {7, 11}, {8, 11}, {9, 11}, {10, 11}
+    };
 
     /**
      * The center of this Icosahedron
@@ -113,6 +122,25 @@ public final class Icosahedron extends AbstractTriangleFacetedType<Icosahedron> 
                 facetBuilder.usePoints(10,9,2);
                 break;
         }
+    }
+
+    @Override
+    public int getEdgeCount() {
+        return edges.length;
+    }
+
+    @Override
+    public Edge getEdge(int i) {
+        if (i < 0 || i >= edges.length) {
+            throw new IllegalArgumentException();
+        }
+        int[] endpoints = edges[i];
+        return new Edge(points[endpoints[0]], points[endpoints[1]]);
+    }
+
+    @Override
+    public PlatonicBaseType getPlatanicBaseType() {
+        return PlatonicBaseType.DODECAHEDRON;
     }
 
     @Override

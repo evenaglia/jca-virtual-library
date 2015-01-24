@@ -26,6 +26,7 @@ import javax.swing.*;
 import java.awt.Dimension;
 import java.awt.Image;
 import java.net.URL;
+import java.util.List;
 
 /**
  * User: ed
@@ -37,9 +38,11 @@ public class FlowViewer implements View3DMainLoop, ViewEventHandler {
     private final FlowSimulator flowSimulator;
     private final double radius;
     private final boolean onlyPoints;
+    private final List<TectonicVectorArrow> tectonicArrows;
 
     private DisplayList fragmentDisplayList = new DisplayListBuffer("Fragment");
     private DisplayList sphereDisplayList = new DisplayListBuffer("Sphere");
+    private DisplayList tectonicArrowsDisplayList = new DisplayListBuffer("Tectonic Arrows");
     private Light[] lights;
     private Camera camera;
     private double t = 0.0;
@@ -48,6 +51,7 @@ public class FlowViewer implements View3DMainLoop, ViewEventHandler {
         this.flowSimulator = flowSimulator;
         this.onlyPoints = onlyPoints;
         this.radius = flowSimulator.getRadius();
+        this.tectonicArrows = flowSimulator.getTectonicArrows(radius);
     }
 
     public void handleInit() {
@@ -63,6 +67,13 @@ public class FlowViewer implements View3DMainLoop, ViewEventHandler {
                 sphere.project(buffer);
             }
         });
+        tectonicArrowsDisplayList.record(new GeometryRecorder() {
+            public void record(RecordingBuffer buffer) {
+                for (TectonicVectorArrow arrow : tectonicArrows) {
+                    arrow.project(buffer);
+                }
+            }
+        });
         lights = new Light[]{
                 new FixedPointSourceLight(new Point(radius * -0.5 ,radius * 3.0, radius * 0.25)),
                 new FixedPointSourceLight(new Point(radius * 1.1f, radius * 5.0f, radius * 3.5f)),
@@ -74,6 +85,12 @@ public class FlowViewer implements View3DMainLoop, ViewEventHandler {
 
     public void handleClose() {
         flowSimulator.stop();
+        try {
+            Thread.sleep(2500);
+        } catch (InterruptedException e) {
+            // don't care
+        }
+        System.exit(0);
     }
 
     public void handleNewFrame(long now) {
@@ -88,7 +105,7 @@ public class FlowViewer implements View3DMainLoop, ViewEventHandler {
         camera.setPosition(cameraPosition);
         camera.setDirection(Vector.betweenPoints(cameraPosition, Point.ORIGIN));
         camera.setRight(Vector.cross(cameraPosition, Point.ORIGIN, new Point(0.0, 0.0, radius)).normalize(radius * 2.2));
-        camera.computeClippingDistances(new BoundingSphere(Point.ORIGIN, radius * 1.1 + 2.0));
+        camera.computeClippingDistances(new BoundingSphere(Point.ORIGIN, radius * 1.15 + 2.0));
         return true;
     }
 
@@ -101,22 +118,24 @@ public class FlowViewer implements View3DMainLoop, ViewEventHandler {
         buffer.useCamera(camera);
         if (onlyPoints) {
             buffer.applyBrush(Brush.POINTS);
-            buffer.color(net.venaglia.gloo.physical.decorators.Color.GRAY_50);
+            buffer.color(Color.GRAY_50);
             sphereDisplayList.project(nowMS, buffer);
             buffer.applyBrush(Brush.POINTS);
         } else {
             if (!flowSimulator.areAllPointsIn()) {
                 buffer.applyBrush(Brush.POINTS);
-                buffer.color(net.venaglia.gloo.physical.decorators.Color.GRAY_50);
+                buffer.color(Color.GRAY_50);
                 sphereDisplayList.project(nowMS, buffer);
             }
+            tectonicArrows.get(0).getMaterial().apply(nowMS, buffer);
+            tectonicArrowsDisplayList.project(nowMS, buffer);
             buffer.applyBrush(Brush.FRONT_SHADED);
         }
-        FlowSimulator.Fragment[] fragments = flowSimulator.getFragments();
+        Fragment[] fragments = flowSimulator.getFragments();
         for (int i = 0, l = flowSimulator.activeFragments(); i < l; i++) {
-            FlowSimulator.Fragment fragment = fragments[i];
+            Fragment fragment = fragments[i];
             buffer.pushTransform();
-            buffer.translate(fragment.getVectorXYZ());
+            buffer.translate(fragment.getCenterXYZ(Vector.VECTOR_XFORM_VIEW));
             buffer.color(fragment.getColor());
             fragmentDisplayList.project(nowMS, buffer);
             buffer.popTransform();
@@ -136,15 +155,20 @@ public class FlowViewer implements View3DMainLoop, ViewEventHandler {
         return new ImageIcon(url).getImage();
     }
 
+    private static float colorSine(double a, double part) {
+        float v = (float)(Math.sin((a + Math.PI / 2.0) + Math.PI * part * 0.6666666667) * 1.5 + 0.5);
+        return Math.max(Math.min(v,1.0f),0.0f);
+    }
+
     public static void main(String[] args) {
         Application application = Application.getApplication();
         application.setDockIconImage(loadAppIcon());
-        FlowSimulator flowSimulator =
+        final FlowSimulator flowSimulator =
 //                new FlowSimulator(10,280,500,10.0);
 //                new FlowSimulator(25,1000,240,12.0);
-//                new FlowSimulator(25,8000,60,10.0);
+                new FlowSimulator(25,8000,60,10.0);
 //                new FlowSimulator(25,5000,12.5,10.0); // slow
-                new FlowSimulator(40,16000,15,10.0);
+//                new FlowSimulator(40,16000,15,10.0);
 //                new FlowSimulator(60,50000,8,10.0);
 //                new FlowSimulator(240,1000000,1,1.0);
         flowSimulator.setObserver(new FlowObserver() {
@@ -152,10 +176,19 @@ public class FlowViewer implements View3DMainLoop, ViewEventHandler {
                 queryInterface.changeSettings(60, 3.0);
             }
         });
+        Fragment[] fragments = flowSimulator.getFragments();
+        int endPadding = 0; //numTectonicPoints * 4;
+        for (int i = 0, count = fragments.length; i < count; i++) {
+            Fragment fragment = fragments[i];
+            double a = Math.PI * -2.0 * (((double)i) / count);
+            Color color = i < endPadding || (i + endPadding) > count ? Color.WHITE : new Color(colorSine(a, 0.0), colorSine(a, 1.0), colorSine(a, 2.0), 1.0f);
+            fragment.setColor(color);
+        }
 
         Dimension dimension =
 //                new Dimension(640, 408);
-                new Dimension(1024, 768);
+//                new Dimension(1024, 768);
+                new Dimension(1280, 1024);
 //                new Dimension(1920, 1150);
         FlowViewer flowViewer = new FlowViewer(flowSimulator, false);
         View3D view = new View3D((int)dimension.getWidth(), (int)dimension.getHeight());
@@ -169,6 +202,6 @@ public class FlowViewer implements View3DMainLoop, ViewEventHandler {
         } catch (InterruptedException e) {
             // don't care
         }
-        flowSimulator.run();
+        flowSimulator.start();
     }
 }

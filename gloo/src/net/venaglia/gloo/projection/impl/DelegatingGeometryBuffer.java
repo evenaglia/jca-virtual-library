@@ -11,9 +11,10 @@ import net.venaglia.gloo.projection.CoordinateList;
 import net.venaglia.gloo.projection.GeometryBuffer;
 import net.venaglia.gloo.physical.texture.Texture;
 import net.venaglia.gloo.physical.texture.TextureMapping;
-import net.venaglia.common.util.Tuple2;
 
 import java.awt.geom.Rectangle2D;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 
 /**
  * User: ed
@@ -60,12 +61,16 @@ public class DelegatingGeometryBuffer implements GeometryBuffer {
         delegate.coordinates(coordinateList, seq);
     }
 
-    public void coordinates(CoordinateList coordinateList, GeometrySequence seq, int[] order) {
+    public void coordinates(CoordinateList coordinateList, GeometrySequence seq, ShortBuffer order) {
         delegate.coordinates(coordinateList, seq, order);
     }
 
-    public void coordinates(CoordinateList coordinateList, Iterable<Tuple2<GeometrySequence,int[]>> sequences) {
-        delegate.coordinates(coordinateList, sequences);
+    public void coordinates(CoordinateList coordinateList, GeometrySequence seq, IntBuffer order) {
+        delegate.coordinates(coordinateList, seq, order);
+    }
+
+    public void coordinates(CoordinateList coordinateList, Drawable drawable) {
+        delegate.coordinates(coordinateList, drawable);
     }
 
     public void coordinate(Coordinate coordinate) {

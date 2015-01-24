@@ -11,6 +11,10 @@ public interface FlowQuery {
 
     GeoPoint getPoint();
 
+    double getRadius();
+
+    double getScale();
+
     /**
      * @param data the point data object
      */

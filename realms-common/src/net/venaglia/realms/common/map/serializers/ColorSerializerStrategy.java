@@ -1,6 +1,6 @@
 package net.venaglia.realms.common.map.serializers;
 
-import net.venaglia.common.util.Secondary;
+import net.venaglia.common.util.serializer.Secondary;
 import net.venaglia.common.util.serializer.AbstractSerializerStrategy;
 import net.venaglia.common.util.serializer.SerializerStrategy;
 import net.venaglia.gloo.physical.decorators.Color;

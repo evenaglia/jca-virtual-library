@@ -2,7 +2,7 @@ package net.venaglia.realms.common.map;
 
 import net.venaglia.gloo.physical.bounds.BoundingVolume;
 import net.venaglia.realms.common.map.data.CommonDataSources;
-import net.venaglia.realms.common.util.Visitor;
+import net.venaglia.common.util.Visitor;
 
 import java.util.UUID;
 

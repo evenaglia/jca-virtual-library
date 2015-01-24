@@ -1,4 +1,4 @@
-package net.venaglia.realms.common.util;
+package net.venaglia.common.util;
 
 /**
  * User: ed

@@ -1,6 +1,7 @@
 package net.venaglia.realms.common.map.data;
 
 import net.venaglia.common.util.Ref;
+import net.venaglia.realms.common.Configuration;
 import net.venaglia.realms.common.map.UniqueIdSource;
 
 import java.io.BufferedReader;
@@ -243,6 +244,9 @@ public abstract class AbstractUniqueIdSource implements UniqueIdSource {
         }
 
         public synchronized void writeToDisk(String availableRanges) {
+            if (Configuration.DATABASE_HARMLESS.getBoolean()) {
+                return;
+            }
             FileWriter out = null;
             try {
                 out = new FileWriter(local);

@@ -1,5 +1,8 @@
 package net.venaglia.realms.common.map.world;
 
+import net.venaglia.common.util.Ref;
+import net.venaglia.common.util.Visitor;
+import net.venaglia.common.util.impl.AbstractCachingRef;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.realms.common.Configuration;
 import net.venaglia.realms.common.map.BinaryStore;
@@ -24,7 +27,7 @@ import net.venaglia.realms.common.map.things.ThingMetadata;
 import net.venaglia.realms.common.map.things.ThingRef;
 import net.venaglia.realms.common.map.data.binaries.BinaryResource;
 import net.venaglia.realms.common.map.data.binaries.BinaryType;
-import net.venaglia.realms.common.util.Visitor;
+import net.venaglia.realms.common.map.world.topo.TerraformVertexStore;
 
 import java.util.UUID;
 
@@ -38,7 +41,7 @@ public class WorldMapImpl implements WorldMap {
     private final DataStore dataStore;
     private final CommonDataSources commonDataSources;
     private final BinaryStore binaryStore;
-    private final VertexStore vertexStore = null; // todo
+    private final Ref<VertexStore> vertexStore;
 
     static {
         ColorSerializerStrategy.init();
@@ -55,6 +58,12 @@ public class WorldMapImpl implements WorldMap {
             this.dataStore.init();
             this.commonDataSources = this.dataStore.getCommonDataSources();
             this.binaryStore = new BinaryStoreImpl();
+            this.vertexStore = new AbstractCachingRef<VertexStore>() {
+                @Override
+                protected VertexStore getImpl() {
+                    return Configuration.TERAFORMING.getBoolean(false) ? new TerraformVertexStore(binaryStore) : null;
+                }
+            };
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
@@ -86,7 +95,7 @@ public class WorldMapImpl implements WorldMap {
     }
 
     public VertexStore getVertexStore() {
-        return vertexStore;
+        return vertexStore.get();
     }
 
     public PropertyStore getPropertyStore() {

@@ -1,6 +1,6 @@
 package net.venaglia.realms.common.map.data.rdbms;
 
-import net.venaglia.realms.common.util.UncaughtExceptionVisitor;
+import net.venaglia.common.util.UncaughtExceptionVisitor;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

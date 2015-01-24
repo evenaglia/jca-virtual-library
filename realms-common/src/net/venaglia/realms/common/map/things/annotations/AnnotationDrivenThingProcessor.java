@@ -1,6 +1,8 @@
 package net.venaglia.realms.common.map.things.annotations;
 
 import net.venaglia.common.util.Factory;
+import net.venaglia.common.util.Predicate;
+import net.venaglia.common.util.Visitor;
 import net.venaglia.common.util.serializer.AbstractSerializerStrategy;
 import net.venaglia.common.util.serializer.SerializerStrategy;
 import net.venaglia.realms.common.map.things.AbstractThing;
@@ -8,8 +10,6 @@ import net.venaglia.realms.common.map.things.PropertyAccessor;
 import net.venaglia.realms.common.map.things.PropertyType;
 import net.venaglia.realms.common.map.things.Thing;
 import net.venaglia.realms.common.map.things.ThingMetadata;
-import net.venaglia.common.util.Predicate;
-import net.venaglia.realms.common.util.Visitor;
 
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;

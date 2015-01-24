@@ -1,7 +1,7 @@
 package net.venaglia.realms.common.util.cache;
 
 import net.venaglia.common.util.Series;
-import net.venaglia.realms.common.util.Identifiable;
+import net.venaglia.common.util.Identifiable;
 
 import java.util.Collection;
 

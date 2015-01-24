@@ -2,7 +2,6 @@ package net.venaglia.gloo.physical.geom.complex;
 
 import net.venaglia.gloo.demo.SingleShapeDemo;
 import net.venaglia.gloo.physical.decorators.Color;
-import net.venaglia.gloo.physical.geom.Axis;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
 import net.venaglia.gloo.physical.geom.XForm;

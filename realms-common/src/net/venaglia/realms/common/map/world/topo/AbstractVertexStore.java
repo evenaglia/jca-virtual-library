@@ -1,8 +1,9 @@
 package net.venaglia.realms.common.map.world.topo;
 
 import net.venaglia.common.util.RangeBasedLongSet;
+import net.venaglia.realms.common.Configuration;
 import net.venaglia.realms.common.map.VertexStore;
-import net.venaglia.realms.common.util.Visitor;
+import net.venaglia.common.util.Visitor;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -21,6 +22,10 @@ import static net.venaglia.realms.common.map.world.topo.VertexBlock.INDEX_MASK;
 abstract class AbstractVertexStore implements VertexStore {
 
     protected final VertexChangeEventBus eventBus;
+
+    protected AbstractVertexStore() {
+        this(Configuration.VERTEX_CHANGE_EVENT_BUS.getBean());
+    }
 
     protected AbstractVertexStore(VertexChangeEventBus eventBus) {
         this.eventBus = eventBus;
@@ -51,12 +56,12 @@ abstract class AbstractVertexStore implements VertexStore {
     public VertexWriter write(final RangeBasedLongSet vertexIds) {
         return new VertexWriter() {
 
-            private long next;
+            private long next = -1L;
             private VertexBlock block;
 
             public boolean hasNext() {
                 try {
-                    vertexIds.getNext(next);
+                    vertexIds.getNext(next + 1);
                     return true;
                 } catch (NoSuchElementException e) {
                     return false;
@@ -68,7 +73,7 @@ abstract class AbstractVertexStore implements VertexStore {
             }
 
             public void next(int rgbColor, double i, double j, double k, float elevation) {
-                next = vertexIds.getNext(next);
+                next = vertexIds.getNext(next + 1);
                 long blockId = next & VERTEX_ID_MASK;
                 if (block == null || block.getId() != blockId) {
                     block = getBlock(blockId);

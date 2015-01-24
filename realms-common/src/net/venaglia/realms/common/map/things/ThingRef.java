@@ -1,10 +1,10 @@
 package net.venaglia.realms.common.map.things;
 
+import net.venaglia.common.util.Identifiable;
 import net.venaglia.gloo.physical.bounds.BoundingVolume;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.util.SpatialMap;
 import net.venaglia.realms.common.map.Cube;
-import net.venaglia.realms.common.util.Identifiable;
 
 /**
  * User: ed

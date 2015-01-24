@@ -1,10 +1,10 @@
 package net.venaglia.realms.common.map.world.topo;
 
+import net.venaglia.common.util.Identifiable;
+import net.venaglia.common.util.Visitor;
 import net.venaglia.realms.common.map.VertexStore;
 import net.venaglia.realms.common.map.data.binaries.BinaryType;
 import net.venaglia.realms.common.map.data.binaries.BinaryTypeRegistry;
-import net.venaglia.realms.common.util.Identifiable;
-import net.venaglia.realms.common.util.Visitor;
 import net.venaglia.realms.common.util.cache.Volatile;
 import net.venaglia.realms.spec.GeoSpec;
 
@@ -145,7 +145,7 @@ public class VertexBlock implements Identifiable, Volatile {
     void update(byte[] buffer) {
         assert buffer.length == byteBuffer.capacity();
         synchronized (byteBuffer) {
-            byteBuffer.reset();
+            byteBuffer.position(0);
             byteBuffer.get(buffer);
         }
     }
@@ -154,11 +154,15 @@ public class VertexBlock implements Identifiable, Volatile {
         return index * STRIDE;
     }
 
+    public static void init() {
+        // no-op, here to bootstrap the type into the BinaryTypeRegistry
+    }
+
     public static class IdRange implements Comparable<IdRange> {
         public final long begin;
         public final long end;
         public final long expectedVertices;
-        public final long maxVerices;
+        public final long maxVertices;
 
         private IdRange(long expectedVertices) {
             this(0L, expectedVertices | INDEX_MASK, expectedVertices);
@@ -168,7 +172,7 @@ public class VertexBlock implements Identifiable, Volatile {
             this.begin = begin;
             this.end = end;
             this.expectedVertices = expectedVertices;
-            this.maxVerices = end - begin;
+            this.maxVertices = end - begin;
         }
 
         private IdRange next(long expectedVertices, long padding) {

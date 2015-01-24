@@ -4,6 +4,7 @@ import net.venaglia.gloo.physical.geom.Axis;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
 import net.venaglia.gloo.util.debug.OutputGraphProjection;
+import net.venaglia.realms.common.map.world.AcreDetail;
 
 import java.awt.geom.Point2D;
 
@@ -33,10 +34,12 @@ public class RelativeCoordinateReference implements OutputGraphProjection<GeoPoi
         this (c.toPoint(1000.0), null, b.toPoint(1000.0), a.toPoint(1000.0), null);
     }
 
+    // for quads
     public RelativeCoordinateReference(GeoPoint a, GeoPoint b, GeoPoint c, GeoPoint d) {
         this(a.toPoint(1000.0), b.toPoint(1000.0), c.toPoint(1000.0), d.toPoint(1000.0), null);
     }
 
+    // for quads
     public RelativeCoordinateReference(Point a, Point b, Point c, Point d) {
         this(normalize(a), normalize(b), normalize(c), normalize(d), null);
     }
@@ -81,6 +84,26 @@ public class RelativeCoordinateReference implements OutputGraphProjection<GeoPoi
     public Point resolve(GeoPoint point, double evevation) {
         Point p = point.toPoint(1000.0);
         return new Point(seek(p, a, b, c, d), seek(p, a, c, b, d), evevation);
+    }
+
+    // passing 2.0 makes rendered points larger, 0.5 makes rendered points smaller
+    public RelativeCoordinateReference scale(double scale) {
+        if (scale == 1.0) {
+            return this;
+        }
+        if (scale == 0.0 || Double.isNaN(scale) || Double.isInfinite(scale)) {
+            throw new IllegalArgumentException();
+        }
+        double s = 1.0 / scale;
+        Point m = new Point((a.x + b.x + c.x + d.x) * 0.25,
+                            (a.y + b.y + c.y + d.y) * 0.25,
+                            (a.z + b.z + c.z + d.z) * 0.25);
+        return new RelativeCoordinateReference(
+                m.translate(Vector.betweenPoints(m, a).scale(s)),
+                m.translate(Vector.betweenPoints(m, b).scale(s)),
+                m.translate(Vector.betweenPoints(m, c).scale(s)),
+                m.translate(Vector.betweenPoints(m, d).scale(s))
+        );
     }
 
     private Square findSquare(Point p, int limit) {
@@ -164,6 +187,61 @@ public class RelativeCoordinateReference implements OutputGraphProjection<GeoPoi
         return numerator.l / denominator.l;
     }
 
+    public static RelativeCoordinateReference forAcre(Acre acre) {
+        return forAcreImpl(acre.points);
+    }
+
+    public static RelativeCoordinateReference forAcre(AcreDetail acreDetail) {
+        return forAcreImpl(acreDetail.getVertices());
+    }
+
+    private static RelativeCoordinateReference forAcreImpl(GeoPoint[] points) {
+        // todo: this distorts the acre to be square, squash it by 86.6%
+        // find the four corners of this acre
+        Point a, b, c, d;
+        Point t1, t2, b1, b2, p1, p2;
+        if (points == null) {
+            throw new NullPointerException("points");
+        }
+        switch (points.length) {
+            case 5:
+                b1 = points[0].toPoint(1000.0);
+                b2 = points[1].toPoint(1000.0);
+                t1 = points[3].toPoint(1000.0);
+                // special case, these pentagonal acres are equilateral
+                t2 = t1.translate(Vector.betweenPoints(b1, b2));
+                p1 = points[2].toPoint(1000.0);
+                p2 = points[4].toPoint(1000.0);
+                break;
+            case 6:
+                b1 = points[0].toPoint(1000.0);
+                b2 = points[1].toPoint(1000.0);
+                t1 = points[3].toPoint(1000.0);
+                t2 = points[4].toPoint(1000.0);
+                p1 = points[2].toPoint(1000.0);
+                p2 = points[5].toPoint(1000.0);
+                break;
+            default:
+                throw new UnsupportedOperationException();
+        }
+        a = findClosestPointOnLine(t1, t2, p1);
+        b = findClosestPointOnLine(t1, t2, p2);
+        c = findClosestPointOnLine(b1, b2, p1);
+        d = findClosestPointOnLine(b1, b2, p2);
+        return new RelativeCoordinateReference(
+                Point.midPoint(a, c, -0.067),
+                Point.midPoint(b, d, -0.067),
+                Point.midPoint(c, a, -0.067),
+                Point.midPoint(d, b, -0.067)
+        );
+    }
+
+    private static Point findClosestPointOnLine(Point onLine_pointA, Point onLine_pointB, Point nearbyPoint) {
+        Vector a = Vector.betweenPoints(onLine_pointA, nearbyPoint);
+        Vector u = Vector.betweenPoints(onLine_pointA, onLine_pointB).normalize();
+        return onLine_pointA.translate(u.scale(a.dot(u)));
+    }
+
     private static class Square {
 
         public int x, y;
@@ -178,6 +256,8 @@ public class RelativeCoordinateReference implements OutputGraphProjection<GeoPoi
             this.t1 = t1;
         }
     }
+
+    // self-test methods
 
     private static boolean isClose(double a, double b) {
         if (a == b) {

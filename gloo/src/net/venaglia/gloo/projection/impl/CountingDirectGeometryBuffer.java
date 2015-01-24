@@ -12,9 +12,10 @@ import net.venaglia.gloo.projection.Coordinate;
 import net.venaglia.gloo.projection.CoordinateList;
 import net.venaglia.gloo.physical.texture.Texture;
 import net.venaglia.gloo.physical.texture.TextureMapping;
-import net.venaglia.common.util.Tuple2;
 
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 
 /**
  * User: ed
@@ -75,19 +76,27 @@ public class CountingDirectGeometryBuffer extends DirectGeometryBuffer implement
         count++;
     }
 
-    public void coordinates(CoordinateList coordinateList, GeometrySequence seq, int[] order) {
+    @Override
+    public void coordinates(CoordinateList coordinateList, GeometrySequence seq, ShortBuffer order) {
         super.coordinates(coordinateList, seq, order);
         count++;
     }
 
-    public void coordinates(CoordinateList coordinateList, Iterable<Tuple2<GeometrySequence, int[]>> sequences) {
-        super.coordinates(coordinateList, sequences);
+    @Override
+    public void coordinates(CoordinateList coordinateList, GeometrySequence seq, IntBuffer order) {
+        super.coordinates(coordinateList, seq, order);
         count++;
     }
 
     @Override
-    protected void load(CoordinateList coordinateList) {
-        super.load(coordinateList);
+    public void coordinates(CoordinateList coordinateList, Drawable drawable) {
+        super.coordinates(coordinateList, drawable);
+        count++;
+    }
+
+    @Override
+    protected void loadCoordinateList(CoordinateList coordinateList) {
+        super.loadCoordinateList(coordinateList);
         extendBounds(coordinateList);
     }
 
@@ -106,11 +115,10 @@ public class CountingDirectGeometryBuffer extends DirectGeometryBuffer implement
     }
 
     private void extendBounds(CoordinateList coordinateList) {
-        ByteBuffer data = coordinateList.data();
+        ByteBuffer data = coordinateList.data(CoordinateList.Field.VERTEX);
         int length = coordinateList.size();
-        int stride = coordinateList.stride(CoordinateList.Field.VERTEX);
-        for (int i = 0, j = coordinateList.offset(CoordinateList.Field.VERTEX); i < length; i++, j += stride) {
-            data.position(j);
+        data.position(0);
+        for (int i = 0; i < length; i++) {
             extendBounds(data.getDouble(), data.getDouble(), data.getDouble());
         }
     }

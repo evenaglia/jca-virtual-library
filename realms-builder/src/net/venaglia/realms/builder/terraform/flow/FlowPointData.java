@@ -1,44 +1,62 @@
 package net.venaglia.realms.builder.terraform.flow;
 
+import net.venaglia.gloo.physical.geom.MatrixXForm;
+import net.venaglia.gloo.physical.geom.XForm;
 import net.venaglia.realms.spec.map.GeoPoint;
-import net.venaglia.gloo.physical.geom.Point;
-import net.venaglia.gloo.physical.geom.Vector;
 
 /**
  * User: ed
  * Date: 3/1/13
  * Time: 8:09 AM
  */
-public class FlowPointData {
+public interface FlowPointData {
 
-    protected GeoPoint geoPoint;
-    protected Point point;
-    protected Vector magnitude;
-    protected Vector direction;
-    protected double velocity;
-    protected double pressure; // as an exponent, 0 represents average pressure across the globe
+    /**
+     * @return The GeoPoint where this flow point data is to be sampled
+     */
+    GeoPoint getGeoPoint();
 
-    public GeoPoint getGeoPoint() {
-        return geoPoint;
-    }
+    /**
+     * @param view The view representing the Point data type you wish to consume.
+     * @param <P> The Point data type you wish to consume.
+     * @return A Point
+     */
+    <P> P getPoint(XForm.View<P> view);
 
-    public Point getPoint() {
-        return point;
-    }
+    /**
+     * @param view The view representing the Magnitude Vector data type you wish to consume.
+     * @param <V> The Magnitude Vector data type you wish to consume.
+     * @return A Magnitude Vector
+     */
+    <V> V getMagnitudeVector(MatrixXForm.View<V> view);
 
-    public Vector getMagnitude() {
-        return magnitude;
-    }
+    /**
+     * @param view The view representing the Vector data type you wish to consume.
+     * @param <V> The Vector data type you wish to consume.
+     * @return A Vector
+     */
+    <V> V getDirection(MatrixXForm.View<V> view);
 
-    public Vector getDirection() {
-        return direction;
-    }
+    /**
+     * @return The magnitude of the sampled plow point data.
+     */
+    double getMagnitude();
 
-    public double getVelocity() {
-        return velocity;
-    }
+    /**
+     * @return pressure as an exponent, 0 represents average pressure across the globe
+     */
+    double getPressure();
 
-    public double getPressure() {
-        return pressure;
-    }
+    /**
+     * @return An Iterable of FlowPointContribution objects that were used to compute the
+     *     values of this FlowPointData object.
+     * @throws UnsupportedOperationException if this FlowPointData object does not support
+     *     this operation or it did not record individual FlowPointContributions made to it.
+     */
+    Iterable<FlowPointContribution> getFlowPointContributions();
+
+    /**
+     * @return A copy of this FlowPointData that will not change
+     */
+    FlowPointData immutableCopy();
 }

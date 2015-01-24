@@ -1,13 +1,13 @@
 package net.venaglia.realms.common.map;
 
 import net.venaglia.common.util.Ref;
+import net.venaglia.common.util.Visitor;
 import net.venaglia.common.util.impl.AbstractCachingRef;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.realms.common.map.things.Thing;
 import net.venaglia.realms.common.map.things.ThingMetadata;
 import net.venaglia.realms.common.map.things.ThingRef;
 import net.venaglia.realms.common.map.world.WorldMapImpl;
-import net.venaglia.realms.common.util.Visitor;
 
 import java.util.UUID;
 

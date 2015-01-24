@@ -1,5 +1,6 @@
 package net.venaglia.gloo.physical.geom.primitives;
 
+import net.venaglia.gloo.physical.geom.PlatonicShape;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
 import net.venaglia.gloo.physical.geom.XForm;
@@ -14,9 +15,13 @@ import java.util.List;
  * Date: 9/1/12
  * Time: 9:51 AM
  */
-public final class Tetrahedron extends AbstractTriangleFacetedType<Tetrahedron> {
+public final class Tetrahedron extends AbstractTriangleFacetedType<Tetrahedron> implements PlatonicShape<Tetrahedron> {
 
     public static final Point[] VERTICES = getVertices();
+
+    private static final int[][] edges = {
+            {0, 1}, {0, 2}, {0, 3}, {1, 2}, {2, 3}, {3, 1}
+    };
 
     public Tetrahedron() {
         super(VERTICES);
@@ -51,6 +56,25 @@ public final class Tetrahedron extends AbstractTriangleFacetedType<Tetrahedron> 
 
     public int facetCount() {
         return 4;
+    }
+
+    @Override
+    public int getEdgeCount() {
+        return edges.length;
+    }
+
+    @Override
+    public Edge getEdge(int i) {
+        if (i < 0 || i >= edges.length) {
+            throw new IllegalArgumentException();
+        }
+        int[] endpoints = edges[i];
+        return new Edge(points[endpoints[0]], points[endpoints[1]]);
+    }
+
+    @Override
+    public PlatonicBaseType getPlatanicBaseType() {
+        return PlatonicBaseType.TETRAHEDRON;
     }
 
     public Vector getNormal(int index) {

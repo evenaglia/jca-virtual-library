@@ -777,7 +777,7 @@ public class JDBCDataStore extends AbstractDataStore {
                 throw new RuntimeException("Unable to find a BinaryType for " + mimeType);
             }
             String metadata = rs.getString("metadata");
-            String sha1Hash = rs.getString("sha1");
+             String sha1Hash = rs.getString("sha1");
             int length = rs.getInt("length");
             InputStream in = rs.getBinaryStream("data");
             byte[] data = new byte[length];

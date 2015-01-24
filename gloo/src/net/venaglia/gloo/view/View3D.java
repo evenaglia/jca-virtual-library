@@ -28,6 +28,7 @@ import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -35,7 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Date: 9/6/12
  * Time: 6:23 PM
  */
-public class View3D extends Thread implements Closeable {
+public class View3D implements Closeable {
 
     public static final int ALPHA_CHANNEL = 0x0001;
     public static final int DEPTH_MASK = 0x0002;
@@ -45,6 +46,8 @@ public class View3D extends Thread implements Closeable {
 
     private static final int TITLE_DIRTY_BIT = 1;
 
+    private final Thread thread;
+    private final AtomicBoolean threadStarted = new AtomicBoolean();
     private final Dimension dimension;
     private final int options;
     private final List<ViewEventHandler> viewEventHandlers = new LinkedList<ViewEventHandler>();
@@ -70,7 +73,12 @@ public class View3D extends Thread implements Closeable {
     }
 
     public View3D(int width, int height, int options) {
-        super(new ThreadGroup("3D View"), "Rendering Loop");
+        thread = new Thread(new ThreadGroup("3D View"), new Runnable() {
+            @Override
+            public void run() {
+                View3D.this.run();
+            }
+        }, "Rendering Loop");
         keyboardEventHandlers.add(keyboardKeyHandlers);
         this.dimension = new Dimension(width, height);
         this.options = options;
@@ -79,8 +87,15 @@ public class View3D extends Thread implements Closeable {
         this.buttonsDown = new EnumMap<MouseButton,MouseTarget<?>>(MouseButton.class);
     }
 
-    @Override
-    public void run() {
+    public void start() {
+        if (threadStarted.compareAndSet(false, true)) {
+            thread.start();
+        } else {
+            throw new IllegalStateException("View3D is already started");
+        }
+    }
+
+    private void run() {
         prepareWindow();
         setupGL();
         ProjectionBuffer buffer = new DirectProjectionBuffer();
@@ -193,7 +208,7 @@ public class View3D extends Thread implements Closeable {
                     break;
             }
         } catch (Throwable t) {
-            getUncaughtExceptionHandler().uncaughtException(this, t);
+            thread.getUncaughtExceptionHandler().uncaughtException(thread, t);
         }
     }
 
@@ -203,7 +218,7 @@ public class View3D extends Thread implements Closeable {
                 return mainLoop.beforeFrame(now);
             }
         } catch (Throwable t) {
-            getUncaughtExceptionHandler().uncaughtException(this, t);
+            thread.getUncaughtExceptionHandler().uncaughtException(thread, t);
         }
         return false;
     }
@@ -215,7 +230,7 @@ public class View3D extends Thread implements Closeable {
                     handler.handleNewFrame(now);
                 }
             } catch (Throwable t) {
-                getUncaughtExceptionHandler().uncaughtException(this, t);
+                thread.getUncaughtExceptionHandler().uncaughtException(thread, t);
             }
         }
     }
@@ -230,7 +245,7 @@ public class View3D extends Thread implements Closeable {
                 target.getProjectableObject().project(now, targetBuffer);
             }
         } catch (Throwable t) {
-            getUncaughtExceptionHandler().uncaughtException(this, t);
+            thread.getUncaughtExceptionHandler().uncaughtException(thread, t);
         }
     }
 
@@ -240,7 +255,7 @@ public class View3D extends Thread implements Closeable {
                 mainLoop.renderFrame(now, buffer);
             }
         } catch (Throwable t) {
-            getUncaughtExceptionHandler().uncaughtException(this, t);
+            thread.getUncaughtExceptionHandler().uncaughtException(thread, t);
         }
     }
 
@@ -251,7 +266,7 @@ public class View3D extends Thread implements Closeable {
         try {
             mainLoop.renderOverlay(now, buffer.beginOverlay());
         } catch (Throwable t) {
-            getUncaughtExceptionHandler().uncaughtException(this, t);
+            thread.getUncaughtExceptionHandler().uncaughtException(thread, t);
         } finally {
             buffer.endOverlay();
         }
@@ -263,7 +278,7 @@ public class View3D extends Thread implements Closeable {
                 mainLoop.afterFrame(now);
             }
         } catch (Throwable t) {
-            getUncaughtExceptionHandler().uncaughtException(this, t);
+            thread.getUncaughtExceptionHandler().uncaughtException(thread, t);
         }
     }
 
@@ -272,7 +287,7 @@ public class View3D extends Thread implements Closeable {
             try {
                 viewEventHandler.handleInit();
             } catch (Throwable t) {
-                getUncaughtExceptionHandler().uncaughtException(this, t);
+                thread.getUncaughtExceptionHandler().uncaughtException(thread, t);
             }
         }
     }
@@ -288,7 +303,7 @@ public class View3D extends Thread implements Closeable {
                     }
                 }
             } catch (Throwable t) {
-                getUncaughtExceptionHandler().uncaughtException(this, t);
+                thread.getUncaughtExceptionHandler().uncaughtException(thread, t);
             }
         }
     }
@@ -303,7 +318,7 @@ public class View3D extends Thread implements Closeable {
                         viewEventHandler.handleClose();
                     }
                 } catch (Throwable t) {
-                    getUncaughtExceptionHandler().uncaughtException(this, t);
+                    thread.getUncaughtExceptionHandler().uncaughtException(thread, t);
                 }
             }
         }

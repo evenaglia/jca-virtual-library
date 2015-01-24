@@ -10,6 +10,7 @@ import net.venaglia.gloo.physical.texture.TextureCoordinate;
 import net.venaglia.gloo.physical.texture.TextureMapping;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
@@ -21,13 +22,13 @@ import java.util.Set;
  */
 public class CoordinatesListBuilder implements CoordinateBuffer {
 
-    private int recordSize;
-    private boolean normals;
-    private boolean colors;
-    private boolean texture;
+    private boolean mutable;
+    private ByteBuffer vertices;
+    private ByteBuffer normals;
+    private ByteBuffer colors;
+    private ByteBuffer texture;
     private int limit;
     private int count;
-    private ByteBuffer buffer;
     private TextureMapping textureMapping;
     private double i, j, k;
     private float r, g, b, a;
@@ -44,18 +45,23 @@ public class CoordinatesListBuilder implements CoordinateBuffer {
     public void reset(CoordinateList.Field... extraFields) {
         Set<CoordinateList.Field> o = EnumSet.noneOf(CoordinateList.Field.class);
         Collections.addAll(o, extraFields);
-        int recordSize = (Double.SIZE >> 3) * 3; // vertices
-        for (CoordinateList.Field field : extraFields) {
-            recordSize = field == CoordinateList.Field.VERTEX ? 0 : getFieldSize(field);
+        assert o.contains(CoordinateList.Field.VERTEX);
+        this.limit = 16;
+        this.count = 0;
+        this.mutable = false;
+        this.vertices = ByteBuffer.allocate(limit * 24).order(ByteOrder.nativeOrder());
+        this.normals = o.contains(CoordinateList.Field.NORMAL)
+                       ? ByteBuffer.allocate(limit * 24).order(ByteOrder.nativeOrder())
+                       : null;
+        this.colors = o.contains(CoordinateList.Field.COLOR)
+                      ? ByteBuffer.allocate(limit * 16).order(ByteOrder.nativeOrder())
+                      : null;
+        this.texture = o.contains(CoordinateList.Field.TEXTURE_COORDINATE)
+                       ? ByteBuffer.allocate(limit * 8).order(ByteOrder.nativeOrder())
+                       : null;
+        if (texture != null) {
+            this.st = new float[2];
         }
-        this.recordSize = recordSize;
-        this.normals = o.contains(CoordinateList.Field.NORMAL);
-        this.colors = o.contains(CoordinateList.Field.COLOR);
-        this.texture = o.contains(CoordinateList.Field.TEXTURE_COORDINATE);
-        if (texture) st = new float[2];
-        limit = 16;
-        count = 0;
-        buffer = ByteBuffer.allocate(limit * recordSize);
     }
 
     private static int getFieldSize(CoordinateList.Field field) {
@@ -72,6 +78,11 @@ public class CoordinatesListBuilder implements CoordinateBuffer {
         }
     }
 
+    public CoordinatesListBuilder setMutable(boolean mutable) {
+        this.mutable = mutable;
+        return this;
+    }
+
     public CoordinatesListBuilder setTextureMapping(TextureMapping textureMapping) {
         this.textureMapping = textureMapping;
         return this;
@@ -83,24 +94,24 @@ public class CoordinatesListBuilder implements CoordinateBuffer {
 
     public void vertex(double x, double y, double z) {
         ensureCapacity();
-        buffer.putDouble(x);
-        buffer.putDouble(y);
-        buffer.putDouble(z);
-        if (normals) {
-            buffer.putDouble(i);
-            buffer.putDouble(j);
-            buffer.putDouble(k);
+        vertices.putDouble(x);
+        vertices.putDouble(y);
+        vertices.putDouble(z);
+        if (normals != null) {
+            normals.putDouble(i);
+            normals.putDouble(j);
+            normals.putDouble(k);
         }
-        if (colors) {
-            buffer.putFloat(r);
-            buffer.putFloat(g);
-            buffer.putFloat(b);
-            buffer.putFloat(a);
+        if (colors != null) {
+            colors.putFloat(r);
+            colors.putFloat(g);
+            colors.putFloat(b);
+            colors.putFloat(a);
         }
-        if (texture) {
+        if (texture != null) {
             textureMapping.unwrap(x, y, z, st);
-            buffer.putFloat(st[0]);
-            buffer.putFloat(st[1]);
+            texture.putFloat(st[0]);
+            texture.putFloat(st[1]);
         }
         count++;
     }
@@ -108,12 +119,22 @@ public class CoordinatesListBuilder implements CoordinateBuffer {
     private void ensureCapacity() {
         if (count >= limit) {
             int newLimit = limit <<= 1;
-            ByteBuffer newBuffer = ByteBuffer.allocate(newLimit * recordSize);
-            buffer.flip();
-            newBuffer.put(buffer);
-            buffer = newBuffer;
+            vertices = growBuffer(vertices, newLimit, 24);
+            normals = growBuffer(normals, newLimit, 24);
+            colors = growBuffer(colors, newLimit, 16);
+            texture = growBuffer(texture, newLimit, 8);
             limit = newLimit;
         }
+    }
+
+    private ByteBuffer growBuffer(ByteBuffer buffer, int newLimit, int size) {
+        if (buffer == null) {
+            return null;
+        }
+        ByteBuffer newBuffer = ByteBuffer.allocate(newLimit * size).order(ByteOrder.nativeOrder());
+        buffer.flip();
+        newBuffer.put(buffer);
+        return newBuffer;
     }
 
     public void normal(Vector normal) {
@@ -179,54 +200,84 @@ public class CoordinatesListBuilder implements CoordinateBuffer {
     }
 
     public CoordinateList build() {
+        final boolean mutable = this.mutable;
         final int size = count;
-        final int recordSize = this.recordSize;
-        final ByteBuffer data = ByteBuffer.allocateDirect(buffer.limit());
-        data.put(buffer);
-        data.flip();
+        final ByteBuffer vertices = toDirectByteBuffer(this.vertices);
+        final ByteBuffer normals = toDirectByteBuffer(this.normals);
+        final ByteBuffer colors = toDirectByteBuffer(this.colors);
+        final ByteBuffer texture = toDirectByteBuffer(this.texture);
         final Set<CoordinateList.Field> fields = EnumSet.of(CoordinateList.Field.VERTEX);
-        if (normals) {
+        if (normals != null) {
             fields.add(CoordinateList.Field.NORMAL);
         }
-        if (colors) {
+        if (colors != null) {
             fields.add(CoordinateList.Field.COLOR);
         }
-        if (texture) {
+        if (texture != null) {
             fields.add(CoordinateList.Field.TEXTURE_COORDINATE);
         }
-        return new AbstractCoordinateList() {
-            public int size() {
-                return size;
-            }
-
-            @Override
-            protected Set<Field> getFields() {
-                return fields;
-            }
-
-            public int recordSize() {
-                return recordSize;
-            }
-
-            public ByteBuffer data() {
-                return data;
-            }
-        };
+        return new CoordinateListImpl(mutable, size, fields, vertices, normals, colors, texture);
     }
-//    public ByteBuffer applyTextureMapping(TextureMapping mapping) {
-//        float[] c = {0,0};
-//        for (int i = 0; i < size; i++) {
-//            buffer.position(STRIDE * i);
-//            double x = buffer.getDouble();
-//            double y = buffer.getDouble();
-//            double z = buffer.getDouble();
-//            buffer.getDouble(); // i
-//            buffer.getDouble(); // j
-//            buffer.getDouble(); // k
-//            mapping.unwrap(x, y, z, c);
-//            buffer.putFloat(c[0]);
-//            buffer.putFloat(c[1]);
-//        }
-//        return buffer.asReadOnlyBuffer();
-//    }
+
+    private ByteBuffer toDirectByteBuffer(ByteBuffer buffer) {
+        if (buffer == null) {
+            return null;
+        }
+        final ByteBuffer newBuffer = ByteBuffer.allocateDirect(buffer.position()).order(ByteOrder.nativeOrder());
+        buffer.flip();
+        newBuffer.put(buffer);
+        assert buffer.limit() == buffer.position();
+        assert newBuffer.limit() == newBuffer.position();
+        newBuffer.flip();
+        return newBuffer;
+    }
+
+    private static class CoordinateListImpl extends AbstractCoordinateList {
+
+        private final int size;
+        private final Set<Field> fields;
+        private final ByteBuffer vertices;
+        private final ByteBuffer normals;
+        private final ByteBuffer colors;
+        private final ByteBuffer texture;
+
+        public CoordinateListImpl(boolean mutable,
+                                  int size,
+                                  Set<Field> fields,
+                                  ByteBuffer vertices,
+                                  ByteBuffer normals,
+                                  ByteBuffer colors,
+                                  ByteBuffer texture) {
+            super(mutable);
+            this.size = size;
+            this.fields = fields;
+            this.vertices = vertices;
+            this.normals = normals;
+            this.colors = colors;
+            this.texture = texture;
+        }
+
+        public int size() {
+            return size;
+        }
+
+        @Override
+        protected Set<Field> getFields() {
+            return fields;
+        }
+
+        public ByteBuffer data(Field field) {
+            switch (field) {
+                case VERTEX:
+                    return vertices;
+                case NORMAL:
+                    return normals;
+                case COLOR:
+                    return colors;
+                case TEXTURE_COORDINATE:
+                    return texture;
+            }
+            return null;
+        }
+    }
 }

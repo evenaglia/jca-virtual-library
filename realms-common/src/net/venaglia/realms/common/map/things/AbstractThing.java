@@ -132,7 +132,7 @@ public abstract class AbstractThing implements Thing {
         }
     }
 
-    private void load(ThingRef<?> myRef, ThingProperties properties) {
+    void load(ThingRef<?> myRef, ThingProperties properties) {
         myRef.lock(true);
         try {
             if (status != ThingStatus.NOT_LOADED) {

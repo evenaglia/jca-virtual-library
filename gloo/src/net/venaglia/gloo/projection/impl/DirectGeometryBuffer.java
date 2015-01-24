@@ -17,7 +17,6 @@ import net.venaglia.gloo.projection.GeometryBuffer;
 import net.venaglia.gloo.physical.texture.Texture;
 import net.venaglia.gloo.physical.texture.TextureCoordinate;
 import net.venaglia.gloo.physical.texture.TextureMapping;
-import net.venaglia.common.util.Tuple2;
 
 import java.awt.geom.Rectangle2D;
 import java.nio.ByteBuffer;
@@ -34,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class DirectGeometryBuffer implements GeometryBuffer {
 
     protected final AtomicInteger transformDepth = new AtomicInteger();
+    protected final MyCoordinateListGeometryBuffer clgb = new MyCoordinateListGeometryBuffer();
 
     protected GeometrySequence begin = null;
     protected Brush activeBrush = new ActiveBrush();
@@ -42,6 +42,7 @@ public class DirectGeometryBuffer implements GeometryBuffer {
     protected float[] textureCoords = {0,0};
     protected int activeTextureId = 0;
     protected boolean textureSet;
+    protected ArrayBufferBindings arrayBufferBindings = new ActiveArrayBufferBindings();
 
     public void applyBrush(Brush brush) {
         if (logCalls) logCall("applyBrush", brush);
@@ -122,119 +123,61 @@ public class DirectGeometryBuffer implements GeometryBuffer {
         if (begin != null) {
             throw new IllegalStateException();
         }
-        load(coordinateList);
+        loadCoordinateList(coordinateList);
         if (logCalls) logCall("glDrawArrays", seq.getCode(), 0, (long)coordinateList.size());
         glDrawArrays(seq.getCode(), 0, coordinateList.size());
-        unload(coordinateList);
+        unloadCoordinateList();
     }
 
-    public void coordinates(CoordinateList coordinateList, GeometrySequence seq, int[] order) {
+    public void coordinates(CoordinateList coordinateList, GeometrySequence seq, ShortBuffer order) {
         if (begin != null) {
             throw new IllegalStateException();
         }
-        load(coordinateList);
-        coordinatesImpl(coordinateList.size(), seq, order);
-        unload(coordinateList);
+        loadCoordinateList(coordinateList);
+        coordinatesImpl(seq, order);
+        unloadCoordinateList();
     }
 
-    public void coordinates(CoordinateList coordinateList,
-                            Iterable<Tuple2<GeometrySequence, int[]>> sequences) {
+    public void coordinates(CoordinateList coordinateList, GeometrySequence seq, IntBuffer order) {
         if (begin != null) {
             throw new IllegalStateException();
         }
-        load(coordinateList);
-        for (Tuple2<GeometrySequence,int[]> sequence : sequences) {
-            coordinatesImpl(coordinateList.size(), sequence.getA(), sequence.getB());
-        }
-        unload(coordinateList);
+        loadCoordinateList(coordinateList);
+        coordinatesImpl(seq, order);
+        unloadCoordinateList();
     }
 
-    protected void coordinatesImpl(int size, GeometrySequence seq, int[] order) {
-        if (size < 256) {
-            ByteBuffer indices = ByteBuffer.allocateDirect(order.length);
-            for (int i : order) {
-                indices.put((byte)i);
-            }
-            glDrawElements(seq.getCode(), indices);
-            if (logCalls) logCall("glDrawElements", seq.getCode(), indices);
-        } else if (size < 65536) {
-            ShortBuffer indices = ByteBuffer.allocateDirect(order.length * (Short.SIZE >> 3)).asShortBuffer();
-            for (int i : order) {
-                indices.put((short)i);
-            }
-            glDrawElements(seq.getCode(), indices);
-            if (logCalls) logCall("glDrawElements", seq.getCode(), indices);
-        } else {
-            IntBuffer indices = ByteBuffer.allocateDirect(order.length * (Integer.SIZE >> 3)).asIntBuffer();
-            indices.put(order);
-            glDrawElements(seq.getCode(), indices);
-            if (logCalls) logCall("glDrawElements", seq.getCode(), indices);
+    @Override
+    public void coordinates(CoordinateList coordinateList, Drawable drawable) {
+        if (begin != null) {
+            throw new IllegalStateException();
         }
+        loadCoordinateList(coordinateList);
+        clgb.setEnabled(true);
+        try {
+            drawable.draw(clgb);
+        } finally {
+            clgb.setEnabled(false);
+        }
+        unloadCoordinateList();
     }
 
-    protected void load(CoordinateList coordinateList) {
-        ByteBuffer data = coordinateList.data();
-        if (coordinateList.has(CoordinateList.Field.VERTEX)) {
-            glEnableClientState(GL_VERTEX_ARRAY);
-            if (logCalls) logCall("glEnableClientState", GL_VERTEX_ARRAY);
-            data.position(coordinateList.offset(CoordinateList.Field.VERTEX));
-            glVertexPointer(3, coordinateList.stride(CoordinateList.Field.VERTEX), data.slice().asDoubleBuffer());
-            if (logCalls) logCall("glVertexPointer",
-                                  3,
-                                  (long)coordinateList.stride(CoordinateList.Field.VERTEX),
-                                  data.slice().asDoubleBuffer());
-        }
-        if (coordinateList.has(CoordinateList.Field.NORMAL)) {
-            glEnableClientState(GL_NORMAL_ARRAY);
-            if (logCalls) logCall("glEnableClientState", GL_NORMAL_ARRAY);
-            data.position(coordinateList.offset(CoordinateList.Field.NORMAL));
-            glVertexPointer(3, coordinateList.stride(CoordinateList.Field.NORMAL), data.slice().asDoubleBuffer());
-            if (logCalls) logCall("glVertexPointer",
-                                  3,
-                                  (long)coordinateList.stride(CoordinateList.Field.NORMAL),
-                                  data.slice().asDoubleBuffer());
-        }
-        if (coordinateList.has(CoordinateList.Field.COLOR)) {
-            glEnableClientState(GL_COLOR_ARRAY);
-            if (logCalls) logCall("glEnableClientState", GL_COLOR_ARRAY);
-            data.position(coordinateList.offset(CoordinateList.Field.COLOR));
-            glVertexPointer(3, coordinateList.stride(CoordinateList.Field.COLOR), data.slice().asFloatBuffer());
-            if (logCalls) logCall("glVertexPointer",
-                                  3,
-                                  (long)coordinateList.stride(CoordinateList.Field.COLOR),
-                                  data.slice().asFloatBuffer());
-        }
-        if (coordinateList.has(CoordinateList.Field.TEXTURE_COORDINATE)) {
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            if (logCalls) logCall("glEnableClientState", GL_TEXTURE_COORD_ARRAY);
-            data.position(coordinateList.offset(CoordinateList.Field.TEXTURE_COORDINATE));
-            if (logCalls) logCall("glVertexPointer",
-                                  3,
-                                  (long)coordinateList.stride(CoordinateList.Field.TEXTURE_COORDINATE),
-                                  data.slice().asFloatBuffer());
-            glVertexPointer(3,
-                            coordinateList.stride(CoordinateList.Field.TEXTURE_COORDINATE),
-                            data.slice().asFloatBuffer());
-        }
+    protected void coordinatesImpl(GeometrySequence seq, ShortBuffer order) {
+        glDrawElements(seq.getCode(), order);
+        if (logCalls) logCall("glDrawElements", seq.getCode(), order);
     }
 
-    private void unload(CoordinateList coordinateList) {
-        if (coordinateList.has(CoordinateList.Field.VERTEX)) {
-            glDisableClientState(GL_VERTEX_ARRAY);
-            if (logCalls) logCall("glDisableClientState", GL_VERTEX_ARRAY);
-        }
-        if (coordinateList.has(CoordinateList.Field.NORMAL)) {
-            glDisableClientState(GL_NORMAL_ARRAY);
-            if (logCalls) logCall("glDisableClientState", GL_NORMAL_ARRAY);
-        }
-        if (coordinateList.has(CoordinateList.Field.COLOR)) {
-            glDisableClientState(GL_COLOR_ARRAY);
-            if (logCalls) logCall("glDisableClientState", GL_COLOR_ARRAY);
-        }
-        if (coordinateList.has(CoordinateList.Field.TEXTURE_COORDINATE)) {
-            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-            if (logCalls) logCall("glDisableClientState", GL_TEXTURE_COORD_ARRAY);
-        }
+    protected void coordinatesImpl(GeometrySequence seq, IntBuffer order) {
+        glDrawElements(seq.getCode(), order);
+        if (logCalls) logCall("glDrawElements", seq.getCode(), order);
+    }
+
+    protected void loadCoordinateList(CoordinateList coordinateList) {
+        arrayBufferBindings.apply(new ArrayBufferBindings(coordinateList));
+    }
+
+    protected void unloadCoordinateList() {
+        arrayBufferBindings.apply(ArrayBufferBindings.ALL_DISABLED);
     }
 
     public void vertex(Point point) {
@@ -465,7 +408,7 @@ public class DirectGeometryBuffer implements GeometryBuffer {
                     glDepthMask(false);
                     if (logCalls) logCall("glDepthMask", false);
                     glDepthFunc(GL_ALWAYS);
-                    if (logCalls) logCall("glDepthFunc", depth.glCode);
+                    if (logCalls) logCall("glDepthFunc", GL_ALWAYS);
                     this.depth = depth;
                 }
             }
@@ -514,6 +457,186 @@ public class DirectGeometryBuffer implements GeometryBuffer {
         @Override
         public Brush immutable() {
             throw new UnsupportedOperationException("The active brush cannot be made immutable");
+        }
+    }
+
+    private static class ActiveArrayBufferBindings extends ArrayBufferBindings {
+
+        @Override
+        protected void doEnable(Type type) {
+            glEnableClientState(type.getCode());
+            if (logCalls) logCall("glEnableClientState", type.getCode());
+        }
+
+        @Override
+        protected void doDisable(Type type) {
+            glDisableClientState(type.getCode());
+            if (logCalls) logCall("glDisableClientState", type.getCode());
+        }
+
+        @Override
+        protected void doBind(Type type, ByteBuffer buffer, int offset, int stride) {
+            buffer.position(offset);
+            switch (type) {
+                case VERTEX:
+                    glVertexPointer(3, GL_DOUBLE, stride, buffer);
+                    if (logCalls) logCall("glVertexPointer",
+                                          3,
+                                          stride,
+                                          buffer);
+                    break;
+                case NORMAL:
+                    glNormalPointer(GL_DOUBLE, stride, buffer);
+                    if (logCalls) logCall("glNormalPointer",
+                                          stride,
+                                          buffer);
+                    break;
+                case COLOR:
+                    glColorPointer(3, GL_FLOAT, stride, buffer);
+                    if (logCalls) logCall("glColorPointer",
+                                          3,
+                                          stride,
+                                          buffer);
+                    break;
+                case TEXTURE_COORDINATE:
+                    glTexCoordPointer(2, GL_FLOAT, stride, buffer);
+                    if (logCalls) logCall("glTexCoordPointer",
+                                          2,
+                                          stride,
+                                          buffer);
+                    break;
+            }
+        }
+    }
+
+    private class MyCoordinateListGeometryBuffer implements CoordinateListGeometryBuffer {
+
+        private boolean enabled = false;
+
+        private void checkEnabled(String methodName) {
+            if (!enabled) {
+                throw new IllegalStateException("Cannot call CoordinateListGeometryBuffer." + methodName +
+                                                " outside a call to GeometryBuffer.coordinates(CoordinateList, " +
+                                                "GeometryBuffer.Drawable)");
+            }
+        }
+
+        @Override
+        public void draw(GeometrySequence seq, ShortBuffer offsets) {
+            checkEnabled("draw(GeometrySequence,ShortBuffer)");
+            DirectGeometryBuffer.this.coordinatesImpl(seq, offsets);
+        }
+
+        @Override
+        public void draw(GeometrySequence seq, IntBuffer offsets) {
+            checkEnabled("draw(GeometrySequence,IntBuffer)");
+            DirectGeometryBuffer.this.coordinatesImpl(seq, offsets);
+        }
+
+        @Override
+        public void applyBrush(Brush brush) {
+            checkEnabled("applyBrush(Brush)");
+            DirectGeometryBuffer.this.pushBrush();
+        }
+
+        @Override
+        public void pushBrush() {
+            checkEnabled("pushBrush()");
+            DirectGeometryBuffer.this.pushBrush();
+        }
+
+        @Override
+        public void popBrush() {
+            checkEnabled("popBrush()");
+            DirectGeometryBuffer.this.popBrush();
+        }
+
+        @Override
+        public void normal(Vector normal) {
+            checkEnabled("normal(Vector)");
+            DirectGeometryBuffer.this.normal(normal);
+        }
+
+        @Override
+        public void normal(double i, double j, double k) {
+            checkEnabled("normal(double,double,double)");
+            DirectGeometryBuffer.this.normal(i, j, k);
+        }
+
+        @Override
+        public void color(Color color) {
+            checkEnabled("color(Color)");
+            DirectGeometryBuffer.this.color(color);
+        }
+
+        @Override
+        public void color(float r, float g, float b) {
+            checkEnabled("color(float,float,float)");
+            DirectGeometryBuffer.this.color(r, g, b);
+        }
+
+        @Override
+        public void colorAndAlpha(Color color) {
+            checkEnabled("colorAndAlpha(Color)");
+            DirectGeometryBuffer.this.colorAndAlpha(color);
+        }
+
+        @Override
+        public void colorAndAlpha(float r, float g, float b, float a) {
+            checkEnabled("colorAndAlpha(float,float,float,float)");
+            DirectGeometryBuffer.this.colorAndAlpha(r, g, b, a);
+        }
+
+        @Override
+        public void pushTransform() {
+            checkEnabled("pushTransform()");
+            DirectGeometryBuffer.this.pushTransform();
+        }
+
+        @Override
+        public void popTransform() {
+            checkEnabled("popTransform()");
+            DirectGeometryBuffer.this.popTransform();
+        }
+
+        @Override
+        public void identity() {
+            checkEnabled("popTransform()");
+            DirectGeometryBuffer.this.identity();
+        }
+
+        @Override
+        public void rotate(Axis axis, double angle) {
+            checkEnabled("rotate(Axis,double)");
+            DirectGeometryBuffer.this.rotate(axis, angle);
+        }
+
+        @Override
+        public void rotate(Vector axis, double angle) {
+            checkEnabled("rotate(Vector,double)");
+            DirectGeometryBuffer.this.rotate(axis, angle);
+        }
+
+        @Override
+        public void translate(Vector magnitude) {
+            checkEnabled("translate()");
+            DirectGeometryBuffer.this.translate(magnitude);
+        }
+
+        @Override
+        public void scale(double magnitude) {
+            checkEnabled("scale(double)");
+            DirectGeometryBuffer.this.scale(magnitude);
+        }
+
+        @Override
+        public void scale(Vector magnitude) {
+            checkEnabled("scale(Vector)");
+            DirectGeometryBuffer.this.scale(magnitude);
+        }
+
+        void setEnabled(boolean enabled) {
+            this.enabled = enabled;
         }
     }
 }

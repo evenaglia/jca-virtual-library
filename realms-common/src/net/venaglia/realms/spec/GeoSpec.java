@@ -62,6 +62,7 @@ public enum GeoSpec {
             buffer.append(String.format("                  %,12d  joining 2 global sectors\n", cf.get(TWO_GLOBAL_SECTOR_ACRES)));
             buffer.append(String.format("                  %,12d  joining 2 sectors\n", cf.get(TWO_SECTOR_ACRES)));
             buffer.append(String.format("                  %,12d  completely within a single sector\n", cf.get(ONE_SECTOR_ACRES)));
+            buffer.append(String.format("                  %,12d  seams between two acres\n", cf.get(ACRE_SEAMS)));
             buffer.append(String.format("%,20d  Zones\n", cf.get(ZONES)));
             buffer.append(String.format("%,20d  Surface Vertices (%,d per zone)\n", cf.get(POINTS), 65 * 66 / 2));
             buffer.append(String.format("                  %,12d  joining 5 zones\n", cf.get(PENTAGONAL_ACRES)));
@@ -124,7 +125,7 @@ public enum GeoSpec {
     private static final AtomicReference<Preset> usingPreset = new AtomicReference<Preset>();
 
     static {
-        String geospec = Configuration.GEOSPEC.getString("LARGE");
+        String geospec = Configuration.GEOSPEC.getString();
         if (geospec.matches("SMALL|MEDIUM|LARGE")) {
             Preset.valueOf(geospec).use();
         } else if (geospec.matches("[1-9][0-9]?x[1-9][0-9]?")) {

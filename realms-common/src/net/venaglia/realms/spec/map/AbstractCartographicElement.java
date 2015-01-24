@@ -130,9 +130,29 @@ public abstract class AbstractCartographicElement implements GeoPointBasedElemen
         }
     }
 
+    public void addNeighbor(AbstractCartographicElement neighbor, int index) {
+        assert neighbor != this;
+        assert getClass().equals(neighbor.getClass());
+        switch (addNeighborImpl(neighbor.id, index)) {
+            case 1:
+                throw new AssertionError("Failed to add a neighbor, another element is already present in the specified position --> add to --> " + this);
+            case 2:
+                throw new AssertionError("Failed to add a neighbor, element already exists at another position --> add to --> " + this);
+        }
+    }
+
     public void addNeighbor(long neighborId) {
         if (!addNeighborImpl(neighborId)) {
             throw new AssertionError("Failed to add a neighbor, not enough space in array: [" + neighborId + "] --> add to --> " + this);
+        }
+    }
+
+    public void addNeighbor(long neighborId, int index) {
+        switch (addNeighborImpl(neighborId, index)) {
+            case 1:
+                throw new AssertionError("Failed to add a neighbor, another element is already present in the specified position --> add to --> " + this);
+            case 2:
+                throw new AssertionError("Failed to add a neighbor, element already exists at another position --> add to --> " + this);
         }
     }
 
@@ -151,6 +171,29 @@ public abstract class AbstractCartographicElement implements GeoPointBasedElemen
             }
         }
         return false;
+    }
+
+    // todo: return value needs to be more descriptive
+
+    /**
+     * @return 0 = success, 1 = position unavailable, 2 = duplicate value
+     */
+    public int addNeighborImpl(long neighborId, int index) {
+        assert id != neighborId;
+        assert index >= 0 && index < neighbors.length;
+        synchronized (neighbors) {
+            if (neighbors[index] == 0) {
+                for (long neighbor : neighbors) {
+                    if (neighbor == neighborId) {
+                        return 2; // present, but not at the right position
+                    }
+                }
+                neighbors[index] = neighborId;
+                return 0;
+            } else {
+                return neighbors[index] == neighborId ? 0 : 1;
+            }
+        }
     }
 
     public boolean inside(GeoPoint geoPoint) {

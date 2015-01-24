@@ -1,5 +1,10 @@
 package net.venaglia.gloo.projection;
 
+import net.venaglia.gloo.physical.decorators.Color;
+import net.venaglia.gloo.physical.geom.Point;
+import net.venaglia.gloo.physical.geom.Vector;
+import net.venaglia.gloo.physical.texture.TextureCoordinate;
+
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -23,13 +28,21 @@ public interface CoordinateList extends List<Coordinate> {
         }
     }
 
+    Point set(int i, Point vertex);
+
+    Vector set(int i, Vector normal);
+
+    Color set(int i, Color color);
+
+    TextureCoordinate set(int i, TextureCoordinate textureCoordinate);
+
     boolean has(Field field);
 
-    int recordSize();
+    int recordSize(Field field);
 
     int offset(Field field);
 
     int stride(Field field);
 
-    ByteBuffer data();
+    ByteBuffer data(Field field);
 }

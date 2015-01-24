@@ -1,10 +1,8 @@
 package net.venaglia.gloo.util;
 
 import net.venaglia.gloo.physical.decorators.Brush;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
-import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL20;
+import org.lwjgl.MemoryUtil;
+import org.lwjgl.opengl.*;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -73,7 +71,12 @@ public class CallLogger {
     static {
         Map<Integer, String> glConstants = new HashMap<Integer, String>();
         Map<Integer, String> glBits = new HashMap<Integer, String>();
-        Class[] glClasses = { GL11.class, GL12.class, GL13.class, GL20.class };
+        Class[] glClasses = {
+                GL11.class, GL12.class, GL13.class, GL15.class,
+                GL20.class, GL21.class,
+                GL30.class, GL31.class, GL32.class, GL33.class,
+                GL40.class, GL41.class, GL42.class, GL43.class, GL44.class, GL45.class
+        };
         for (Class glClass : glClasses) {
             for (Field field : glClass.getFields())
                 if (Modifier.isPublic(field.getModifiers()) &&
@@ -169,6 +172,27 @@ public class CallLogger {
 
     public static LogMatrix logMatrix(String name, DoubleBuffer buffer, int w, int h) {
         return BufferFormatter.DOUBLE_FIXED.wrapForMatrix(name, buffer, w, h);
+    }
+
+    public static Object memoryAddress(final long address) {
+        return new Object() {
+            @Override
+            public String toString() {
+                StringBuilder buffer = new StringBuilder(32);
+                buffer.append(Long.toHexString(address));
+                buffer.reverse();
+                int l = buffer.length();
+                if (l % 4 != 0) {
+                    buffer.append("0000".substring(l % 4));
+                }
+                for (int i = 0; i < l; i += 5) {
+                    buffer.insert(i, ":");
+                }
+                buffer.append('&');
+                buffer.reverse();
+                return buffer.toString();
+            }
+        };
     }
 
     private static int getError(String method) {
@@ -541,6 +565,10 @@ public class CallLogger {
                 }
             }
             string.append(']');
+            if ("DirectByteBuffer".equals(buffer.getClass().getSimpleName())) {
+                string.append("@0x");
+                string.append(Long.toHexString(MemoryUtil.getAddress((ByteBuffer)buffer, 0)));
+            }
             return string.toString();
         }
 

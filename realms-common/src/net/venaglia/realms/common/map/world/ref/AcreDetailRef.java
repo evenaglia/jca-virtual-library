@@ -1,10 +1,10 @@
 package net.venaglia.realms.common.map.world.ref;
 
+import net.venaglia.common.util.Identifiable;
 import net.venaglia.common.util.impl.AbstractCachingRef;
 import net.venaglia.realms.common.map.BinaryStore;
 import net.venaglia.realms.common.map.data.binaries.BinaryResource;
 import net.venaglia.realms.common.map.world.AcreDetail;
-import net.venaglia.realms.common.util.Identifiable;
 
 import java.nio.ByteBuffer;
 
