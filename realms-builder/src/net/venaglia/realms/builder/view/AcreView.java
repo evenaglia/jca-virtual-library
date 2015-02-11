@@ -1,15 +1,18 @@
 package net.venaglia.realms.builder.view;
 
-import net.venaglia.common.util.RangeBasedLongSet;
+import net.venaglia.common.util.Named;
 import net.venaglia.gloo.physical.decorators.Color;
+import net.venaglia.gloo.physical.geom.XForm;
 import net.venaglia.gloo.projection.ColorBuffer;
 import net.venaglia.gloo.projection.CoordinateList;
 import net.venaglia.gloo.projection.GeometryBuffer;
 import net.venaglia.gloo.projection.Projectable;
-import net.venaglia.gloo.projection.impl.CoordinatesListBuilder;
-import net.venaglia.realms.common.map.VertexStore;
+import net.venaglia.gloo.projection.impl.CoordinateListBuilder;
+import net.venaglia.gloo.util.ColorGradient;
+import net.venaglia.realms.common.map.GlobalVertexLookup;
 import net.venaglia.realms.common.map.world.AcreDetail;
 import net.venaglia.common.util.Visitor;
+import net.venaglia.realms.spec.GeoSpec;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -20,7 +23,7 @@ import java.nio.IntBuffer;
  * Date: 12/10/14
  * Time: 8:35 AM
  */
-public class AcreView implements Projectable {
+public class AcreView implements Projectable, Named {
 
     private final AcreViewGeometry geometry;
     private final AcreRendererImpl acreRenderer = new AcreRendererImpl();
@@ -41,6 +44,7 @@ public class AcreView implements Projectable {
         this.name = name;
     }
 
+    @Override
     public String getName() {
         return name;
     }
@@ -52,6 +56,9 @@ public class AcreView implements Projectable {
 
     @Override
     public void project(long nowMS, GeometryBuffer buffer) {
+        if (!projectBeforeAcres(nowMS, buffer)) {
+            return;
+        }
         try {
             buffer.coordinates(geometry.zoneVertices, new GeometryBuffer.Drawable() {
                 @Override
@@ -61,7 +68,7 @@ public class AcreView implements Projectable {
                         IntBuffer[] intBuffers = geometry.acreVertices[i];
                         renderAcre(i, acreRenderer);
                         for (IntBuffer intBuffer : intBuffers) {
-                            buffer.draw(GeometryBuffer.GeometrySequence.TRIANGLE_STRIP, intBuffer);
+                            buffer.draw(geometry.geometrySequence, intBuffer);
                         }
                     }
                 }
@@ -69,6 +76,17 @@ public class AcreView implements Projectable {
         } finally {
             acreRenderer.setCoordinateListGeometryBuffer(null);
         }
+        projectAfterAcres(nowMS, buffer);
+    }
+
+    protected boolean projectBeforeAcres(long nowMS, GeometryBuffer buffer) {
+        // override this method to render custom geometry
+        // return false to prevent drawing acres
+        return true;
+    }
+
+    protected void projectAfterAcres(long nowMS, GeometryBuffer buffer) {
+        // override this method to render custom geometry
     }
 
     protected void renderAcre(int acreId, AcreRenderer acreRenderer) {
@@ -78,6 +96,13 @@ public class AcreView implements Projectable {
     @Override
     public String toString() {
         return "AcreView['" + name + "']";
+    }
+
+    public static ColorGradient makeGradient (float r, float g, float b) {
+        Color c = new Color(r, g, b);
+        ColorGradient gradient = new ColorGradient(Color.BLACK, Color.WHITE);
+        gradient.addStop(0.5f, c);
+        return new ColorGradient(gradient.get(0.2f), gradient.get(0.8f)).addStop(0.5f, c);
     }
 
     public interface AcreRenderer extends ColorBuffer {
@@ -114,55 +139,81 @@ public class AcreView implements Projectable {
 
     public static class AcreViewGeometry implements Visitor<AcreDetail> {
 
-        private static final int[][] MAP_6_SIDES = {
-                {4,11,17,5,18,12,6},
-                {10,4,16,17,0,18,13,6,7},
-                {7,1,13,14,0,15,16,3,10},
-                {1,8,14,2,15,9,3}
-        };
+        private static final int[][] MAP_6_SIDES;
+        private static final int[][] MAP_5_SIDES;
+        private static final GeometryBuffer.GeometrySequence GEOMETRY_SEQUENCE;
 
-        private static final int[][] MAP_5_SIDES = {
-                {6,11,5,15,10,4},
-                {11,0,15,14,4,9},
-                {6,1,11,12,0,13,14,3,9},
-                {1,7,12,2,13,8,3}
-        };
+        static {
+            long acres = GeoSpec.ACRES.get();
+            if (acres < 10000) {
+                MAP_5_SIDES = new int[][]{
+                        {6,11,5,15,10,4},
+                        {11,0,15,14,4,9},
+                        {6,1,11,12,0,13,14,3,9},
+                        {1,7,12,2,13,8,3}
+                };
+                MAP_6_SIDES = new int[][]{
+                        {4,11,17,5,18,12,6},
+                        {10,4,16,17,0,18,13,6,7},
+                        {7,1,13,14,0,15,16,3,10},
+                        {1,8,14,2,15,9,3}
+                };
+                GEOMETRY_SEQUENCE = GeometryBuffer.GeometrySequence.TRIANGLE_STRIP;
+            } else if (acres < 1000000) {
+                MAP_5_SIDES = new int[][]{
+                        {6,7,8,9,10}
+                };
+                MAP_6_SIDES = new int[][]{
+                        {7,8,9,10,11,12}
+                };
+                GEOMETRY_SEQUENCE = GeometryBuffer.GeometrySequence.TRIANGLE_FAN;
+            } else {
+                MAP_5_SIDES = new int[][]{
+                        {11,12,13,14,15}
+                };
+                MAP_6_SIDES = new int[][]{
+                        {13,15,17}
+                };
+                GEOMETRY_SEQUENCE = GeometryBuffer.GeometrySequence.POINTS;
+            }
+        }
 
+        private final GeometryBuffer.GeometrySequence geometrySequence;
         private final CoordinateList zoneVertices;
         private final IntBuffer[][] acreVertices;
-        private final int acreCount;
 
         private boolean done = false;
 
-        public AcreViewGeometry(VertexStore vertexStore, int acreCount, long globalPointCount, double radius) {
-            assert globalPointCount < 32500000L;
-            final CoordinatesListBuilder builder =
-                    new CoordinatesListBuilder(CoordinateList.Field.VERTEX, CoordinateList.Field.NORMAL);
-            RangeBasedLongSet ids = new RangeBasedLongSet();
-            ids.addAll(0, globalPointCount);
-            System.out.println("Caching vertices...");
-            vertexStore.read(ids, new VertexStore.VertexConsumer() {
+        public AcreViewGeometry(GlobalVertexLookup vertexLookup) {
+            this.geometrySequence = GEOMETRY_SEQUENCE;
+            int acreCount = GeoSpec.ACRES.iGet();
+            int globalPointCount = GeoSpec.POINTS_SHARED_MANY_ZONE.iGet();
+            double radius = GeoSpec.APPROX_RADIUS_METERS.get();
+            final CoordinateListBuilder builder =
+                    new CoordinateListBuilder(CoordinateList.Field.VERTEX, CoordinateList.Field.NORMAL);
+            builder.setMutable(true);
+            System.out.println("Loading vertex buffer...");
+            XForm.View<Void> vertexLoader = new XForm.View<Void>() {
 
                 private int count = 0;
 
                 @Override
-                public void next(int rgbColor, double i, double j, double k, float elevation) {
+                public Void convert(double x, double y, double z, double w) {
                     if (count++ >= 16384) {
                         count -= 16384;
                         System.out.print(".");
                     }
-                    builder.normal(i, j, k);
-                    builder.vertex(i * radius, j * radius, k * radius);
+                    builder.normal(x, y, z);
+                    builder.vertex(x * radius, y * radius, z * radius);
+                    return null;
                 }
-
-                @Override
-                public void done() {
-                }
-            });
+            };
+            for (int i = 0; i < globalPointCount; i++) {
+                vertexLookup.get(i, vertexLoader);
+            }
             System.out.println();
             this.zoneVertices = builder.build();
             this.acreVertices = new IntBuffer[acreCount][];
-            this.acreCount = acreCount;
         }
 
         @Override
@@ -197,6 +248,10 @@ public class AcreView implements Projectable {
                 }
                 done = true;
             }
+        }
+
+        public CoordinateList getZoneVertices() {
+            return zoneVertices;
         }
 
         private IntBuffer[] buildBuffers(int[][] pointMap, long[] vertexIds) {

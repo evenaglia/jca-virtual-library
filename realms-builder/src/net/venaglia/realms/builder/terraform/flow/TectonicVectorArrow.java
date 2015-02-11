@@ -141,7 +141,8 @@ public class TectonicVectorArrow extends AbstractShape<TectonicVectorArrow> impl
 
     public static void main(String[] args) {
         double sq3 = Math.sqrt(3);
-        TectonicPoint tectonicPoint = new TectonicPoint(new Point(sq3, sq3, sq3), Vector.X, TectonicPoint.PointClass.OTHER);
+        TectonicPoint tectonicPoint = new TectonicPoint(new Point(sq3, sq3, sq3), Vector.X, 0, TectonicPoint.PointClass.OTHER,
+                                                        TectonicPoint.Source.OTHER);
         TectonicVectorArrow arrow1 = createArrow(tectonicPoint).setMaterial(Material.makeSelfIlluminating(Color.GREEN));
         Shape<?> shape = new CompositeShape(new GeodesicSphere(8).setMaterial(Material.makePoints(Color.GRAY_75)), arrow1);
         new SingleShapeDemo(shape, Color.GREEN, SingleShapeDemo.Mode.WIREFRAME).start();

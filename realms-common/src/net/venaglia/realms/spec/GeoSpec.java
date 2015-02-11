@@ -98,6 +98,10 @@ public enum GeoSpec {
         return computedFields.get(this);
     }
 
+    public int iGet() {
+        return (int)get();
+    }
+
     public void set(long value) {
         switch (this) {
             case GLOBAL_SECTOR_DIVISIONS:

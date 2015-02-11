@@ -864,7 +864,7 @@ class AcreBuilder implements Runnable {
         }
         Collection<AcreBuilder> builders = new ArrayList<AcreBuilder>();
         for (final Sector s : sectors.get()) {
-            builders.add(new AcreBuilder((int)GeoSpec.SECTOR_DIVISIONS.get(), false, s, sectorMap, null, acreConsumer) {
+            builders.add(new AcreBuilder(GeoSpec.SECTOR_DIVISIONS.iGet(), false, s, sectorMap, null, acreConsumer) {
 
                 @Override
                 protected int[] findNearCornerAcres() {

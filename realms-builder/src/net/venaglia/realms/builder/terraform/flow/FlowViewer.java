@@ -1,5 +1,7 @@
 package net.venaglia.realms.builder.terraform.flow;
 
+import static net.venaglia.realms.builder.terraform.flow.FlowSimulator.TectonicDensity.*;
+
 import com.apple.eawt.Application;
 import net.venaglia.gloo.physical.bounds.BoundingSphere;
 import net.venaglia.gloo.physical.decorators.*;
@@ -166,7 +168,7 @@ public class FlowViewer implements View3DMainLoop, ViewEventHandler {
         final FlowSimulator flowSimulator =
 //                new FlowSimulator(10,280,500,10.0);
 //                new FlowSimulator(25,1000,240,12.0);
-                new FlowSimulator(25,8000,60,10.0);
+                new FlowSimulator(25,8000,60,10.0, MEDIUM);
 //                new FlowSimulator(25,5000,12.5,10.0); // slow
 //                new FlowSimulator(40,16000,15,10.0);
 //                new FlowSimulator(60,50000,8,10.0);

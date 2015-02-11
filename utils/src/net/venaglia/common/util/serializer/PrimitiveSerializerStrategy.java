@@ -69,7 +69,12 @@ public abstract class PrimitiveSerializerStrategy<T> extends AbstractSerializerS
                 return PrimitiveSerializerStrategy.this.deserialize(in);
             }
 
-            public void deserializePartial(ByteBuffer in, Predicate<String> filter, Map<String,Object> out) {
+            @Override
+            public T deserializePartial(ByteBuffer in, Predicate<? super String> filter) {
+                throw new UnsupportedOperationException();
+            }
+
+            public void deserializePartial(ByteBuffer in, Predicate<? super String> filter, Map<String,Object> out) {
                 throw new UnsupportedOperationException();
             }
         };

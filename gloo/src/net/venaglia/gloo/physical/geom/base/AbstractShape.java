@@ -132,6 +132,11 @@ public abstract class AbstractShape<T extends AbstractShape<T>> implements Shape
     @SuppressWarnings("unchecked")
     protected abstract T build(Point[] points, XForm xForm);
 
+    @Override
+    public String getName() {
+        return getClass().getSimpleName();
+    }
+
     public final int size() {
         return points.length;
     }

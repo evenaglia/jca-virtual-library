@@ -2,8 +2,6 @@ package net.venaglia.realms.builder.terraform.flow;
 
 import net.venaglia.common.util.CumulativeDeviation;
 import net.venaglia.common.util.Factory;
-import net.venaglia.common.util.Ref;
-import net.venaglia.common.util.impl.AbstractCachingRef;
 import net.venaglia.common.util.recycle.Recyclable;
 import net.venaglia.common.util.recycle.RecycleBin;
 import net.venaglia.common.util.recycle.RecycleDeque;
@@ -13,6 +11,7 @@ import net.venaglia.gloo.physical.bounds.MutableSimpleBounds;
 import net.venaglia.gloo.physical.decorators.Color;
 import net.venaglia.gloo.physical.decorators.Material;
 import net.venaglia.gloo.physical.geom.Facet;
+import net.venaglia.gloo.physical.geom.PlatonicShape;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
 import net.venaglia.gloo.physical.geom.XForm;
@@ -30,8 +29,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
+import java.util.NavigableMap;
 import java.util.Random;
+import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadFactory;
@@ -58,7 +60,7 @@ public class FlowSimulator {
 
             @SuppressWarnings("NullableProblems")
             public Thread newThread(Runnable runnable) {
-                Thread thread = new Thread(tg, runnable, String.format("Worker-%02d", seq.incrementAndGet()));
+                Thread thread = new Thread(tg, runnable, String.format("FlowWorker-%02d", seq.incrementAndGet()));
                 thread.setDaemon(true);
                 return thread;
             }
@@ -75,7 +77,7 @@ public class FlowSimulator {
     private final double nominalRadius;
     private final String fragmentFormat;
     private final int count;
-    private final int numTectonicPoints = 32;
+    private final int numTectonicPoints;
     private final boolean captureFragmentContributions;
 
     private double fps;
@@ -87,20 +89,19 @@ public class FlowSimulator {
     private Advance advance;
     private FragmentImpl[] fragments;
     private SpatialMap.Entry<FragmentImpl>[] entries;
-
     private FlowObserver observer;
+    private QueryInterface queryInterface = new QueryInterface();
+    private AtomicBoolean observerQueryLock = new AtomicBoolean(false);
+    private AtomicInteger pendingWorkCount = new AtomicInteger();
 
-    private final QueryInterface queryInterface = new QueryInterface();
-    private final AtomicBoolean observerQueryLock = new AtomicBoolean(false);
-    private final AtomicInteger pendingWorkCount = new AtomicInteger();
-
-    public FlowSimulator(double radius, int count, double fps, double timeScale) {
-        this(radius, count, fps, timeScale, System.currentTimeMillis(), false);
+    public FlowSimulator(double radius, int count, double fps, double timeScale, TectonicDensity density) {
+        this(radius, count, fps, timeScale, density, System.currentTimeMillis(), false);
     }
 
-    public FlowSimulator(double radius, int count, double fps, double timeScale, long seed, boolean captureContributions) {
+    public FlowSimulator(double radius, int count, double fps, double timeScale, TectonicDensity density, long seed, boolean captureContributions) {
         this.radius = radius;
         this.count = count;
+        this.numTectonicPoints = density.getNumTectonicPoints();
         double surfaceAreaPerFragment = (radius * radius * 1.333333333333333) / count;
         this.nominalRadius = Math.sqrt(surfaceAreaPerFragment);
         this.fps = fps;
@@ -123,26 +124,61 @@ public class FlowSimulator {
         Dodecahedron dodecahedron = new Dodecahedron().scale(radius);
         for (Point p : dodecahedron) {
             startingPoints[index] = p;
-            tectonicPoints[index++] = new TectonicPoint(p, randomTectonicVector(random, p),
-                                                        TectonicPoint.PointClass.PLATONIC);
+            tectonicPoints[index++] = new TectonicPoint(p,
+                                                        randomTectonicVector(random, p),
+                                                        random.nextGaussian() * 0.001,
+                                                        TectonicPoint.PointClass.PLATONIC,
+                                                        TectonicPoint.Source.RANDOM);
         }
         for (int i = 0, l = dodecahedron.facetCount(); i < l; i++) {
             Facet f = dodecahedron.getFacet(i);
-            double x = 0.0, y = 0.0, z = 0.0, d = 0.0;
-            for (Point p : f) {
-                x += p.x;
-                y += p.y;
-                z += p.z;
-                d += 1.0;
-            }
-            x /= d;
-            y /= d;
-            z /= d;
-            Point p = new Point(x, y, z);
+            Point p = getFacetCenterPoint(f);
             startingPoints[index] = p;
-            tectonicPoints[index++] = new TectonicPoint(p, randomTectonicVector(random, p),
-                                                        TectonicPoint.PointClass.MIDPOINT);
+            tectonicPoints[index++] = new TectonicPoint(p,
+                                                        randomTectonicVector(random, p),
+                                                        random.nextGaussian() * 0.001,
+                                                        TectonicPoint.PointClass.MIDPOINT,
+                                                        TectonicPoint.Source.RANDOM);
         }
+        if (index < numTectonicPoints) {
+            for (int i = 0, l = dodecahedron.edgeCount(); i < l; i++) {
+                PlatonicShape.Edge e = dodecahedron.getEdge(i);
+                Point p = getEdgeCenterPoint(e);
+                startingPoints[index] = p;
+                tectonicPoints[index++] = new TectonicPoint(p,
+                                                            reverseTectonicVector(p),
+                                                            random.nextGaussian() * 0.001,
+                                                            TectonicPoint.PointClass.MIDPOINT,
+                                                            TectonicPoint.Source.REVERSE);
+            }
+        }
+        if (index < numTectonicPoints) {
+            Point[] points = new Point[5];
+            for (int i = 0, l = dodecahedron.facetCount(); i < l; i++) {
+                double x = 0.0, y = 0.0, z = 0.0;
+                Facet f = dodecahedron.getFacet(i);
+                assert f.size() == 5;
+                Iterator<Point> iterator = f.iterator();
+                for (int j = 0; j < 5; j++) {
+                    Point p = iterator.next();
+                    x += p.x;
+                    y += p.y;
+                    z += p.z;
+                    points[j] = p;
+                }
+                Point c = new Point(x * 0.2, y * 0.2, z * 0.2);
+                for (int j = 0; j < 5; j++) {
+                    Point p = Point.midPoint(points[j], c, 0.5);
+                    startingPoints[index] = p;
+                    tectonicPoints[index++] = new TectonicPoint(p,
+                                                                reverseTectonicVector(p),
+                                                                random.nextGaussian() * 0.001 - 0.0005,
+                                                                TectonicPoint.PointClass.INTERPOLATED,
+                                                                TectonicPoint.Source.REVERSE);
+                }
+            }
+        }
+        assert index == numTectonicPoints;
         for (int i = 0, l = startingPoints.length; i < l; i++) {
             startingPoints[i] = Point.ORIGIN.translate(Vector.betweenPoints(Point.ORIGIN, startingPoints[i]).normalize(radius));
         }
@@ -159,26 +195,57 @@ public class FlowSimulator {
         entries = (SpatialMap.Entry<FragmentImpl>[])new SpatialMap.Entry[count];
     }
 
+    private Point getFacetCenterPoint(Facet f) {
+        double x = 0.0, y = 0.0, z = 0.0, d = 0.0;
+        for (Point p : f) {
+            x += p.x;
+            y += p.y;
+            z += p.z;
+            d += 1.0;
+        }
+        x /= d;
+        y /= d;
+        z /= d;
+        return new Point(x, y, z);
+    }
+
+    private Point getEdgeCenterPoint(PlatonicShape.Edge e) {
+        return Point.midPoint(e.a, e.b, 0.5);
+    }
+
     public int getCount() {
         return count;
     }
 
     public List<TectonicVectorArrow> getTectonicArrows(double radius) {
+        ensureNotDestroyed();
         Material green = Material.makeSelfIlluminating(Color.GREEN);
+        Material yellow = Material.makeSelfIlluminating(Color.YELLOW);
+        Material gray = Material.makeSelfIlluminating(Color.GRAY_50);
         List<TectonicVectorArrow> arrows = new ArrayList<>(tectonicPoints.length);
         for (TectonicPoint tectonicPoint : tectonicPoints) {
+            Material material;
+            if (tectonicPoint.source == TectonicPoint.Source.RANDOM) {
+                material = green;
+            } else if (tectonicPoint.pointClass == TectonicPoint.PointClass.MIDPOINT) {
+                material = yellow;
+            } else {
+                material = gray;
+            }
             arrows.add(TectonicVectorArrow.createArrow(tectonicPoint)
                                .scale(radius)
-                               .setMaterial(green));
+                               .setMaterial(material));
         }
         return Collections.unmodifiableList(arrows);
     }
 
     public void setObserver(FlowObserver observer) {
+        ensureNotDestroyed();
         this.observer = observer;
     }
 
     public synchronized void start() {
+        ensureNotDestroyed();
         switch (advance.runState.getAndSet(RunState.RUNNING)) {
             case STOPPED:
                 queueIsEmpty();
@@ -186,8 +253,47 @@ public class FlowSimulator {
         }
     }
 
-    public void stop() {
+    public synchronized void stop() {
+        ensureNotDestroyed();
         advance.runState.compareAndSet(RunState.RUNNING, RunState.STOPPING);
+    }
+
+    public void destroy() {
+        while (true) {
+            RunState runState = advance.runState.get();
+            switch (runState) {
+                case STOPPED:
+                    if (advance.runState.compareAndSet(RunState.STOPPED, RunState.DESTROYED)) {
+                        destroyImpl();
+                        return;
+                    }
+                    continue;
+                case RUNNING:
+                case STOPPING:
+                    throw new IllegalStateException("Cannot destroy a FlowSimulator that is not stopped");
+                case DESTROYED:
+                    // no-op
+                    return;
+            }
+        }
+    }
+
+    private void destroyImpl() {
+        queryInterface.destroy();
+        queryInterface = null;
+        map.clear();
+        map = null;
+        Arrays.fill(tectonicPoints, null);
+        tectonicPoints = null;
+        advance = null;
+        Arrays.fill(fragments, null);
+        fragments = null;
+        Arrays.fill(entries, null);
+        entries = null;
+        observer = null;
+        observerQueryLock = null;
+        pendingWorkCount = null;
+        //To change body of created methods use File | Settings | File Templates.
     }
 
     private Vector randomTectonicVector(Random random, Point p) {
@@ -199,7 +305,17 @@ public class FlowSimulator {
         x *= m;
         y *= m;
         z *= m;
-        return new Vector(x - p.x, y - p.y, z - p.z).normalize().scale(0.005);
+        return new Vector(x - p.x, y - p.y, z - p.z).normalize(0.005);
+    }
+
+    private Vector reverseTectonicVector(Point p) {
+        NavigableMap<Double,TectonicPoint> closestPoints = new TreeMap<>();
+        for (int i = 0; i < TectonicDensity.LOW.getNumTectonicPoints(); i++) {
+            TectonicPoint point = tectonicPoints[i];
+            closestPoints.put(Vector.computeDistance(p, point.point), point);
+        }
+        Iterator<TectonicPoint> iter = closestPoints.values().iterator();
+        return iter.next().vector.sum(iter.next().vector).normalize(0.005);
     }
 
     public double getRadius() {
@@ -207,10 +323,12 @@ public class FlowSimulator {
     }
 
     public double getTimeScale() {
+        ensureNotDestroyed();
         return timeScale;
     }
 
     public Fragment[] getFragments() {
+        ensureNotDestroyed();
         return fragments;
     }
 
@@ -238,6 +356,7 @@ public class FlowSimulator {
     }
 
     public synchronized void waitUntilAllIn() {
+        ensureNotDestroyed();
         while (!advance.allPointsIn.get()) {
             try {
                 wait(250L);
@@ -248,6 +367,7 @@ public class FlowSimulator {
     }
 
     public synchronized void waitUntilRunning() {
+        ensureNotDestroyed();
         while (advance.runState.get() != RunState.RUNNING) {
             try {
                 wait(250L);
@@ -258,6 +378,7 @@ public class FlowSimulator {
     }
 
     public synchronized void waitUntilDone() {
+        ensureNotDestroyed();
         while (advance.runState.get() != RunState.STOPPED) {
             try {
                 wait(250L);
@@ -268,6 +389,7 @@ public class FlowSimulator {
     }
 
     public synchronized void waitUntilStable() {
+        ensureNotDestroyed();
         while (!queryInterface.isStable()) {
             try {
                 wait(250L);
@@ -285,6 +407,7 @@ public class FlowSimulator {
     }
 
     public synchronized void runOneQuery(FlowQuery query) {
+        ensureNotDestroyed();
         if (advance.runState.get() != RunState.STOPPED) {
             throw new IllegalStateException("Flow simulator is not stopped");
         }
@@ -303,11 +426,19 @@ public class FlowSimulator {
     }
 
     public boolean areAllPointsIn() {
+        ensureNotDestroyed();
         return advance.allPointsIn.get();
     }
 
     public int activeFragments() {
+        ensureNotDestroyed();
         return map.size();
+    }
+
+    private void ensureNotDestroyed() {
+        if (advance == null || advance.runState.get() == RunState.DESTROYED) {
+            throw new IllegalStateException("Flow simulator has been destroyed");
+        }
     }
 
     private void observeFrame() {
@@ -349,6 +480,22 @@ public class FlowSimulator {
         }
         pressureBias = 0 - cumulativeDeviation.average();
         pressureScale = 1.0 / cumulativeDeviation.deviation();
+    }
+
+    public enum TectonicDensity {
+        LOW, MEDIUM, HIGH;
+
+        int getNumTectonicPoints() {
+            switch (this) {
+                case LOW:
+                    return 32;
+                case MEDIUM:
+                    return 62;
+                case HIGH:
+                    return 122;
+            }
+            return -1;
+        }
     }
 
     protected abstract class AbstractWorker implements Runnable {
@@ -401,6 +548,7 @@ public class FlowSimulator {
 
         private double x, y, z;
         private double i, j, k;
+        private double a;
         private double p;
 
         public FragmentImpl(int seq) {
@@ -450,24 +598,29 @@ public class FlowSimulator {
             }
             Arrays.sort(tectonicPointIndices, this);
 
+            a = 0.0;
             i = 0.0;
             j = 0.0;
             k = 0.0;
             double sumWeight = 0.0;
             double runOut = Math.sqrt(tectonicPointDistances[tectonicPointIndices[9]]);
-            for (int a = 0; a < 6; a++) {
+            for (int a = 0; a < 9; a++) {
                 double weight = runOut - Math.sqrt(tectonicPointDistances[tectonicPointIndices[a]]);
                 sumWeight += weight;
-                Vector v = tectonicPoints[tectonicPointIndices[a]].vector;
+                TectonicPoint t = tectonicPoints[tectonicPointIndices[a]];
+                Vector v = t.vector;
+                Point p = t.point;
                 i += v.i * weight;
                 j += v.j * weight;
                 k += v.k * weight;
+                this.a += t.attraction * weight;
             }
             if (sumWeight > 0.0) {
                 sumWeight = 1.0 / sumWeight;
                 i *= sumWeight;
                 j *= sumWeight;
                 k *= sumWeight;
+                a *= sumWeight * sumWeight;
             }
         }
 
@@ -489,7 +642,7 @@ public class FlowSimulator {
             double u = z + k * timeScale;
             double r = Vector.computeDistance(s, t, u);
             double d = radius / r;
-            p = r - radius;
+            p = r - radius;// + a;
             x = s * d;
             y = t * d;
             z = u * d;
@@ -564,7 +717,7 @@ public class FlowSimulator {
     }
     
     enum RunState {
-        STOPPED, RUNNING, STOPPING,
+        STOPPED, RUNNING, STOPPING, DESTROYED
     }
 
     protected class Advance extends AbstractWorker implements SpatialMap.Consumer<FragmentImpl> {
@@ -665,11 +818,11 @@ public class FlowSimulator {
 
     protected class QueryInterface implements FlowQueryInterface {
 
-        private final WorkManager workManager = new WorkManager("Query");
-        private final AtomicInteger seq = new AtomicInteger(1);
-        private final AtomicBoolean stable = new AtomicBoolean(false);
-        private final RecycleBin<QueryRunner> queryRunnerRecycleBin;
-        private final RecycleBin<WorkRunner> workRunnerRecycleBin;
+        private WorkManager workManager = new WorkManager("Query");
+        private AtomicInteger seq = new AtomicInteger(1);
+        private AtomicBoolean stable = new AtomicBoolean(false);
+        private RecycleBin<QueryRunner> queryRunnerRecycleBin;
+        private RecycleBin<WorkRunner> workRunnerRecycleBin;
 
         int frameCount = (int)Math.round(-100.0 / timeScale);
         WorkSourceKey<Void> lastKey = null;
@@ -781,6 +934,17 @@ public class FlowSimulator {
 
         protected WorkRunner getWorkRunner(Runnable runnable) {
             return workRunnerRecycleBin.get().init(runnable);
+        }
+
+        protected void destroy() {
+            if (workManager != null) {
+                workManager.destroy();
+                workManager = null;
+                seq = null;
+                stable = null;
+                queryRunnerRecycleBin = null;
+                workRunnerRecycleBin = null;
+            }
         }
     }
 

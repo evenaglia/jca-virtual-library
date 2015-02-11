@@ -8,21 +8,15 @@ import net.venaglia.common.util.Ref;
 import net.venaglia.common.util.Visitor;
 import net.venaglia.common.util.serializer.SerializerDebugger;
 import net.venaglia.common.util.serializer.SerializerStrategy;
-import net.venaglia.realms.common.map.WorldMap;
 import net.venaglia.realms.common.map.data.binaries.BinaryTypeDefinition;
 import net.venaglia.realms.common.map.data.binaries.BinaryTypeRegistry;
 import net.venaglia.realms.common.map.things.annotations.Property;
-import net.venaglia.realms.common.map.things.surface.Zone;
-import net.venaglia.realms.common.map.things.surface.ZonePosition;
-import net.venaglia.realms.common.map.world.ref.AcreDetailRef;
 import net.venaglia.realms.common.map.world.topo.Topography;
 import net.venaglia.realms.common.map.world.topo.TopographyDef;
 import net.venaglia.realms.spec.GeoSpec;
 import net.venaglia.realms.spec.map.GeoPoint;
 import net.venaglia.gloo.physical.geom.Axis;
-import net.venaglia.gloo.physical.geom.detail.DetailLevel;
 import net.venaglia.gloo.physical.geom.MatrixXForm;
-import net.venaglia.gloo.physical.geom.Shape;
 import net.venaglia.gloo.physical.geom.XForm;
 import net.venaglia.gloo.util.matrix.Matrix_4x4;
 
@@ -30,9 +24,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.EnumMap;
 
 /**
  * User: ed
@@ -70,7 +61,6 @@ public class AcreDetail extends WorldElement {
     private transient XForm toGlobal;
     @Property
     int[] neighborIds;
-    private Collection<AcreDetailRef> neighbors;
 
     /**
      * def[0] : center vertex id
@@ -97,10 +87,8 @@ public class AcreDetail extends WorldElement {
     @Property
     private long[] zoneFirstVertexIds; // length = 4 * (pentagonal ? 5 : 6)
     private transient Ref<Topography> acreTopographyRef;
-    private transient EnumMap<ZonePosition,Ref<Zone>> zoneRef;
     @Property
     private float elevation = 0.0f; // -1.0 deep ocean, 0.0 swamp or coastline, 1.0 high mountains
-    private float pressure = 0.0f;
 
     public AcreDetail() {
     }
@@ -144,17 +132,6 @@ public class AcreDetail extends WorldElement {
         return toGlobal;
     }
 
-    public Collection<AcreDetailRef> getNeighbors() {
-        if (neighbors == null) {
-            WorldMap worldMap = WorldMap.INSTANCE.get();
-            neighbors = new ArrayList<AcreDetailRef>(neighborIds.length);
-            for (int neighborId : neighborIds) {
-                neighbors.add(new AcreDetailRef(neighborId, worldMap.getBinaryStore()));
-            }
-        }
-        return neighbors;
-    }
-
     /**
      * Copies neighbor ids into the passed array, and returns the number of ids written
      * @param out Buffer to receive neighbor ids.
@@ -191,19 +168,6 @@ public class AcreDetail extends WorldElement {
 
     public void setElevation(float elevation) {
         this.elevation = elevation;
-    }
-
-    public float getPressure() {
-        return pressure;
-    }
-
-    public void setPressure(float pressure) {
-        this.pressure = pressure;
-    }
-
-    public Shape<?> getSurface(DetailLevel detailLevel) {
-        // todo
-        return null;
     }
 
     public String formatForSanityCheck() {

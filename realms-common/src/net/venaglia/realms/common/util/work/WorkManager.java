@@ -25,11 +25,11 @@ public class WorkManager {
     private static final ThreadLocal<WorkSourceWrapper<?>> ACTIVE_WORK_SOURCE = new ThreadLocal<WorkSourceWrapper<?>>();
     private static final int ONE_COMPLETE_WORK = 1048576;
 
-    private final WorkHandler workHandler;
-    private final Map<WorkSourceKey<?>,WorkSourceWrapper<?>> queue = new ConcurrentHashMap<WorkSourceKey<?>,WorkSourceWrapper<?>>();
-    private final CompositeProgressMonitor progressMonitor = new CompositeProgressMonitor();
+    private WorkHandler workHandler;
+    private Map<WorkSourceKey<?>,WorkSourceWrapper<?>> queue = new ConcurrentHashMap<WorkSourceKey<?>,WorkSourceWrapper<?>>();
+    private CompositeProgressMonitor progressMonitor = new CompositeProgressMonitor();
 
-    private final Results results = new Results() {
+    private Results results = new Results() {
         @SuppressWarnings("unchecked")
         public <T> T getResult(WorkSourceKey<T> key) throws NoSuchElementException, CircularDependencyException {
             blockForResult(key, new LinkedHashSet<WorkSourceKey<?>>());
@@ -128,10 +128,12 @@ public class WorkManager {
     }
 
     public <T> void addWorkSource(WorkSource<T> workSource) {
+        endureNotDestroyed();
         addWorkSource(workSource, 1.0);
     }
 
     public <T> void addWorkSource(WorkSource<T> workSource, double relativeWeight) {
+        endureNotDestroyed();
         WorkSourceWrapper<T> workSourceWrapper = new WorkSourceWrapper<T>(workSource, relativeWeight);
         queue.put(workSource.getKey(), workSourceWrapper);
         if (allAreDone(workSourceWrapper.dependsOn)) {
@@ -140,11 +142,35 @@ public class WorkManager {
     }
 
     public Results getResults() {
+        endureNotDestroyed();
         return results;
     }
 
     public ProgressMonitor getProgressMonitor() {
+        endureNotDestroyed();
         return progressMonitor;
+    }
+
+    public void destroy() {
+        if (workHandler != null) {
+            for (WorkSourceWrapper<?> wrapper : queue.values()) {
+                if (!wrapper.state.get().done()) {
+                    throw new IllegalStateException("Cannot destroy a WorkManager while its queue contains incomplete work");
+                }
+            }
+            workHandler.destroy();
+            workHandler = null;
+            progressMonitor = null;
+            queue.clear();
+            queue = null;
+            results = null;
+        }
+    }
+
+    private void endureNotDestroyed() {
+        if (workHandler != null && workHandler.isDestroyed()) {
+            throw new IllegalStateException("WorkManager is destroyed");
+        }
     }
 
     private enum WorkSourceState {
@@ -240,6 +266,7 @@ public class WorkManager {
         }
 
         public void addWorkUnit(final Runnable runnable) {
+            endureNotDestroyed();
             if (state.get() != WorkSourceState.START) {
                 WorkSourceWrapper<?> active = ACTIVE_WORK_SOURCE.get();
                 if (active == null) {

@@ -12,7 +12,7 @@ import net.venaglia.gloo.projection.CoordinateList;
 import net.venaglia.gloo.projection.GeometryBuffer;
 import net.venaglia.gloo.projection.ProjectionBuffer;
 import net.venaglia.gloo.projection.camera.PerspectiveCamera;
-import net.venaglia.gloo.projection.impl.CoordinatesListBuilder;
+import net.venaglia.gloo.projection.impl.CoordinateListBuilder;
 import net.venaglia.gloo.view.MouseTargets;
 import net.venaglia.gloo.view.View3D;
 import net.venaglia.gloo.view.View3DMainLoop;
@@ -42,7 +42,7 @@ public class VertexBufferDemo {
         Vector center = new Vector(-0.5, -0.5, 0.0);
 
         final View3D view3D = new View3D(1024,768);
-        CoordinatesListBuilder builder = new CoordinatesListBuilder(CoordinateList.Field.VERTEX, CoordinateList.Field.NORMAL);
+        CoordinateListBuilder builder = new CoordinateListBuilder(CoordinateList.Field.VERTEX, CoordinateList.Field.NORMAL);
         builder.setMutable(true);
         if (size > 180) {
             throw new IllegalArgumentException("size is too big, cannot be greater than 180: " + size);

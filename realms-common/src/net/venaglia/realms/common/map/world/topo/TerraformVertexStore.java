@@ -4,8 +4,11 @@ import static net.venaglia.realms.common.map.world.topo.VertexBlock.BUFFER_SIZE;
 import static net.venaglia.realms.common.map.world.topo.VertexBlock.DEFINITION;
 import static net.venaglia.realms.common.map.world.topo.VertexBlock.VERTEX_COUNT;
 
- import net.venaglia.realms.common.Configuration;
+import net.venaglia.common.util.Ref;
+import net.venaglia.common.util.impl.AbstractCachingRef;
+import net.venaglia.realms.common.Configuration;
 import net.venaglia.realms.common.map.BinaryStore;
+import net.venaglia.realms.common.map.GlobalVertexLookup;
 import net.venaglia.realms.common.map.data.binaries.BinaryResource;
 import net.venaglia.realms.spec.GeoSpec;
 
@@ -25,10 +28,16 @@ public class TerraformVertexStore extends AbstractVertexStore {
 
     private final ConcurrentNavigableMap<Long,VertexBlock> allSharedBlocks = new ConcurrentSkipListMap<Long,VertexBlock>();
     private final BinaryStore binaryStore;
+    private final Ref<GlobalVertexLookup> globalVertexLookupRef = new AbstractCachingRef<GlobalVertexLookup>() {
+        @Override
+        protected GlobalVertexLookup getImpl() {
+            return new GlobalVertexLookup(TerraformVertexStore.this);
+        }
+    };
 
     public TerraformVertexStore(BinaryStore binaryStore) {
         this.binaryStore = binaryStore;
-        int totalVertices = (int)GeoSpec.POINTS_SHARED_MANY_ZONE.get();
+        int totalVertices = GeoSpec.POINTS_SHARED_MANY_ZONE.iGet();
         int totalBlocks = (totalVertices + VERTEX_COUNT - 1) / VERTEX_COUNT;
         long blockId = 0L;
         VertexBlock.init();
@@ -83,4 +92,9 @@ public class TerraformVertexStore extends AbstractVertexStore {
             }
         }
     }
+    
+    public GlobalVertexLookup getGlobalVertexLookup() {
+        return globalVertexLookupRef.get();
+    }
+    
 }

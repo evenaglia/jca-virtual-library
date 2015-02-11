@@ -5,7 +5,7 @@ package net.venaglia.common.util.recycle;
 * Date: 10/13/14
 * Time: 8:10 AM
 */
-public enum RecyleDequeOrder {
+public enum RecycleDequeOrder {
     LIFO{
         @Override
         <T> T next(RecycleDeque<T> deque) {

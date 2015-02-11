@@ -20,10 +20,10 @@ public class ColorGradient {
     private static final Float ZERO = 0.0f;
     private static final Float ONE = 1.0f;
 
-    private final NavigableMap<Float,Color> colorStops;
+    protected final NavigableMap<Float,Color> colorStops;
 
-    private boolean mutable = true;
-    private Color nanColor = Color.BLACK;
+    protected boolean mutable = true;
+    protected Color nanColor = Color.BLACK;
 
     public ColorGradient(Color left, Color right) {
         if (left == null) throw new NullPointerException("left");
@@ -37,7 +37,7 @@ public class ColorGradient {
         this(new TreeMap<>(clone.colorStops));
     }
 
-    public ColorGradient(NavigableMap<Float, Color> colorStops) {
+    private ColorGradient(NavigableMap<Float, Color> colorStops) {
         this.colorStops = colorStops;
     }
 
@@ -213,6 +213,30 @@ public class ColorGradient {
         }
     }
 
+    public ColorGradient tint(Color tintColor, float tintAmount) {
+        NavigableMap<Float,Color> tint = new TreeMap<>();
+        for (Map.Entry<Float,Color> entry : colorStops.subMap(ZERO, false, ONE, false).entrySet()) {
+            Color color = entry.getValue();
+            tint.put(entry.getKey(), new Color(
+                    calculateMidpoint(color.r, tintColor.r, tintAmount),
+                    calculateMidpoint(color.g, tintColor.g, tintAmount),
+                    calculateMidpoint(color.b, tintColor.b, tintAmount),
+                    calculateMidpoint(color.a, tintColor.a, tintAmount)
+            ));
+        }
+        Color nanColor = new Color(
+                calculateMidpoint(this.nanColor.r, tintColor.r, tintAmount),
+                calculateMidpoint(this.nanColor.g, tintColor.g, tintAmount),
+                calculateMidpoint(this.nanColor.b, tintColor.b, tintAmount),
+                calculateMidpoint(this.nanColor.a, tintColor.a, tintAmount)
+        );
+        return new ColorGradient(tint).addStop(Float.NaN, nanColor);
+    }
+
+    public ColorGradient highPerformance() {
+        return new HighPerformance(this);
+    }
+
     public String toString() {
         StringBuilder buffer = new StringBuilder(32);
         buffer.append("ColorGradient(");
@@ -248,6 +272,141 @@ public class ColorGradient {
             return right;
         } else {
             return right * p + left * (1.0f - p);
+        }
+    }
+
+    private static class HighPerformance extends ColorGradient {
+
+        private final float[] color;
+
+        private HighPerformance(ColorGradient base) {
+            super((NavigableMap<Float,Color>)null);
+            this.nanColor = base.nanColor;
+            this.mutable = false;
+            this.color = new float[8196];
+            for (int i = 0, j = 0; i <= 2048; i++) {
+                float p = i / 2048.0f;
+                Color c = base.get(p);
+                color[j++] = c.r;
+                color[j++] = c.g;
+                color[j++] = c.b;
+                color[j++] = c.a;
+            }
+        }
+
+        private HighPerformance(float[] color, Color nanColor) {
+            super((NavigableMap<Float,Color>)null);
+            this.color = color;
+            this.nanColor = nanColor;
+        }
+
+        @Override
+        public boolean hasStop(float stop) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Color getStop(float stop) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ColorGradient getMutableCopy() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ColorGradient highPerformance() {
+            return this;
+        }
+
+        @Override
+        public ColorGradient getReverseCopy() {
+            float[] reverse = new float[8196];
+            for (int i = 0, j = 0, k = 8192; i <= 2048; i++, k = 8192 - j) {
+                reverse[j++] = color[k++];
+                reverse[j++] = color[k++];
+                reverse[j++] = color[k++];
+                reverse[j++] = color[k];
+            }
+            return new HighPerformance(reverse, nanColor);
+        }
+
+        @Override
+        public ColorGradient tint(Color tintColor, float tintAmount) {
+            float[] color = this.color.clone();
+            for (int i = 0, j = 0; i <= 2048; i++) {
+                color[j] = calculateMidpoint(color[j], tintColor.r, tintAmount);
+                j++;
+                color[j] = calculateMidpoint(color[j], tintColor.g, tintAmount);
+                j++;
+                color[j] = calculateMidpoint(color[j], tintColor.b, tintAmount);
+                j++;
+                color[j] = calculateMidpoint(color[j], tintColor.a, tintAmount);
+                j++;
+            }
+            Color nanColor = new Color(
+                    calculateMidpoint(this.nanColor.r, tintColor.r, tintAmount),
+                    calculateMidpoint(this.nanColor.g, tintColor.g, tintAmount),
+                    calculateMidpoint(this.nanColor.b, tintColor.b, tintAmount),
+                    calculateMidpoint(this.nanColor.a, tintColor.a, tintAmount)
+            );
+            return new HighPerformance(color, nanColor);
+        }
+
+        @Override
+        public Color get(float where) {
+            if (Float.isNaN(where)) {
+                return nanColor;
+            } else {
+                int i = getIndex(where);
+                return new Color(color[i++], color[i++], color[i++], color[i]);
+            }
+        }
+
+        @Override
+        public <T> T get(float where, XForm.View<T> view) {
+            if (Float.isNaN(where)) {
+                return view.convert(nanColor.r, nanColor.g, nanColor.b, nanColor.a);
+            } else {
+                int i = getIndex(where);
+                return view.convert(color[i++], color[i++], color[i++], color[i]);
+            }
+        }
+
+        @Override
+        public void applyColor(float where, ColorBuffer buffer) {
+            if (Float.isNaN(where)) {
+                buffer.color(nanColor);
+            } else {
+                int i = getIndex(where);
+                buffer.color(color[i++], color[i++], color[i]);
+            }
+        }
+
+        @Override
+        public void applyColorAndAlpha(float where, ColorBuffer buffer) {
+            if (Float.isNaN(where)) {
+                buffer.colorAndAlpha(nanColor);
+            } else {
+                int i = getIndex(where);
+                buffer.colorAndAlpha(color[i++], color[i++], color[i++], color[i]);
+            }
+        }
+
+        private int getIndex(float where) {
+            if (where <= 0.0f) {
+                return 0;
+            } else if (where >= 1.0f) {
+                return 8192;
+            } else {
+                return Math.round(where * 2048.0f) << 2;
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "ColorGradient(high-performance)";
         }
     }
 

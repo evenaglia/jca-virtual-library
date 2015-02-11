@@ -128,13 +128,13 @@ public abstract class AbstractCoordinateList extends AbstractList<Coordinate> im
     }
 
     @Override
-    public Point set(int i, Point vertex) {
+    public Point set(int n, Point vertex) {
         ensureMutable();
         if (vertex == null) {
             throw new NullPointerException("vertex");
         }
         ByteBuffer data = data(Field.VERTEX);
-        int position = i * recordSize(Field.VERTEX);
+        int position = n * recordSize(Field.VERTEX);
         data.position(position);
         try {
             return new Point(data.getDouble(), data.getDouble(), data.getDouble());
@@ -145,13 +145,22 @@ public abstract class AbstractCoordinateList extends AbstractList<Coordinate> im
     }
 
     @Override
-    public Vector set(int i, Vector normal) {
+    public void setVertex(int n, double x, double y, double z) {
+        ensureMutable();
+        ByteBuffer data = data(Field.VERTEX);
+        int position = n * recordSize(Field.VERTEX);
+        data.position(position);
+        data.putDouble(x).putDouble(y).putDouble(z);
+    }
+
+    @Override
+    public Vector set(int n, Vector normal) {
         ensureMutable();
         if (normal == null) {
             throw new NullPointerException("normal");
         }
         ByteBuffer data = data(Field.NORMAL);
-        int position = i * recordSize(Field.NORMAL);
+        int position = n * recordSize(Field.NORMAL);
         data.position(position);
         try {
             return new Vector(data.getDouble(), data.getDouble(), data.getDouble());
@@ -162,13 +171,22 @@ public abstract class AbstractCoordinateList extends AbstractList<Coordinate> im
     }
 
     @Override
-    public Color set(int i, Color color) {
+    public void setNormal(int n, double i, double j, double k) {
+        ensureMutable();
+        ByteBuffer data = data(Field.NORMAL);
+        int position = n * recordSize(Field.NORMAL);
+        data.position(position);
+        data.putDouble(i).putDouble(j).putDouble(k);
+    }
+
+    @Override
+    public Color set(int n, Color color) {
         ensureMutable();
         if (color == null) {
             throw new NullPointerException("color");
         }
         ByteBuffer data = data(Field.COLOR);
-        int position = i * recordSize(Field.COLOR);
+        int position = n * recordSize(Field.COLOR);
         data.position(position);
         try {
             return new Color(data.getFloat(), data.getFloat(), data.getFloat(), data.getFloat());
@@ -179,13 +197,31 @@ public abstract class AbstractCoordinateList extends AbstractList<Coordinate> im
     }
 
     @Override
-    public TextureCoordinate set(int i, TextureCoordinate textureCoordinate) {
+    public void setColor(int n, float r, float g, float b) {
+        ensureMutable();
+        ByteBuffer data = data(Field.COLOR);
+        int position = n * recordSize(Field.COLOR);
+        data.position(position);
+        data.putFloat(r).putFloat(g).putFloat(b);
+    }
+
+    @Override
+    public void setColor(int n, float r, float g, float b, float a) {
+        ensureMutable();
+        ByteBuffer data = data(Field.COLOR);
+        int position = n * recordSize(Field.COLOR);
+        data.position(position);
+        data.putFloat(r).putFloat(g).putFloat(b).putFloat(a);
+    }
+
+    @Override
+    public TextureCoordinate set(int n, TextureCoordinate textureCoordinate) {
         ensureMutable();
         if (textureCoordinate == null) {
             throw new NullPointerException("textureCoordinate");
         }
         ByteBuffer data = data(Field.TEXTURE_COORDINATE);
-        int position = i * recordSize(Field.TEXTURE_COORDINATE);
+        int position = n * recordSize(Field.TEXTURE_COORDINATE);
         data.position(position);
         try {
             return new TextureCoordinate(data.getFloat(), data.getFloat());
@@ -193,6 +229,15 @@ public abstract class AbstractCoordinateList extends AbstractList<Coordinate> im
             data.position(position);
             data.putFloat(textureCoordinate.s).putFloat(textureCoordinate.t);
         }
+    }
+
+    @Override
+    public void setTextureCoordinate(int n, float s, float t) {
+        ensureMutable();
+        ByteBuffer data = data(Field.TEXTURE_COORDINATE);
+        int position = n * recordSize(Field.TEXTURE_COORDINATE);
+        data.position(position);
+        data.putFloat(s).putFloat(t);
     }
 
     protected abstract Set<Field> getFields();

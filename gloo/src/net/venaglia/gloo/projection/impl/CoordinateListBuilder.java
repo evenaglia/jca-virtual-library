@@ -20,7 +20,7 @@ import java.util.Set;
  * Date: 3/6/13
  * Time: 9:17 AM
  */
-public class CoordinatesListBuilder implements CoordinateBuffer {
+public class CoordinateListBuilder implements CoordinateBuffer {
 
     private boolean mutable;
     private ByteBuffer vertices;
@@ -34,11 +34,11 @@ public class CoordinatesListBuilder implements CoordinateBuffer {
     private float r, g, b, a;
     private float[] st;
 
-    public CoordinatesListBuilder() {
+    public CoordinateListBuilder() {
         this(CoordinateList.Field.values());
     }
 
-    public CoordinatesListBuilder(CoordinateList.Field... extraFields) {
+    public CoordinateListBuilder(CoordinateList.Field... extraFields) {
         reset(extraFields);
     }
 
@@ -78,12 +78,12 @@ public class CoordinatesListBuilder implements CoordinateBuffer {
         }
     }
 
-    public CoordinatesListBuilder setMutable(boolean mutable) {
+    public CoordinateListBuilder setMutable(boolean mutable) {
         this.mutable = mutable;
         return this;
     }
 
-    public CoordinatesListBuilder setTextureMapping(TextureMapping textureMapping) {
+    public CoordinateListBuilder setTextureMapping(TextureMapping textureMapping) {
         this.textureMapping = textureMapping;
         return this;
     }

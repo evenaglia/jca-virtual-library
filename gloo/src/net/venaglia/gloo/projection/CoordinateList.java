@@ -28,13 +28,23 @@ public interface CoordinateList extends List<Coordinate> {
         }
     }
 
-    Point set(int i, Point vertex);
+    Point set(int n, Point vertex);
 
-    Vector set(int i, Vector normal);
+    void setVertex(int n, double x, double y, double z);
 
-    Color set(int i, Color color);
+    Vector set(int n, Vector normal);
 
-    TextureCoordinate set(int i, TextureCoordinate textureCoordinate);
+    void setNormal(int n, double i, double j, double k);
+
+    Color set(int n, Color color);
+
+    void setColor(int n, float r, float g, float b);
+
+    void setColor(int n, float r, float g, float b, float a);
+
+    TextureCoordinate set(int n, TextureCoordinate textureCoordinate);
+
+    void setTextureCoordinate(int n, float s, float t);
 
     boolean has(Field field);
 

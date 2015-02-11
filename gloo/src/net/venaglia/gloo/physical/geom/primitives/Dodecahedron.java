@@ -86,7 +86,7 @@ public class Dodecahedron extends AbstractPolygonFacetedType<Dodecahedron> imple
     }
 
     @Override
-    public int getEdgeCount() {
+    public int edgeCount() {
         return edges.length;
     }
 

@@ -14,7 +14,7 @@ public class RecycleBin<E extends Recyclable<E>> {
     protected final Factory<E> factory;
     protected final RecycleDeque<WeakReference<E>> recycleDeque;
 
-    protected RecyleDequeOrder order = RecyleDequeOrder.FIFO;
+    protected RecycleDequeOrder order = RecycleDequeOrder.FIFO;
     protected int limit = 0;
 
     public RecycleBin(Factory<E> factory, RecycleDeque<WeakReference<E>> recycleDeque) {
@@ -26,7 +26,7 @@ public class RecycleBin<E extends Recyclable<E>> {
         this.limit = limit;
     }
 
-    public void setOrder(RecyleDequeOrder order) {
+    public void setOrder(RecycleDequeOrder order) {
         this.order = order;
     }
 

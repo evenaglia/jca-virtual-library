@@ -90,7 +90,7 @@ public final class Facet implements Series<Point>, Element<Facet> {
     }
 
     public int size() {
-        return d == null ? 3 : 4;
+        return d == null ? 3 : more == null ? 4 : more.length + 4;
     }
 
     public Iterator<Point> iterator() {

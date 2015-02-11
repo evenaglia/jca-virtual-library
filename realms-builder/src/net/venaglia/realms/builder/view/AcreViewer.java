@@ -35,25 +35,24 @@ import java.awt.Dimension;
 */
 public class AcreViewer implements ViewEventHandler, View3DMainLoop {
 
-    private final AcreView[] views;
+    private final AcreViews switchableViews;
+    private final AcreViews persistentViews;
     private final double radius;
     private final Camera camera;
     private final Light[] lights;
     private final String windowTitle;
-    private final Projectable projectable;
 
     private DisplayList sphere;
-    private int show = 0;
     private double t = 0.0;
 
-    private AcreViewer(AcreView[] views, double radius, Camera camera, String windowTitle, Projectable projectable) {
-        assert views != null && views.length > 0;
+    private AcreViewer(AcreViews switchableViews, AcreViews persistentViews, double radius, Camera camera, String windowTitle) {
+        assert switchableViews != null;
         assert camera != null;
-        this.views = views;
+        this.switchableViews = switchableViews;
+        this.persistentViews = persistentViews;
         this.radius = radius;
         this.camera = camera;
         this.windowTitle = windowTitle;
-        this.projectable = projectable;
         Point point = new Point(0, 0, 3);
         Point source1 = point.scale(radius);
         Point source2 = point.rotate(Axis.Y, Math.PI * 0.66667).scale(radius);
@@ -109,14 +108,14 @@ public class AcreViewer implements ViewEventHandler, View3DMainLoop {
                 new KeyHandler(KEY_LBRACKET) {
                     @Override
                     protected void handleKeyDown(int keyCode) {
-                        show = (show + views.length - 1) % (views.length);
+                        switchableViews.previousView();
                         view.setTitle(getWindowTitle());
                     }
                 },
                 new KeyHandler(KEY_RBRACKET) {
                     @Override
                     protected void handleKeyDown(int keyCode) {
-                        show = (show + 1) % (views.length);
+                        switchableViews.nextView();
                         view.setTitle(getWindowTitle());
                     }
                 }
@@ -126,7 +125,7 @@ public class AcreViewer implements ViewEventHandler, View3DMainLoop {
     double scale = 1.0;
 
     public boolean beforeFrame(long nowMS) {
-        t += 0.002 * scale;
+        t += 0.005 * scale;
         double cx = Math.sin(t) * radius * 5.0;
         double cy = Math.cos(t) * radius * -5.0;
         Point cameraPosition = new Point(cx, cy, radius);
@@ -151,10 +150,17 @@ public class AcreViewer implements ViewEventHandler, View3DMainLoop {
         buffer.applyBrush(Brush.FRONT_SHADED);
         buffer.color(Color.GRAY_25);
 //        buffer.applyBrush(Brush.WIRE_FRAME);
-        views[show].project(nowMS, buffer);
+        Projectable activeView = switchableViews.getActiveView();
+        if (activeView != null) {
+            activeView.project(nowMS, buffer);
+        } else {
+            sphere.project(nowMS, buffer);
+        }
 
-        if (projectable != null) {
-            projectable.project(nowMS, buffer);
+        if (persistentViews != null) {
+            for (Projectable projectable : persistentViews.getAllViews()) {
+                projectable.project(nowMS, buffer);
+            }
         }
     }
 
@@ -165,16 +171,21 @@ public class AcreViewer implements ViewEventHandler, View3DMainLoop {
     }
 
     String getWindowTitle() {
-        return windowTitle + " - " + views[show].getName();
+        String activeView = switchableViews.getActiveViewName();
+        return windowTitle + " - " + (activeView == null ? "(none)" : activeView);
     }
 
-    public static View3D view(AcreView[] views, double radius, String windowTitle, Dimension windowSize, Projectable projectable) {
+    public static View3D view(AcreViews switchableViews,
+                              AcreViews persistentViews,
+                              double radius,
+                              String windowTitle,
+                              Dimension windowSize) {
         Camera camera = new PerspectiveCamera();
         camera.setPosition(new Point(0.0, radius * -2.0, 0.0));
         camera.setDirection(new Vector(0.0, radius * 2.0, 0.0));
         camera.setRight(new Vector(radius * 1.25, 0.0, 0.0));
         camera.computeClippingDistances(new BoundingSphere(Point.ORIGIN, radius * 1.1));
-        AcreViewer view = new AcreViewer(views, radius, camera, windowTitle, projectable);
+        AcreViewer view = new AcreViewer(switchableViews, persistentViews, radius, camera, windowTitle);
         View3D view3D = new View3D((int)windowSize.getWidth(), (int)windowSize.getHeight());
         view.registerKeyHandlers(view3D);
         view3D.setTitle(view.getWindowTitle());

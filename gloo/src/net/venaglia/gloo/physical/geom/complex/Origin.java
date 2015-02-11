@@ -57,6 +57,11 @@ public class Origin implements Shape<Origin> {
         brush.setColor(false);
     }
 
+    @Override
+    public String getName() {
+        return "Origin";
+    }
+
     public Vector getNormal(int index) {
         return new Vector(1,1,1);
     }

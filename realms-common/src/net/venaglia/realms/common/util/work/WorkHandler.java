@@ -21,10 +21,10 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class WorkHandler {
 
-    private final ThreadPoolExecutor executor;
-    private final AtomicInteger processCounter = new AtomicInteger();
-    private final Lock runWhenCompleteLock = new ReentrantLock(true);
-    private final List<Runnable> runWhenComplete = new LinkedList<Runnable>();
+    private ThreadPoolExecutor executor;
+    private AtomicInteger processCounter = new AtomicInteger();
+    private Lock runWhenCompleteLock = new ReentrantLock(true);
+    private List<Runnable> runWhenComplete = new LinkedList<Runnable>();
 
     public WorkHandler(final String name) {
         int numThreads = Runtime.getRuntime().availableProcessors() * 2;
@@ -49,10 +49,12 @@ public class WorkHandler {
     }
 
     public void addWorkUnit(Runnable runnable) {
+        ensureNotDestroyed();
         addWorkUnit(runnable, null);
     }
 
     public void addWorkUnit(final Runnable runnable, final ProgressListener progressListener) {
+        ensureNotDestroyed();
         processCounter.incrementAndGet();
         executor.execute(new Runnable() {
             public void run() {
@@ -69,6 +71,7 @@ public class WorkHandler {
     }
 
     private void processCompeted() {
+        if (executor == null) return;
         if (processCounter.decrementAndGet() == 0) {
             List<Runnable> toRun;
             runWhenCompleteLock.lock();
@@ -85,6 +88,7 @@ public class WorkHandler {
     }
 
     public void runWhenQueueIsCompleted(Runnable runnable) {
+        ensureNotDestroyed();
         if (processCounter.get() == 0) {
             addWorkUnit(runnable);
         } else {
@@ -94,6 +98,35 @@ public class WorkHandler {
             } finally {
                 runWhenCompleteLock.unlock();
             }
+        }
+    }
+
+    public synchronized void destroy() {
+        if (executor != null) {
+            if (processCounter.get() > 0) {
+                throw new IllegalStateException("Cannot destroy a work handler while there is still work being done");
+            }
+            runWhenCompleteLock.lock();
+            try {
+                executor.shutdown();
+                executor = null;
+                runWhenComplete.clear();
+                runWhenComplete = null;
+                processCounter = null;
+            } finally {
+                runWhenCompleteLock.unlock();
+                runWhenCompleteLock = null;
+            }
+        }
+    }
+
+    public boolean isDestroyed() {
+        return executor == null;
+    }
+
+    private void ensureNotDestroyed() {
+        if (executor == null) {
+            throw new IllegalStateException("The WorkHandler has been destroyed");
         }
     }
 }

@@ -378,7 +378,7 @@ public class GeoFactory {
 
     private File initGlobeStep8(final GlobalPointMap globalPointMap) {
         System.out.println("Packing global vertices...");
-        final int count = (int)GeoSpec.POINTS_SHARED_MANY_ZONE.get();
+        final int count = GeoSpec.POINTS_SHARED_MANY_ZONE.iGet();
         final int step = 2 * (Double.SIZE >> 3);
         final byte[] bytes = new byte[count * step];
         final ByteBuffer buffer = ByteBuffer.wrap(bytes);
@@ -1124,7 +1124,7 @@ public class GeoFactory {
 
         @Override
         protected void processVertices() {
-            int total = (int)GeoSpec.SECTORS.get();
+            int total = GeoSpec.SECTORS.iGet();
             int count = 0;
             for (GlobalSector globalSector : globe.sectors) {
                 for (Sector sector : globalSector.getSectors()) {
@@ -1277,13 +1277,13 @@ public class GeoFactory {
             this.writeSummary = writeSummary;
             this.globalVerticesFile = globalVerticesFile;
             this.vertexStore = vertexStore;
-            this.count = (int)GeoSpec.POINTS_SHARED_MANY_ZONE.get();
+            this.count = GeoSpec.POINTS_SHARED_MANY_ZONE.iGet();
             this.radius = GeoSpec.APPROX_RADIUS_METERS.get();
         }
 
         @Override
         public void run() {
-            final int count = (int)GeoSpec.POINTS_SHARED_MANY_ZONE.get();
+            final int count = GeoSpec.POINTS_SHARED_MANY_ZONE.iGet();
             final int step = 2 * (Double.SIZE >> 3);
             System.out.printf("Reading global vertices to temp file... (%,d bytes)\n", count * step);
             final ByteBuffer buffer = ByteBuffer.allocate(count * step);

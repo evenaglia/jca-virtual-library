@@ -59,7 +59,7 @@ public final class Tetrahedron extends AbstractTriangleFacetedType<Tetrahedron> 
     }
 
     @Override
-    public int getEdgeCount() {
+    public int edgeCount() {
         return edges.length;
     }
 

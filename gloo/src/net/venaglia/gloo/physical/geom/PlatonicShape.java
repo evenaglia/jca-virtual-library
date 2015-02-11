@@ -10,7 +10,7 @@ public interface PlatonicShape<S extends PlatonicShape<S>> extends Shape<S> {
     /**
      * @return The total number of edges that make up this platonic shape.
      */
-    int getEdgeCount();
+    int edgeCount();
 
     /**
      * @return The specified edge

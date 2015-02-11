@@ -24,5 +24,7 @@ public interface SerializerStrategy<T> {
 
     T deserialize(ByteBuffer in);
 
-    void deserializePartial(ByteBuffer in, Predicate<String> filter, Map<String, Object> out);
+    T deserializePartial(ByteBuffer in, Predicate<? super String> filter);
+
+    void deserializePartial(ByteBuffer in, Predicate<? super String> filter, Map<String, Object> out);
 }

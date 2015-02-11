@@ -262,7 +262,7 @@ public class AnnotationDrivenThingProcessor {
             }
         }
 
-        public void deserializePartial(ByteBuffer in, Predicate<String> filter, Map<String, Object> out) {
+        public void deserializePartial(ByteBuffer in, Predicate<? super String> filter, Map<String, Object> out) {
             int n = (int)deserializeSmallNonNegativeInteger("<fields>", in);
             for (int i = 0; i < n; i++) {
                 String name = deserializeString("<name>", in);
@@ -274,12 +274,16 @@ public class AnnotationDrivenThingProcessor {
         }
 
         public O deserialize(ByteBuffer in) {
+            return deserializePartial(in, Predicate.ALWAYS_TRUE);
+        }
+
+        public O deserializePartial(ByteBuffer in, Predicate<? super String> filter) {
             O value = factory.createEmpty();
             int n = (int)deserializeSmallNonNegativeInteger("<fields>", in);
             for (int i = 0; i < n; i++) {
                 String name = deserializeString("<name>", in);
                 FieldAccessor<O,?> fieldAccessor = fieldAccessors.get(name);
-                readField(fieldAccessor, value, in);
+                readField(fieldAccessor, value, in, filter.allow(name));
             }
             if (postProcessor != null) {
                 postProcessor.visit(value);
@@ -287,7 +291,7 @@ public class AnnotationDrivenThingProcessor {
             return value;
         }
 
-        private <P> void readField(FieldAccessor<O,P> fieldAccessor, O object, ByteBuffer in) {
+        private <P> void readField(FieldAccessor<O,P> fieldAccessor, O object, ByteBuffer in, boolean set) {
             int size = deserializeInt("<size>", in);
             if (fieldAccessor == null) {
                 if (size > 0) {
@@ -296,7 +300,9 @@ public class AnnotationDrivenThingProcessor {
                 return;
             }
             P value = size >= 0 ? fieldAccessor.getType().read(in) : fieldAccessor.getType().getDefaultValue();
-            fieldAccessor.set(object, value);
+            if (set) {
+                fieldAccessor.set(object, value);
+            }
         }
 
         private <P> void readField(FieldAccessor<O,P> fieldAccessor, Map<String,Object> out, ByteBuffer in) {

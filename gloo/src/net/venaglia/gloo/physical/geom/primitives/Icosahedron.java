@@ -125,7 +125,7 @@ public final class Icosahedron extends AbstractTriangleFacetedType<Icosahedron> 
     }
 
     @Override
-    public int getEdgeCount() {
+    public int edgeCount() {
         return edges.length;
     }
 

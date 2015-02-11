@@ -308,8 +308,10 @@ public class OctreeMap<E> extends AbstractSpatialMap<E> implements Projectable {
             if (!containsNodes) {
                 for (Object child : children) {
                     @SuppressWarnings("unchecked")
-                    OctreeMap<E> sbuMap = (OctreeMap<E>)child;
-                    sbuMap.clear();
+                    OctreeMap<E> subMap = (OctreeMap<E>)child;
+                    if (subMap != null) {
+                        subMap.clear();
+                    }
                 }
                 Arrays.fill(children, null);
                 totalEntryCount = 0;

@@ -1,9 +1,15 @@
 package net.venaglia.realms.builder.terraform;
 
 import static java.awt.Color.*;
+import static net.venaglia.realms.builder.terraform.flow.FlowSimulator.TectonicDensity.LOW;
 
+import net.venaglia.common.util.RangeBasedLongSet;
+import net.venaglia.common.util.Visitor;
+import net.venaglia.common.util.extensible.ExtendedPropertyKey;
+import net.venaglia.common.util.extensible.ExtensibleObjectRegistry;
 import net.venaglia.gloo.physical.geom.Point;
 import net.venaglia.gloo.physical.geom.Vector;
+import net.venaglia.gloo.physical.geom.XForm;
 import net.venaglia.gloo.util.debug.OutputGraph;
 import net.venaglia.gloo.util.debug.ProjectedOutputGraph;
 import net.venaglia.realms.builder.terraform.flow.FlowPointContribution;
@@ -11,7 +17,12 @@ import net.venaglia.realms.builder.terraform.flow.FlowPointData;
 import net.venaglia.realms.builder.terraform.flow.FlowQuery;
 import net.venaglia.realms.builder.terraform.flow.FlowSimulator;
 import net.venaglia.realms.builder.terraform.flow.Fragment;
+import net.venaglia.realms.builder.terraform.sets.AcreDetailExtendedPropertyProvider;
+import net.venaglia.realms.common.map.GlobalVertexLookup;
+import net.venaglia.realms.common.map.VertexStore;
 import net.venaglia.realms.common.map.world.AcreDetail;
+import net.venaglia.realms.common.map.world.ref.AcreLookup;
+import net.venaglia.realms.common.map.world.topo.VertexChangeEventBus;
 import net.venaglia.realms.spec.map.GeoPoint;
 import net.venaglia.realms.spec.map.RelativeCoordinateReference;
 
@@ -22,6 +33,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * User: ed
@@ -41,6 +53,7 @@ public class TerraformVisualTest {
     private AcreDetail[] neighbors;
     private MyAcreQuery query;
     private FlowPointData flowPointData;
+    private AcreDetailExtendedPropertyProvider.FloatProvider pressureProvider;
 
     public TerraformVisualTest(long seed, String parts) {
         count = 4322;
@@ -77,7 +90,16 @@ public class TerraformVisualTest {
 //        // todo: this should not need to be, neighbors should already be in vertex order
 //        neighbors = reorder(neighbors, testAcre.getVertices());
 
-        query = new MyAcreQuery(testAcre, neighbors);
+        ExtendedPropertyKey.FloatKey pressureKey = new ExtendedPropertyKey.FloatKey("pressure");
+        pressureProvider = new AcreDetailExtendedPropertyProvider.FloatProvider(pressureKey);
+        ExtensibleObjectRegistry.register(pressureProvider);
+        AcreQuery.Shared shared = new AcreQuery.Shared(new MyAcreLookup(samples),
+                                                       new MyGlobalVertexLookup(samples),
+                                                       new AcreDetailExtendedPropertyProvider.FloatProvider(new ExtendedPropertyKey.FloatKey("pressure")),
+                                                       null,
+                                                       4086,
+                                                       4322);
+        query = new MyAcreQuery(shared, testAcre.getId());
         flowPointData = synthesizeFlowPointData(query.getPoint());
         query.processDataForPoint(flowPointData);
     }
@@ -129,7 +151,7 @@ public class TerraformVisualTest {
 
     private FlowPointData synthesizeFlowPointData(final GeoPoint point) {
         final FlowPointData[] result = {null};
-        FlowSimulator flowSimulator = new FlowSimulator(25, 8000, 1000, 10, random.nextLong(), true);
+        FlowSimulator flowSimulator = new FlowSimulator(25, 8000, 1000, 10, LOW, random.nextLong(), true);
         System.out.println("Simulating flow...");
         flowSimulator.startThenStopOnceStable();
         flowSimulator.runOneQuery(new FlowQuery() {
@@ -302,8 +324,9 @@ public class TerraformVisualTest {
         private final double[] areas;
         private Point transferCenter;
 
-        public MyAcreQuery(AcreDetail testAcre, AcreDetail[] neighbors) {
-            super(testAcre, neighbors);
+        public MyAcreQuery(Shared shared, int acreId) {
+            super(shared, acreId);
+            AcreDetail testAcre = shared.acreLookup.get(acreId);
             transferAmounts = new double[testAcre.getVertices().length];
             areas = new double[testAcre.getVertices().length];
         }
@@ -317,7 +340,11 @@ public class TerraformVisualTest {
         }
 
         @Override
-        protected void setTransferAmount(int index, double amount, double area) {
+        protected void setTransferAmount(int index,
+                                         double amount,
+                                         double area,
+                                         AcreDetail acreDetail,
+                                         AcreDetail neighbor) {
             transferAmounts[index] = amount;
             areas[index] = area;
         }
@@ -327,8 +354,76 @@ public class TerraformVisualTest {
         }
 
         @Override
-        protected void setTransferCenter(Point transferCenter) {
-            this.transferCenter = transferCenter;
+        protected void setTransferCenter(double x, double y, double z) {
+            this.transferCenter = new Point(x, y, z);
+        }
+    }
+
+    private static class MyAcreLookup implements AcreLookup {
+
+        private final Map<Integer,AcreDetail> acreDetailMap = new TreeMap<>();
+
+        private MyAcreLookup(AcreDetail[] acreDetails) {
+            for (AcreDetail acre : acreDetails) {
+                acreDetailMap.put(acre.getId(), acre);
+            }
+        }
+
+        @Override
+        public AcreDetail get(int key) {
+            return acreDetailMap.get(key);
+        }
+    }
+
+    private static class MyGlobalVertexLookup extends GlobalVertexLookup {
+
+        private final Map<Integer,Point> pointMap = new TreeMap<>();
+
+        private MyGlobalVertexLookup(AcreDetail[] acreDetails) {
+            super(new VertexStore() {
+                @Override
+                public void read(RangeBasedLongSet vertexIds, VertexConsumer consumer) {
+                    // no-op
+                }
+
+                @Override
+                public VertexWriter write(RangeBasedLongSet vertexIds) {
+                    return null;
+                }
+
+                @Override
+                public void flushChanges() {
+                    // no-op
+                }
+
+                @Override
+                public VertexChangeEventBus getChangeEventBus() {
+                    return null;
+                }
+
+                @Override
+                public void visitVertexIds(RangeBasedLongSet set, Visitor<Long> visitor) {
+                    // no-op
+                }
+            });
+            for (AcreDetail acre : acreDetails) {
+                long[] acreTopographyDef = acre.getAcreTopographyDef();
+                pointMap.put((int)acreTopographyDef[0], acre.getCenter().toPoint(1.0));
+                for (int i = 0, l = acreTopographyDef.length == 19 ? 6 : 5, j = l + 1; i < l; i++, j++) {
+                    pointMap.put((int)acreTopographyDef[j], acre.getVertices()[i].toPoint(1.0));
+                }
+            }
+        }
+
+        @Override
+        public Point get(int index) {
+            return pointMap.get(index);
+        }
+
+        @Override
+        public <V> V get(int index, XForm.View<V> view) {
+            Point p = get(index);
+            return view.convert(p.x, p.y, p.z, 1);
         }
     }
 }

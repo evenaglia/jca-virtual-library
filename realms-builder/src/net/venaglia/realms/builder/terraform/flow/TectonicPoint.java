@@ -17,13 +17,23 @@ public class TectonicPoint {
         OTHER
     }
 
+    public enum Source {
+        RANDOM,
+        REVERSE,
+        OTHER
+    }
+
     public final Point point;
     public final Vector vector;
+    public final double attraction;
     public final PointClass pointClass;
+    public final Source source;
 
-    public TectonicPoint(Point point, Vector vector, PointClass pointClass) {
+    public TectonicPoint(Point point, Vector vector, double attraction, PointClass pointClass, Source source) {
         this.point = point;
         this.vector = vector;
+        this.attraction = attraction;
         this.pointClass = pointClass;
+        this.source = source;
     }
 }

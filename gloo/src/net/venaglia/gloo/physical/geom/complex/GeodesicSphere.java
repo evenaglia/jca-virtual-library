@@ -61,6 +61,11 @@ final public class GeodesicSphere implements Shape<GeodesicSphere>, Faceted {
         }
     }
 
+    @Override
+    public String getName() {
+        return "GeodesicSphere";
+    }
+
     protected TessellatedFacet getFacetForPointIndex(int index) {
         return facets[index / pointsPerFacet];
     }
@@ -173,7 +178,7 @@ final public class GeodesicSphere implements Shape<GeodesicSphere>, Faceted {
             private Iterator<Point> iter = facets[0].iterator();
 
             public boolean hasNext() {
-                return i < l;
+                return (i + 1) < l || iter.hasNext();
             }
 
             public Point next() {

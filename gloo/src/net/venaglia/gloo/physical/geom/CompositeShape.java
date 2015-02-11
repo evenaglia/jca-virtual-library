@@ -26,6 +26,7 @@ public class CompositeShape implements Shape<CompositeShape>, Projectable {
     protected final NavigableMap<Integer,Shape<?>> shapes;
     protected final Lock lock = new ThreadSafeLock();
 
+    protected String name;
     protected Transformation transformation;
     protected Material material = Material.INHERIT;
     protected boolean allAreStatic = true;
@@ -48,6 +49,15 @@ public class CompositeShape implements Shape<CompositeShape>, Projectable {
         this.shapes = shapes;
         if (transformation != null) getTransformation().transform(transformation);
         this.material = material;
+    }
+
+    @Override
+    public String getName() {
+        return name == null ? "CompositeShape@" + Integer.toHexString(System.identityHashCode(this)) : name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public Vector getNormal(int index) {
